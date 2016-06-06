@@ -1,0 +1,6 @@
+framework module Pods_FabSocialNetwork {
+  umbrella header "Pods-FabSocialNetwork-umbrella.h"
+
+  export *
+  module * { export * }
+}

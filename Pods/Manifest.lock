@@ -1,0 +1,15 @@
+PODS:
+  - Alamofire (3.3.1)
+  - Firebase (2.5.1)
+
+DEPENDENCIES:
+  - Alamofire (~> 3.0)
+  - Firebase (>= 2.3.3)
+
+SPEC CHECKSUMS:
+  Alamofire: 369bc67b6f5ac33ded3648d7bd21c5bfb91c2ecc
+  Firebase: 3565ea88b830f28f2c77ecc524622bc71a20d085
+
+PODFILE CHECKSUM: 146a294742d9241f73d5a431cd36873a142bcb42
+
+COCOAPODS: 1.0.0
