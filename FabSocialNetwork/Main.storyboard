@@ -284,6 +284,7 @@
                                                                         <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="heart-empty" translatesAutoresizingMaskIntoConstraints="NO" id="mHU-AI-45j">
                                                                             <rect key="frame" x="434" y="0.0" width="50" height="50"/>
                                                                             <constraints>
+                                                                                <constraint firstAttribute="height" constant="50" id="D64-eS-RRA"/>
                                                                                 <constraint firstAttribute="width" constant="50" id="nvc-K5-YDa"/>
                                                                             </constraints>
                                                                         </imageView>
@@ -316,6 +317,7 @@
                                                                     </subviews>
                                                                     <constraints>
                                                                         <constraint firstItem="QEW-oz-lgN" firstAttribute="leading" secondItem="mHU-AI-45j" secondAttribute="trailing" id="eeL-sb-MZ9"/>
+                                                                        <constraint firstAttribute="height" constant="50" id="pew-fl-q4H"/>
                                                                     </constraints>
                                                                 </stackView>
                                                                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="Lorem ipsum dolor sit er elit lamet,dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident." textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="YVX-H6-Naf">
@@ -373,6 +375,7 @@
                                         <color key="backgroundColor" red="0.8366871843" green="0.8366871843" blue="0.8366871843" alpha="1" colorSpace="calibratedRGB"/>
                                         <connections>
                                             <outlet property="descriptionText" destination="YVX-H6-Naf" id="fBJ-UL-d3y"/>
+                                            <outlet property="likeImage" destination="mHU-AI-45j" id="u1L-0f-xZN"/>
                                             <outlet property="likesLbl" destination="YCy-cH-Wm9" id="5gZ-bt-DAt"/>
                                             <outlet property="mainImg" destination="T23-XC-3aP" id="KSS-Yh-9yo"/>
                                             <outlet property="profileImg" destination="iJF-Cm-fRX" id="k3m-fC-7sd"/>
@@ -412,7 +415,7 @@
                     </connections>
                 </tapGestureRecognizer>
             </objects>
-            <point key="canvasLocation" x="2566" y="560"/>
+            <point key="canvasLocation" x="2666" y="560"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="i8l-2k-kCr">
@@ -426,7 +429,7 @@
                     </navigationBar>
                     <nil name="viewControllers"/>
                     <connections>
-                        <segue destination="9GL-1B-W9j" kind="relationship" relationship="rootViewController" id="N6x-eJ-pbE"/>
+                        <segue destination="9GL-1B-W9j" kind="relationship" relationship="rootViewController" id="OVK-PN-kL8"/>
                     </connections>
                 </navigationController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="anB-nb-dWy" userLabel="First Responder" sceneMemberID="firstResponder"/>

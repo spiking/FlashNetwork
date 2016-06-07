@@ -441,6 +441,7 @@
 					"$(PROJECT_DIR)/FabSocialNetwork",
 				);
 				INFOPLIST_FILE = FabSocialNetwork/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.spiking.FabSocialNetwork;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -459,6 +460,7 @@
 					"$(PROJECT_DIR)/FabSocialNetwork",
 				);
 				INFOPLIST_FILE = FabSocialNetwork/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.spiking.FabSocialNetwork;
 				PRODUCT_NAME = "$(TARGET_NAME)";
