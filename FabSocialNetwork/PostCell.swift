@@ -17,20 +17,27 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var descriptionText: UITextView!
     @IBOutlet weak var likesLbl: UILabel!
     @IBOutlet weak var likeImage: UIImageView!
+    @IBOutlet weak var usernameLbl: UILabel!
     
     var request: Request?
     var likeRef: Firebase!
+    var userRef: Firebase!
     
     private var _post: Post?
+    private var _user: User?
     
     var post: Post? {
         return _post
     }
     
+    var user: User? {
+        return _user
+    }
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         
-        let tap = UITapGestureRecognizer(target: self, action: "likeTapped:")
+        let tap = UITapGestureRecognizer(target: self, action: #selector(PostCell.likeTapped(_:)))
         tap.numberOfTapsRequired = 1
         likeImage.addGestureRecognizer(tap)
         likeImage.userInteractionEnabled = true
@@ -45,12 +52,48 @@ class PostCell: UITableViewCell {
         mainImg.clipsToBounds = true
     }
     
+    
     func configureCell(post: Post, img: UIImage?) {
         self._post = post
+        self.mainImg.image = nil
         self.descriptionText.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
+        var userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
         
+        // Add like to current user
         likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
+        
+        userRef.observeEventType(.Value, withBlock: { snapshot in
+            print(snapshot.value)
+            
+            if let username = snapshot.value["username"] as? String {
+                self.usernameLbl.text = username
+                print(username)
+            } else {
+                self.usernameLbl.text = "Default Username"
+            }
+            
+            if let profileUrl = snapshot.value["imgUrl"] as? String {
+                
+                print(profileUrl)
+                
+                // Not in cache, download and add to cache
+                self.request = Alamofire.request(.GET, post.profileUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                    if err == nil {
+                        let img = UIImage(data: data!)!
+                        self.profileImg.image = img
+                        FeedVC.imageCache.setObject(img, forKey: self.post!.profileUrl!)
+                    }
+                })
+            } else {
+                self.profileImg.hidden = true
+            }
+            
+            
+            }, withCancelBlock: { error in
+                print(error.description)
+        })
+        
         
         if post.imageUrl != nil {
             

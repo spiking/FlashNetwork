@@ -10,6 +10,8 @@ import UIKit
 import Firebase
 import Alamofire
 
+var CURRENT_USER_LOCAL = User(username: "Standard", imageUrl: "Standard")
+
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     var posts = [Post]()
@@ -31,6 +33,15 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker.delegate = self
         
         tableView.estimatedRowHeight = 355
+        
+        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
+        view.addGestureRecognizer(tap)
+        
+        let nav = self.navigationController?.navigationBar
+        nav?.tintColor = UIColor.whiteColor()
+        nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+        
+        self.title = "Fab Network"
         
         // Observe changes in Firebase, update instantly (code in closure)
         DataService.ds.REF_POSTS.observeEventType(.Value, withBlock: { snapshot in
@@ -76,7 +87,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             if let url = post.imageUrl {
                 img = FeedVC.imageCache.objectForKey(url) as? UIImage
             }
-            
+            print(post.userKey)
             cell.configureCell(post, img: img)
             return cell
             
@@ -109,6 +120,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         presentViewController(alert, animated: true, completion: nil)
     }
     
+    func dismisskeyboard() {
+        view.endEditing(true)
+    }
+    
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
         presentViewController(imagePicker, animated: true, completion: nil)
         
@@ -126,13 +141,13 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
                 
-                //Convert to jpeg & compress by 80%(0.2)
-                let imgData = UIImageJPEGRepresentation(img, 0.2)!
+                // Convert to JPG & compress 90 %
+                let imgData = UIImageJPEGRepresentation(img, 0.1)!
                 
-                //Convert Imageshack API key to data format
+                // Convert Imageshack API key to data format
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
                 
-                //Convert Json to data format
+                // Convert Json to data format
                 let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
                 
                 Alamofire.upload(.POST, url, multipartFormData: { MultipartFormData in
@@ -176,13 +191,23 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func postToFireBase(imgUrl: String?) {
+        
+        let id = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
+        
         var post: Dictionary<String, AnyObject> = [
             "description": postField.text!,
-            "likes": 0
+            "likes": 0,
+            "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
             ]
         
         if imgUrl != nil {
             post["imageUrl"] = imgUrl!
+        }
+        
+        let profileUrl = CURRENT_USER_LOCAL.imageUrl
+
+        if profileUrl != "" {
+            post["profileUrl"] = profileUrl
         }
         
         let firebasePost = DataService.ds.REF_POSTS.childByAutoId()

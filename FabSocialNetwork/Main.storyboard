@@ -15,8 +15,10 @@
             <string>NotoSans-Bold</string>
             <string>NotoSans-Bold</string>
             <string>NotoSans-Bold</string>
+            <string>NotoSans-Bold</string>
         </mutableArray>
         <mutableArray key="NotoSans-Regular.ttf">
+            <string>NotoSans</string>
             <string>NotoSans</string>
             <string>NotoSans</string>
         </mutableArray>
@@ -54,7 +56,7 @@
                                         <nil key="highlightedColor"/>
                                     </label>
                                 </subviews>
-                                <color key="backgroundColor" red="0.95686274510000002" green="0.26274509800000001" blue="0.21176470589999999" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="backgroundColor" red="1" green="0.32087678829999999" blue="0.39050799780000001" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
                                     <constraint firstAttribute="trailing" secondItem="mHz-FK-bhw" secondAttribute="trailing" constant="21" id="ObB-1K-8My"/>
                                     <constraint firstItem="zx7-Vr-PKC" firstAttribute="top" secondItem="aQe-QC-dha" secondAttribute="top" constant="44" id="W8q-Ab-AU5"/>
@@ -127,7 +129,7 @@
                                     </textField>
                                     <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="frX-ZY-XZI" customClass="MaterialButton" customModule="FabSocialNetwork" customModuleProvider="target">
                                         <rect key="frame" x="190" y="209" width="181" height="34"/>
-                                        <color key="backgroundColor" red="0.95686274510000002" green="0.26274509800000001" blue="0.21176470589999999" alpha="1" colorSpace="calibratedRGB"/>
+                                        <color key="backgroundColor" red="1" green="0.32087678829999999" blue="0.39050799780000001" alpha="1" colorSpace="calibratedRGB"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="181" id="Wfd-RS-kzL"/>
                                             <constraint firstAttribute="height" constant="36" id="ox4-50-AdG"/>
@@ -268,7 +270,7 @@
                                                                 <stackView opaque="NO" contentMode="scaleToFill" distribution="fillProportionally" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="Aim-Az-Fel">
                                                                     <rect key="frame" x="0.0" y="0.0" width="544" height="50"/>
                                                                     <subviews>
-                                                                        <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="profile" translatesAutoresizingMaskIntoConstraints="NO" id="iJF-Cm-fRX">
+                                                                        <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="profile" translatesAutoresizingMaskIntoConstraints="NO" id="iJF-Cm-fRX">
                                                                             <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                                             <constraints>
                                                                                 <constraint firstAttribute="height" constant="50" id="Jv4-5F-c5F"/>
@@ -379,6 +381,7 @@
                                             <outlet property="likesLbl" destination="YCy-cH-Wm9" id="5gZ-bt-DAt"/>
                                             <outlet property="mainImg" destination="T23-XC-3aP" id="KSS-Yh-9yo"/>
                                             <outlet property="profileImg" destination="iJF-Cm-fRX" id="k3m-fC-7sd"/>
+                                            <outlet property="usernameLbl" destination="HAT-I6-5Qe" id="unb-Ub-aTb"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>
@@ -401,7 +404,14 @@
                             </mask>
                         </variation>
                     </view>
-                    <navigationItem key="navigationItem" id="UdI-fT-ANB"/>
+                    <navigationItem key="navigationItem" id="UdI-fT-ANB">
+                        <barButtonItem key="rightBarButtonItem" title="Profile" id="tGl-YV-CyG">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <connections>
+                                <segue destination="3DD-qm-gT2" kind="show" id="EID-V4-LBw"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="imageSelector" destination="iwB-BJ-df8" id="gIa-8j-Rzb"/>
                         <outlet property="postField" destination="iND-HH-VxF" id="TGB-u2-Vcf"/>
@@ -417,6 +427,90 @@
             </objects>
             <point key="canvasLocation" x="2666" y="560"/>
         </scene>
+        <!--ProfileVC-->
+        <scene sceneID="dOU-T7-yHU">
+            <objects>
+                <viewController id="3DD-qm-gT2" customClass="ProfileVC" customModule="FabSocialNetwork" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="9si-p5-jy7"/>
+                        <viewControllerLayoutGuide type="bottom" id="3xL-ud-0Ez"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="jJ4-89-c0E">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" placeholder="Add username" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="LvR-eu-q5z" customClass="MaterialTextField" customModule="FabSocialNetwork" customModuleProvider="target">
+                                <rect key="frame" x="20" y="291" width="560" height="38"/>
+                                <color key="backgroundColor" red="0.83529411760000005" green="0.83529411760000005" blue="0.83529411760000005" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="38" id="P0Z-MD-UUT"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="NotoSans" family="Noto Sans" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="add-new-image-btn-1" translatesAutoresizingMaskIntoConstraints="NO" id="zjM-eM-VX1">
+                                <rect key="frame" x="213" y="88" width="175" height="175"/>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6fg-s9-Q4I">
+                                <rect key="frame" x="213" y="88" width="175" height="175"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="175" id="pPa-Rd-Eyz"/>
+                                    <constraint firstAttribute="width" constant="175" id="w1h-0S-5sM"/>
+                                </constraints>
+                                <state key="normal" image="add-new-image-btn-1"/>
+                                <connections>
+                                    <action selector="addImgBtnTapped:" destination="3DD-qm-gT2" eventType="touchUpInside" id="MBI-ty-QaJ"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xud-Hm-e9F" customClass="MaterialButton" customModule="FabSocialNetwork" customModuleProvider="target">
+                                <rect key="frame" x="20" y="345" width="560" height="38"/>
+                                <color key="backgroundColor" red="0.1176470588" green="0.53333333329999999" blue="0.8980392157" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="50" id="1dL-Lq-wP0"/>
+                                    <constraint firstAttribute="height" constant="38" id="2Il-00-dJ3"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="NotoSans-Bold" family="Noto Sans" pointSize="15"/>
+                                <state key="normal" title="Save">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="1dL-Lq-wP0"/>
+                                    </mask>
+                                </variation>
+                                <connections>
+                                    <action selector="makePost:" destination="9GL-1B-W9j" eventType="touchUpInside" id="0vQ-Il-9I0"/>
+                                    <action selector="saveBtnTapped:" destination="3DD-qm-gT2" eventType="touchUpInside" id="RBa-BJ-gTa"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="6fg-s9-Q4I" firstAttribute="width" secondItem="zjM-eM-VX1" secondAttribute="width" id="3qA-6I-onx"/>
+                            <constraint firstItem="xud-Hm-e9F" firstAttribute="trailing" secondItem="jJ4-89-c0E" secondAttribute="trailingMargin" id="GXs-JX-PP2"/>
+                            <constraint firstItem="LvR-eu-q5z" firstAttribute="top" secondItem="6fg-s9-Q4I" secondAttribute="bottom" constant="30" id="JC9-qw-vAH"/>
+                            <constraint firstItem="6fg-s9-Q4I" firstAttribute="centerX" secondItem="zjM-eM-VX1" secondAttribute="centerX" id="Ley-Q4-LHr"/>
+                            <constraint firstItem="xud-Hm-e9F" firstAttribute="top" secondItem="LvR-eu-q5z" secondAttribute="bottom" constant="15" id="Qpl-7a-p7c"/>
+                            <constraint firstItem="6fg-s9-Q4I" firstAttribute="centerY" secondItem="zjM-eM-VX1" secondAttribute="centerY" id="d6d-JX-JQU"/>
+                            <constraint firstItem="LvR-eu-q5z" firstAttribute="leading" secondItem="jJ4-89-c0E" secondAttribute="leadingMargin" id="eKg-0i-zbn"/>
+                            <constraint firstItem="6fg-s9-Q4I" firstAttribute="centerX" secondItem="jJ4-89-c0E" secondAttribute="centerX" id="fqZ-tR-cp4"/>
+                            <constraint firstItem="LvR-eu-q5z" firstAttribute="trailing" secondItem="jJ4-89-c0E" secondAttribute="trailingMargin" id="hmc-mP-fsM"/>
+                            <constraint firstItem="6fg-s9-Q4I" firstAttribute="height" secondItem="zjM-eM-VX1" secondAttribute="height" id="q1x-8F-IEx"/>
+                            <constraint firstItem="6fg-s9-Q4I" firstAttribute="top" secondItem="9si-p5-jy7" secondAttribute="bottom" constant="25" id="tKC-8H-RLS"/>
+                            <constraint firstItem="zjM-eM-VX1" firstAttribute="top" secondItem="9si-p5-jy7" secondAttribute="bottom" constant="25" id="xir-Vu-nI8"/>
+                            <constraint firstItem="xud-Hm-e9F" firstAttribute="leading" secondItem="jJ4-89-c0E" secondAttribute="leadingMargin" id="yjL-7h-waV"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="addImgBtn" destination="6fg-s9-Q4I" id="7Lt-ny-05v"/>
+                        <outlet property="imageSelector" destination="zjM-eM-VX1" id="scd-8R-X3u"/>
+                        <outlet property="usernameTextField" destination="LvR-eu-q5z" id="bFJ-Un-e9D"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="DhD-Vs-Hw4" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="3413" y="560"/>
+        </scene>
         <!--Navigation Controller-->
         <scene sceneID="i8l-2k-kCr">
             <objects>
@@ -425,7 +519,7 @@
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="I0D-Rm-96a">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <color key="barTintColor" red="0.95686274510000002" green="0.26274509800000001" blue="0.21176470589999999" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="barTintColor" red="1" green="0.32087678829999999" blue="0.39050799780000001" alpha="1" colorSpace="calibratedRGB"/>
                     </navigationBar>
                     <nil name="viewControllers"/>
                     <connections>
@@ -438,6 +532,7 @@
         </scene>
     </scenes>
     <resources>
+        <image name="add-new-image-btn-1" width="398" height="398"/>
         <image name="camera" width="50" height="50"/>
         <image name="code-icon-logo" width="318" height="281"/>
         <image name="fb-icon" width="65" height="65"/>
