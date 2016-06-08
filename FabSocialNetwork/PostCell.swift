@@ -24,14 +24,9 @@ class PostCell: UITableViewCell {
     var userRef: Firebase!
     
     private var _post: Post?
-    private var _user: User?
     
     var post: Post? {
         return _post
-    }
-    
-    var user: User? {
-        return _user
     }
     
     override func awakeFromNib() {
@@ -54,14 +49,34 @@ class PostCell: UITableViewCell {
     
     
     func configureCell(post: Post, img: UIImage?) {
+        
         self._post = post
         self.mainImg.image = nil
         self.descriptionText.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
-        var userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
+        self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
         
-        // Add like to current user
-        likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
+        self.likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
+        
+        
+        if post.imageUrl != nil {
+            
+            if img != nil {
+                self.mainImg.image = img
+            } else {
+                // Not in cache, download and add to cache
+                request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                    if err == nil {
+                        let img = UIImage(data: data!)!
+                        self.mainImg.image = img
+                        FeedVC.imageCache.setObject(img, forKey: self.post!.imageUrl!)
+                    }
+                })
+            }
+        } else {
+            self.mainImg.hidden = true
+        }
+        
         
         userRef.observeEventType(.Value, withBlock: { snapshot in
             print(snapshot.value)
@@ -93,25 +108,6 @@ class PostCell: UITableViewCell {
             }, withCancelBlock: { error in
                 print(error.description)
         })
-        
-        
-        if post.imageUrl != nil {
-            
-            if img != nil {
-                self.mainImg.image = img
-            } else {
-                // Not in cache, download and add to cache
-                request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
-                    if err == nil {
-                        let img = UIImage(data: data!)!
-                        self.mainImg.image = img
-                        FeedVC.imageCache.setObject(img, forKey: self.post!.imageUrl!)
-                    }
-                })
-            }
-        } else {
-            self.mainImg.hidden = true
-        }
         
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             

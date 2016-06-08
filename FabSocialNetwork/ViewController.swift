@@ -22,7 +22,7 @@ class ViewController: UIViewController {
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
-        // If already signed up
+        // If already signed up, login
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil {
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
         }
@@ -72,7 +72,7 @@ class ViewController: UIViewController {
                     print("User does not exist!")
                     // User does not exist, try to create an account
                     
-                    // Should not be zero, should be fixed
+                    // Should not be zero, error codes not working properly atm
                     if error.code != 0 {
                         
                         DataService.ds.REF_BASE.createUser(email, password: pwd, withValueCompletionBlock: { (error, result) in

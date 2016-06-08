@@ -14,7 +14,6 @@ class Post {
     private var _imageUrl: String?
     private var _profileUrl: String?
     private var _likes: Int!
-    private var _username: String!
     private var _postKey: String!
     private var _postRef: Firebase!
     
@@ -36,10 +35,6 @@ class Post {
         return _likes
     }
     
-    var username: String! {
-        return _username
-    }
-    
     var postKey: String {
         return _postKey
     }
@@ -49,12 +44,6 @@ class Post {
             return _userKey
         }
         return ""
-    }
-    
-    init(description: String, imageUrl: String?, username: String) {
-        self._postDescription = description
-        self._imageUrl = imageUrl
-        self._username = username
     }
     
     init(postKey: String, dictionary: Dictionary<String, AnyObject>) {

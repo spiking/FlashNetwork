@@ -12,13 +12,13 @@ import Firebase
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
-    
     @IBOutlet weak var addImgBtn: UIButton!
     @IBOutlet weak var imageSelector: UIImageView!
     @IBOutlet weak var usernameTextField: MaterialTextField!
+    
     var imagePicker: UIImagePickerController!
     var imageSelected = false
-    
+    var request: Request?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,8 +30,21 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         imageSelector.clipsToBounds = true
         
         addImgBtn.alpha = 1.0
+        self.title = "Profile"
+        loadProfileData()
+    }
+    
+    func loadProfileData() {
+        if let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String {
+            if let profileImg = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
+                imageSelector.image = profileImg
+                addImgBtn.alpha = 0.05
+            }
+        }
         
-        print("Loaded profile view!")
+        if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
+            usernameTextField.text = username
+        }
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
@@ -47,6 +60,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         let username = usernameTextField.text
         
         if imgUrl != nil && username != "" {
+            // Save profile data to Firebase
             let data : Dictionary<String, String> = ["imgUrl" : imgUrl!, "username" : username!]
             DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(username!)
             DataService.ds.REF_USER_CURRENT.childByAppendingPath("imgUrl").setValue(imgUrl)
@@ -54,13 +68,19 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             print("Add data to firebase")
             showAlert("Profile updated", msg: "Your profile has now been updated.")
             
-            //Global user data added (current session)
-            CURRENT_USER_LOCAL = User(username: username!, imageUrl: imgUrl!)
-
+            // Save profile data to locally
+            NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
+            NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
         }
         
         imageSelected = false
-        usernameTextField.text = ""
+    }
+    
+    func showAlert(title: String, msg: String) {
+        let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
+        let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
+        alert.addAction(action)
+        presentViewController(alert, animated: true, completion: nil)
     }
     
     @IBAction func addImgBtnTapped(sender: AnyObject) {
@@ -81,6 +101,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
                 let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
                 
+                // Upload profile image with ImageShack
                 Alamofire.upload(.POST, url, multipartFormData: { MultipartFormData in
                     
                     MultipartFormData.appendBodyPart(data: keyData, name: "key")
@@ -98,6 +119,17 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                                         if let imageLink = links["image_link"] as? String {
                                             print("LINK: \(imageLink)")
                                             self.addProfileDataToFirebase(imageLink)
+                                            
+                                            // Save profile image to local cache
+                                            self.request = Alamofire.request(.GET, imageLink).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                                                if err == nil {
+                                                    print("Add profile image to cache")
+                                                    let img = UIImage(data: data!)!
+                                                    FeedVC.imageCache.setObject(img, forKey: imageLink)
+                                                }
+                                            })
+                                            
+                                            
                                         }
                                         
                                     }
@@ -115,12 +147,5 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         } else {
             showAlert("Error", msg: "Please choose a profile picture and username.")
         }
-    }
-    
-    func showAlert(title: String, msg: String) {
-        let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
-        let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
-        alert.addAction(action)
-        presentViewController(alert, animated: true, completion: nil)
     }
 }

@@ -10,7 +10,7 @@ import UIKit
 import Firebase
 import Alamofire
 
-var CURRENT_USER_LOCAL = User(username: "Standard", imageUrl: "Standard")
+
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
@@ -32,7 +32,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         
-        tableView.estimatedRowHeight = 355
+        tableView.estimatedRowHeight = 400
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
         view.addGestureRecognizer(tap)
@@ -40,19 +40,19 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let nav = self.navigationController?.navigationBar
         nav?.tintColor = UIColor.whiteColor()
         nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
-        
         self.title = "Fab Network"
+        
+        initObservers()
+    }
+    
+    func initObservers() {
         
         // Observe changes in Firebase, update instantly (code in closure)
         DataService.ds.REF_POSTS.observeEventType(.Value, withBlock: { snapshot in
-            print(snapshot.value)
-            
             self.posts = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
                 for snap in snapshot {
-                    print("SNAP: \(snap)")
-                    
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
@@ -64,6 +64,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             self.tableView.reloadData()
         })
+
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -77,17 +78,18 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
-        let post = posts[indexPath.row]
-        
         if let cell = tableView.dequeueReusableCellWithIdentifier("PostCell") as? PostCell {
-            cell.request?.cancel() // Cancel request if scroll
             
+            // Cancel request if user scrolls
+            cell.request?.cancel()
+            let post = posts[indexPath.row]
             var img: UIImage?
             
+            // Load post image from local cache
             if let url = post.imageUrl {
                 img = FeedVC.imageCache.objectForKey(url) as? UIImage
             }
-            print(post.userKey)
+            
             cell.configureCell(post, img: img)
             return cell
             
@@ -99,7 +101,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         let post = posts[indexPath.row]
         
-        if post.imageUrl == nil {
+        if post.imageUrl == nil || post.imageUrl == "" {
             return 150
         } else {
             return tableView.estimatedRowHeight
@@ -126,13 +128,19 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
         presentViewController(imagePicker, animated: true, completion: nil)
-        
     }
     
     
     @IBAction func makePost(sender: AnyObject) {
         
         print("Post!")
+        
+        let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String
+        
+        if profileUrl == nil {
+            showAlert("No profile", msg: "Please add a profile image and username.")
+            return;
+        }
         
         if let txt = postField.text where txt != "" {
             
@@ -141,15 +149,16 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
                 
-                // Convert to JPG & compress 90 %
-                let imgData = UIImageJPEGRepresentation(img, 0.1)!
+                // Convert to JPG & compress 80 %
+                let imgData = UIImageJPEGRepresentation(img, 0.2)!
                 
                 // Convert Imageshack API key to data format
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
                 
-                // Convert Json to data format
+                // Convert JSON to data format
                 let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
                 
+                // Upload post image with ImageShack
                 Alamofire.upload(.POST, url, multipartFormData: { MultipartFormData in
                     
                     MultipartFormData.appendBodyPart(data: keyData, name: "key")
@@ -192,8 +201,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func postToFireBase(imgUrl: String?) {
         
-        let id = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
-        
         var post: Dictionary<String, AnyObject> = [
             "description": postField.text!,
             "likes": 0,
@@ -202,14 +209,17 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         if imgUrl != nil {
             post["imageUrl"] = imgUrl!
+        } else {
+            post["imageUrl"] = ""
         }
         
-        let profileUrl = CURRENT_USER_LOCAL.imageUrl
-
+        let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as! String
+        
         if profileUrl != "" {
             post["profileUrl"] = profileUrl
         }
         
+        // Add post to firebase
         let firebasePost = DataService.ds.REF_POSTS.childByAutoId()
         firebasePost.setValue(post)
         imageSelected = false
