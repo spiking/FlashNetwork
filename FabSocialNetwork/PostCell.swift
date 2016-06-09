@@ -18,6 +18,9 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var likesLbl: UILabel!
     @IBOutlet weak var likeImage: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
+    @IBOutlet weak var commentsBtn: UIButton!
+    
+    var commentsTapAction: ((UITableViewCell) -> Void)?
     
     var request: Request?
     var likeRef: Firebase!
@@ -32,18 +35,15 @@ class PostCell: UITableViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(PostCell.likeTapped(_:)))
-        tap.numberOfTapsRequired = 1
-        likeImage.addGestureRecognizer(tap)
+        let tapOnLike = UITapGestureRecognizer(target: self, action: #selector(PostCell.likeTapped(_:)))
+        tapOnLike.numberOfTapsRequired = 1
+        likeImage.addGestureRecognizer(tapOnLike)
         likeImage.userInteractionEnabled = true
-        
-        
     }
     
     override func drawRect(rect: CGRect) {
         profileImg.layer.cornerRadius = profileImg.frame.size.width / 2
         profileImg.clipsToBounds = true
-        
         mainImg.clipsToBounds = true
     }
     
@@ -55,12 +55,10 @@ class PostCell: UITableViewCell {
         self.descriptionText.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
         self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
-        
         self.likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
         
-        
+        // Main post image
         if post.imageUrl != nil {
-            
             if img != nil {
                 self.mainImg.image = img
             } else {
@@ -69,6 +67,7 @@ class PostCell: UITableViewCell {
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.mainImg.image = img
+                        print("Add to cache!")
                         FeedVC.imageCache.setObject(img, forKey: self.post!.imageUrl!)
                     }
                 })
@@ -77,7 +76,7 @@ class PostCell: UITableViewCell {
             self.mainImg.hidden = true
         }
         
-        
+        // Profile image
         userRef.observeEventType(.Value, withBlock: { snapshot in
             print(snapshot.value)
             
@@ -89,18 +88,22 @@ class PostCell: UITableViewCell {
             }
             
             if let profileUrl = snapshot.value["imgUrl"] as? String {
+                if let profImage = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
+                    self.profileImg.image = profImage
+                } else {
+                    // Not in cache, download and add to cache
+                    self.request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                        if err == nil {
+                            let img = UIImage(data: data!)!
+                            self.profileImg.image = img
+                            FeedVC.imageCache.setObject(img, forKey: profileUrl)
+                        }
+                    })
+
+                }
                 
-                print(profileUrl)
-                
-                // Not in cache, download and add to cache
-                self.request = Alamofire.request(.GET, post.profileUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
-                    if err == nil {
-                        let img = UIImage(data: data!)!
-                        self.profileImg.image = img
-                        FeedVC.imageCache.setObject(img, forKey: self.post!.profileUrl!)
-                    }
-                })
             } else {
+                print("No profile img")
                 self.profileImg.hidden = true
             }
             
@@ -109,8 +112,8 @@ class PostCell: UITableViewCell {
                 print(error.description)
         })
         
+        // Like observer
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
             // In snaphsot nil does not exist, instead you use NSNull
             if let doesNotExist = snapshot.value as? NSNull {
                 self.likeImage.image = UIImage(named: "heart-empty")
@@ -139,5 +142,14 @@ class PostCell: UITableViewCell {
             
             self.likesLbl.text = "\(self.post!.likes)"
         })
+    }
+    
+    @IBAction func commentsBtnTapped(sender: AnyObject) {
+        print("Comments tapped!")
+        commentsTapAction?(self)
+    }
+    
+    func mainImgTapped(sender: UITapGestureRecognizer) {
+        print("Images tapped!")
     }
 }

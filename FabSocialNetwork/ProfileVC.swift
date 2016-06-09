@@ -29,16 +29,30 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         imageSelector.layer.cornerRadius = imageSelector.frame.width / 2
         imageSelector.clipsToBounds = true
         
+        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
+        view.addGestureRecognizer(tap)
+        
         addImgBtn.alpha = 1.0
         self.title = "Profile"
         loadProfileData()
     }
     
     func loadProfileData() {
+        
         if let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String {
             if let profileImg = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
-                imageSelector.image = profileImg
-                addImgBtn.alpha = 0.05
+                self.imageSelector.image = profileImg
+                self.addImgBtn.alpha = 0.05
+            } else {
+                request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                    if err == nil {
+                        let img = UIImage(data: data!)!
+                        self.imageSelector.image = img
+                        self.addImgBtn.alpha = 0.05
+                        print("Add to cache!")
+                        FeedVC.imageCache.setObject(img, forKey: profileUrl)
+                    }
+                })
             }
         }
         
@@ -68,7 +82,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             print("Add data to firebase")
             showAlert("Profile updated", msg: "Your profile has now been updated.")
             
-            // Save profile data to locally
+            // Save profile data locally
             NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
             NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
         }
@@ -83,6 +97,10 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         presentViewController(alert, animated: true, completion: nil)
     }
     
+    func dismisskeyboard() {
+        view.endEditing(true)
+    }
+    
     @IBAction func addImgBtnTapped(sender: AnyObject) {
         presentViewController(imagePicker, animated: true, completion: nil)
         print("Add!")
@@ -91,13 +109,18 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     @IBAction func saveBtnTapped(sender: AnyObject) {
         print("Save")
         
+        if (NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String) != nil {
+            showAlert("Not supported!", msg: "At the moment the application does not support a change of profile picture or username.")
+            return;
+        }
+        
         if let username = usernameTextField.text where username != "" {
             if let img = imageSelector.image where imageSelected == true {
                 
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
                 
-                let imgData = UIImageJPEGRepresentation(img, 0.2)!
+                let imgData = UIImageJPEGRepresentation(img, 0.4)!
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
                 let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
                 
@@ -145,7 +168,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                 })
             }
         } else {
-            showAlert("Error", msg: "Please choose a profile picture and username.")
+            showAlert("Action not allowed!", msg: "Please choose a profile picture and username first!")
         }
     }
 }

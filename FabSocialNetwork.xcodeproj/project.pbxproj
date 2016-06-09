@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		6F2000CF1D09623F00E199B5 /* CommentsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2000CE1D09623F00E199B5 /* CommentsVC.swift */; };
+		6F2000D11D09711100E199B5 /* CommentCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2000D01D09711100E199B5 /* CommentCell.swift */; };
+		6F2000D31D099C0100E199B5 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2000D21D099C0100E199B5 /* Comment.swift */; };
 		6F8AAD661D01805400750F11 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F8AAD651D01805400750F11 /* AppDelegate.swift */; };
 		6F8AAD681D01805400750F11 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F8AAD671D01805400750F11 /* ViewController.swift */; };
 		6F8AAD6D1D01805400750F11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6F8AAD6C1D01805400750F11 /* Assets.xcassets */; };
@@ -32,6 +35,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6F2000CE1D09623F00E199B5 /* CommentsVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommentsVC.swift; sourceTree = "<group>"; };
+		6F2000D01D09711100E199B5 /* CommentCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CommentCell.swift; sourceTree = "<group>"; };
+		6F2000D21D099C0100E199B5 /* Comment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
 		6F8AAD621D01805400750F11 /* FabSocialNetwork.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FabSocialNetwork.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F8AAD651D01805400750F11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6F8AAD671D01805400750F11 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -156,6 +162,7 @@
 				6F8AAD911D01813200750F11 /* MaterialButton.swift */,
 				6F8AAD921D01813200750F11 /* MaterialTextField.swift */,
 				6FA4D02E1D0464770002EB33 /* PostCell.swift */,
+				6F2000D01D09711100E199B5 /* CommentCell.swift */,
 			);
 			name = View;
 			sourceTree = "<group>";
@@ -166,6 +173,7 @@
 				6F8AAD671D01805400750F11 /* ViewController.swift */,
 				6FA4D02C1D0463EB0002EB33 /* FeedVC.swift */,
 				6FA4D0331D06C9170002EB33 /* ProfileVC.swift */,
+				6F2000CE1D09623F00E199B5 /* CommentsVC.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -174,6 +182,7 @@
 			isa = PBXGroup;
 			children = (
 				6FA4D0371D06D53D0002EB33 /* Post.swift */,
+				6F2000D21D099C0100E199B5 /* Comment.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -322,8 +331,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F2000D11D09711100E199B5 /* CommentCell.swift in Sources */,
 				6F8AAD681D01805400750F11 /* ViewController.swift in Sources */,
 				6F8AAD661D01805400750F11 /* AppDelegate.swift in Sources */,
+				6F2000D31D099C0100E199B5 /* Comment.swift in Sources */,
+				6F2000CF1D09623F00E199B5 /* CommentsVC.swift in Sources */,
 				6F8AAD941D01813200750F11 /* MaterialButton.swift in Sources */,
 				6FA4D0381D06D53D0002EB33 /* Post.swift in Sources */,
 				6F8AAD931D01813200750F11 /* MaterialView.swift in Sources */,

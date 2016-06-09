@@ -12,11 +12,9 @@ import Firebase
 class Post {
     private var _postDescription: String!
     private var _imageUrl: String?
-    private var _profileUrl: String?
     private var _likes: Int!
     private var _postKey: String!
     private var _postRef: Firebase!
-    
     private var _userKey: String!
     
     var postDescription: String! {
@@ -25,10 +23,6 @@ class Post {
     
     var imageUrl: String? {
         return _imageUrl
-    }
-    
-    var profileUrl: String? {
-        return _profileUrl
     }
     
     var likes: Int! {
@@ -55,10 +49,6 @@ class Post {
         
         if let imgUrl = dictionary["imageUrl"] as? String {
             self._imageUrl = imgUrl
-        }
-        
-        if let profileUrl = dictionary["profileUrl"] as? String {
-            self._profileUrl = profileUrl
         }
         
         if let desc = dictionary["description"] as? String {

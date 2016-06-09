@@ -26,6 +26,9 @@ class ViewController: UIViewController {
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil {
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
         }
+        
+        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
+        view.addGestureRecognizer(tap)
     }
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
@@ -118,6 +121,10 @@ class ViewController: UIViewController {
         let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
         alert.addAction(action)
         presentViewController(alert, animated: true, completion: nil)
+    }
+    
+    func dismisskeyboard() {
+        view.endEditing(true)
     }
     
 }

@@ -38,11 +38,23 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         view.addGestureRecognizer(tap)
         
         let nav = self.navigationController?.navigationBar
-        nav?.tintColor = UIColor.whiteColor()
-        nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+        nav?.tintColor = UIColor.darkGrayColor()
+        nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.darkGrayColor()]
         self.title = "Fab Network"
         
+        // Profile btn in navigation bar
+        let button: UIButton = UIButton(type: UIButtonType.Custom)
+        button.setImage(UIImage(named: "profile-1.png"), forState: UIControlState.Normal)
+        button.addTarget(self, action: "profileBtnPressed", forControlEvents: UIControlEvents.TouchUpInside)
+        button.frame = CGRectMake(0, 0, 40, 40)
+        let barButton = UIBarButtonItem(customView: button)
+        self.navigationItem.rightBarButtonItem = barButton
+        
         initObservers()
+    }
+    
+    func profileBtnPressed() {
+        self.performSegueWithIdentifier("ProfileVC", sender: nil)
     }
     
     func initObservers() {
@@ -91,6 +103,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
             cell.configureCell(post, img: img)
+            
+            // Push comment segue which will be executed when tapped
+            cell.commentsTapAction = { (cell) in
+                self.performSegueWithIdentifier("CommentsVC", sender: post)
+            }
+            
             return cell
             
         } else {
@@ -102,12 +120,23 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let post = posts[indexPath.row]
         
         if post.imageUrl == nil || post.imageUrl == "" {
-            return 150
+            return 200
         } else {
             return tableView.estimatedRowHeight
         }
     }
     
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        if segue.identifier == "CommentsVC" {
+            if let commentsVC = segue.destinationViewController as? CommentsVC {
+                if let post = sender as? Post {
+                    commentsVC.post = post
+                }
+            }
+        }
+    }
+
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
         imageSelector.image = image
@@ -149,8 +178,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
                 
-                // Convert to JPG & compress 80 %
-                let imgData = UIImageJPEGRepresentation(img, 0.2)!
+                // Convert to JPG & compress 60 %
+                let imgData = UIImageJPEGRepresentation(img, 0.4)!
                 
                 // Convert Imageshack API key to data format
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
@@ -211,12 +240,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             post["imageUrl"] = imgUrl!
         } else {
             post["imageUrl"] = ""
-        }
-        
-        let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as! String
-        
-        if profileUrl != "" {
-            post["profileUrl"] = profileUrl
         }
         
         // Add post to firebase
