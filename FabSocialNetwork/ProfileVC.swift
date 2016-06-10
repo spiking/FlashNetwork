@@ -9,6 +9,7 @@
 import UIKit
 import Alamofire
 import Firebase
+import SCLAlertView
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
@@ -80,7 +81,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             DataService.ds.REF_USER_CURRENT.childByAppendingPath("imgUrl").setValue(imgUrl)
             
             print("Add data to firebase")
-            showAlert("Profile updated", msg: "Your profile has now been updated.")
+            successAlert("Success", subTitle: "Your profile has successfully been updated.")
             
             // Save profile data locally
             NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
@@ -88,13 +89,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         imageSelected = false
-    }
-    
-    func showAlert(title: String, msg: String) {
-        let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
-        let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
-        alert.addAction(action)
-        presentViewController(alert, animated: true, completion: nil)
     }
     
     func dismisskeyboard() {
@@ -110,7 +104,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         print("Save")
         
         if (NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String) != nil {
-            showAlert("Not supported!", msg: "At the moment the application does not support a change of profile picture or username.")
+            errorAlert("Not supported", subTitle: "At the moment the application does not support a change of profile picture or username.")
             return;
         }
         
@@ -168,7 +162,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                 })
             }
         } else {
-            showAlert("Action not allowed!", msg: "Please choose a profile picture and username first!")
+            errorAlert("Action not allowed", subTitle: "Please choose a profile picture and username.")
         }
     }
 }

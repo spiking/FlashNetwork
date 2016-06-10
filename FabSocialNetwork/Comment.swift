@@ -9,6 +9,7 @@
 import Foundation
 import Firebase
 
+
 class Comment {
     private var _commentText: String!
     private var _postKey: String!

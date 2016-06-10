@@ -19,6 +19,11 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>SCLAlertView.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
@@ -27,12 +32,17 @@
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>B7AC9326D819482593FE118E915409D7</key>
+		<key>8920ACFB2667F65B4D4B2DBBC7E0EDCD</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>D76750E1F33588B3A6CB04CC59E0A9AE</key>
+		<key>9F125AAF034F22248971248EA7CF3DFD</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>B7AC9326D819482593FE118E915409D7</key>
 		<dict>
 			<key>primary</key>
 			<true/>

@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import Alamofire
+import SCLAlertView
 
 
 
@@ -33,22 +34,26 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker.delegate = self
         
         tableView.estimatedRowHeight = 400
-        
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
         view.addGestureRecognizer(tap)
         
         let nav = self.navigationController?.navigationBar
-        nav?.tintColor = UIColor.darkGrayColor()
-        nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.darkGrayColor()]
+        nav?.titleTextAttributes =  [NSFontAttributeName: UIFont(name: "Avenir", size: 20)!]
+        nav?.tintColor = UIColor.lightTextColor()
+        nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.lightTextColor()]
         self.title = "Fab Network"
         
         // Profile btn in navigation bar
         let button: UIButton = UIButton(type: UIButtonType.Custom)
-        button.setImage(UIImage(named: "profile-1.png"), forState: UIControlState.Normal)
+        button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
         button.addTarget(self, action: "profileBtnPressed", forControlEvents: UIControlEvents.TouchUpInside)
         button.frame = CGRectMake(0, 0, 40, 40)
         let barButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = barButton
+        
+        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil {
+            successAlert("Success", subTitle: "A new account has successfully been created!")
+        }
         
         initObservers()
     }
@@ -143,14 +148,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imageSelected = true
     }
     
-    
-    func showAlert(title: String, msg: String) {
-        let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
-        let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
-        alert.addAction(action)
-        presentViewController(alert, animated: true, completion: nil)
-    }
-    
     func dismisskeyboard() {
         view.endEditing(true)
     }
@@ -162,12 +159,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     @IBAction func makePost(sender: AnyObject) {
         
+//      waitAlert("Post uploading", subTitle: "Your post is being uploaded.")
         print("Post!")
+        dismisskeyboard()
         
         let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String
         
         if profileUrl == nil {
-            showAlert("No profile", msg: "Please add a profile image and username.")
+            errorAlert("Not supported", subTitle: "Please add a profile picture and username.")
             return;
         }
         
@@ -224,7 +223,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
         } else {
-            showAlert("No description", msg: "Please add a description.")
+            errorAlert("No description", subTitle: "Please add a description.")
         }
     }
     
@@ -250,6 +249,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         // Reset
         postField.text = ""
         imageSelector.image = UIImage(named: "camera")
+        
+        successAlert("Post uploaded", subTitle: "Operation successfully completed.")
+        print("Succcess!")
         
         tableView.reloadData()
     }

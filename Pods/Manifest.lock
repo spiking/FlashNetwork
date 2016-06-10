@@ -1,15 +1,18 @@
 PODS:
   - Alamofire (3.3.1)
   - Firebase (2.5.1)
+  - SCLAlertView (0.5.5)
 
 DEPENDENCIES:
   - Alamofire (~> 3.3)
   - Firebase (>= 2.3.3)
+  - SCLAlertView
 
 SPEC CHECKSUMS:
   Alamofire: 369bc67b6f5ac33ded3648d7bd21c5bfb91c2ecc
   Firebase: 3565ea88b830f28f2c77ecc524622bc71a20d085
+  SCLAlertView: 393f6753ac73c2ede54e9a42cc220a48cc7ee3cf
 
-PODFILE CHECKSUM: 8f32a0133efe7c0633e86a4c78922703e3f343fc
+PODFILE CHECKSUM: 40419c705fc0a2c7407a492ce8be213766f02e03
 
 COCOAPODS: 1.0.0

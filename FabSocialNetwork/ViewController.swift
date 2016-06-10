@@ -9,6 +9,7 @@
 import UIKit
 import FBSDKCoreKit
 import FBSDKLoginKit
+import SCLAlertView
 
 class ViewController: UIViewController {
     
@@ -82,7 +83,7 @@ class ViewController: UIViewController {
                             
                             // Try to creat account
                             if error != nil {
-                                self.showAlert("Could not create account!", msg: "Problem occured when creating an account. Please try again.")
+                                errorAlert("Could not create account!", subTitle: "Problem occured when creating an account. Please try again or come back later.")
                             } else {
                                 // Save account locally
                                 NSUserDefaults.standardUserDefaults().setValue(result[KEY_UID], forKey: KEY_UID)
@@ -91,7 +92,7 @@ class ViewController: UIViewController {
                                 DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { err, authData in
                                     
                                     if err != nil {
-                                        self.showAlert("Could not authorize account!", msg: "Please try again.")
+                                        errorAlert("Could not authorize account!", subTitle: "Please try again.")
                                     } else {
                                         // Create firebase user
                                         let user = ["provider": authData.provider!]
@@ -104,7 +105,7 @@ class ViewController: UIViewController {
                             }
                         })
                     } else {
-                        self.showAlert("Incorrect credentials!", msg: "Please check email and password.")
+                        errorAlert("Incorrect credentials", subTitle: "Please check your email and password.")
                     }
                 } else {
                     self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
@@ -112,15 +113,8 @@ class ViewController: UIViewController {
             })
             
         } else {
-            showAlert("Email and password required.", msg: "You must enter an email and a password.")
+            errorAlert("Invalid input", subTitle: "You must enter an email and a password.")
         }
-    }
-    
-    func showAlert(title: String, msg: String) {
-        let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
-        let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
-        alert.addAction(action)
-        presentViewController(alert, animated: true, completion: nil)
     }
     
     func dismisskeyboard() {

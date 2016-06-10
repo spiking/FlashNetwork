@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import SCLAlertView
 
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
     
@@ -106,7 +107,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     func textFieldDidBeginEditing(textField: UITextField) {
         
         if NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as! String! == nil {
-            showAlert("Action not allowed!", msg: "Please choose a profile picture and username first!")
+            errorAlert("Action not allowed!", subTitle: "Please choose a profile picture and username.")
             commentTextField.text = ""
             commentTextField.resignFirstResponder()
         }
@@ -140,13 +141,4 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             self.view.frame.origin.y += keyboardSize.height
         }
     }
-    
-    func showAlert(title: String, msg: String) {
-        let alert = UIAlertController(title: title, message: msg, preferredStyle: .Alert)
-        let action = UIAlertAction(title: "Ok", style: .Default, handler: nil)
-        alert.addAction(action)
-        presentViewController(alert, animated: true, completion: nil)
-    }
-    
-    
 }
