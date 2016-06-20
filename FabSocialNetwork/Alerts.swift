@@ -8,6 +8,7 @@
 
 import Foundation
 import SCLAlertView
+import EZLoadingActivity
 
 // Global alert functions
 
@@ -48,4 +49,24 @@ func errorAlert(title: String, subTitle: String) {
         colorStyle: 0xCC2214,
         colorTextButton: 0xFFFFFF
     )
+}
+
+func infoAlert(title: String, subTitle: String) {
+    
+    SCLAlertView().showTitle(
+        title, // Title of view
+        subTitle: subTitle, // String of view
+        duration: 3.0, // Duration to show before closing automatically, default: 0.0
+        completeText: "Ok", // Optional button value, default: ""
+        style: .Info, // Styles - see below.
+        colorStyle: 0xED8500,
+        colorTextButton: 0xFFFFFF
+    )
+}
+
+func alertViewSetup() {
+    EZLoadingActivity.Settings.BackgroundColor = UIColor.blackColor()
+    EZLoadingActivity.Settings.TextColor = UIColor.whiteColor()
+    EZLoadingActivity.Settings.FontName = "Avenir"
+    EZLoadingActivity.Settings.ActivityColor = UIColor.whiteColor()
 }

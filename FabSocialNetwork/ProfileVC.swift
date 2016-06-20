@@ -10,6 +10,7 @@ import UIKit
 import Alamofire
 import Firebase
 import SCLAlertView
+import EZLoadingActivity
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
@@ -26,15 +27,18 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         imagePicker = UIImagePickerController()
         imagePicker.delegate = self
+        imagePicker.navigationBar.tintColor = UIColor.blackColor()
         
         imageSelector.layer.cornerRadius = imageSelector.frame.width / 2
         imageSelector.clipsToBounds = true
         
-        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
+        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ProfileVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
         addImgBtn.alpha = 1.0
-        self.title = "Profile"
+        
+        self.title = "PROFILE"
+        
         loadProfileData()
     }
     
@@ -67,27 +71,43 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         imageSelector.image = image
         addImgBtn.alpha = 0.05
         imageSelected = true
-        print("Selected image!")
+        print("Selected an image!")
     }
     
-    func addProfileDataToFirebase(imgUrl: String?) {
-        
-        let username = usernameTextField.text
-        
-        if imgUrl != nil && username != "" {
-            // Save profile data to Firebase
-            let data : Dictionary<String, String> = ["imgUrl" : imgUrl!, "username" : username!]
-            DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(username!)
-            DataService.ds.REF_USER_CURRENT.childByAppendingPath("imgUrl").setValue(imgUrl)
-            
-            print("Add data to firebase")
-            successAlert("Success", subTitle: "Your profile has successfully been updated.")
-            
-            // Save profile data locally
-            NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
-            NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
+    func changeOfUsername() -> Bool {
+        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameTextField.text && usernameTextField.text != ""
+    }
+    
+    func changeOfProfileImage() -> Bool {
+        if let _ = imageSelector.image where imageSelected == true {
+            return true
+        } else {
+            return false
         }
-        
+    }
+    
+    func addNewUsernameToFirebase(newUsername: String!) {
+        // Update firebase and local data
+        print("Inside function")
+        if newUsername != "" {
+            
+            DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername!)
+            NSUserDefaults.standardUserDefaults().setValue(newUsername, forKey: "username")
+            
+            // Prevent double updates
+            if !imageSelected {
+                print("Success!")
+                EZLoadingActivity.hide(success: true, animated: true)
+            }
+        }
+    }
+    
+    func addNewProfileImageToFirebase(imgUrl: String?) {
+        if imgUrl != nil {
+            DataService.ds.REF_USER_CURRENT.childByAppendingPath("imgUrl").setValue(imgUrl)
+            NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
+            EZLoadingActivity.hide(success: true, animated: true)
+        }
         imageSelected = false
     }
     
@@ -95,26 +115,36 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         view.endEditing(true)
     }
     
-    @IBAction func addImgBtnTapped(sender: AnyObject) {
-        presentViewController(imagePicker, animated: true, completion: nil)
-        print("Add!")
+    func userHasUsername() -> Bool {
+        return NSUserDefaults.standardUserDefaults().valueForKey("username") != nil
     }
     
+    func userHasProfileImg() -> Bool {
+        return NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") != nil
+    }
+    
+    @IBAction func addImgBtnTapped(sender: AnyObject) {
+        presentViewController(imagePicker, animated: true, completion: nil)
+    }
+
     @IBAction func saveBtnTapped(sender: AnyObject) {
-        print("Save")
+        dismisskeyboard()
         
-        if (NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String) != nil {
-            errorAlert("Not supported", subTitle: "At the moment the application does not support a change of profile picture or username.")
-            return;
+        if !changeOfUsername() && !changeOfProfileImage() {
+            infoAlert("Unable to update", subTitle: "\nPlease update your profile image or username before saving.")
+            return
         }
         
-        if let username = usernameTextField.text where username != "" {
+        EZLoadingActivity.show("Updating...", disableUI: false)
+        
+        if !userHasProfileImg() || changeOfProfileImage() {
+            
             if let img = imageSelector.image where imageSelected == true {
                 
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
                 
-                let imgData = UIImageJPEGRepresentation(img, 0.4)!
+                let imgData = UIImageJPEGRepresentation(img, 0.3)!
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
                 let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
                 
@@ -135,7 +165,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                                     if let links = info["links"] as? Dictionary<String,AnyObject> {
                                         if let imageLink = links["image_link"] as? String {
                                             print("LINK: \(imageLink)")
-                                            self.addProfileDataToFirebase(imageLink)
+                                            self.addNewProfileImageToFirebase(imageLink)
                                             
                                             // Save profile image to local cache
                                             self.request = Alamofire.request(.GET, imageLink).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
@@ -143,6 +173,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                                                     print("Add profile image to cache")
                                                     let img = UIImage(data: data!)!
                                                     FeedVC.imageCache.setObject(img, forKey: imageLink)
+                                                    
                                                 }
                                             })
                                             
@@ -161,8 +192,12 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                         
                 })
             }
-        } else {
-            errorAlert("Action not allowed", subTitle: "Please choose a profile picture and username.")
+        }
+        
+        if !userHasUsername() || changeOfUsername() {
+            print("Update firebase and local data for new username")
+            let newUsername = usernameTextField.text
+            addNewUsernameToFirebase(newUsername)
         }
     }
 }

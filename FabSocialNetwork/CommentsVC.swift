@@ -10,19 +10,28 @@ import UIKit
 import Firebase
 import SCLAlertView
 
-class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
+class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate {
+    
+    @IBOutlet weak var commentView: UIView!
+    @IBOutlet weak var commentViewHeight: NSLayoutConstraint!
     
     var post: Post!
     var comments = [Comment]()
+    var placeHolderText = "Leave a comment"
     
-    @IBOutlet weak var commentTextField: UITextField!
-    
+    @IBOutlet weak var stackViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var commentTextView: UITextView!
     @IBOutlet weak var tableView: UITableView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         tableView.delegate = self
         tableView.dataSource = self
+        
+        self.tableView.estimatedRowHeight = 80;
+        self.tableView.rowHeight = UITableViewAutomaticDimension;
         
         self.edgesForExtendedLayout = UIRectEdge.None
         
@@ -33,10 +42,24 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
         
-        commentTextField.delegate = self
+        commentTextView.delegate = self
+        
         print("Loaded post with key: \(post.postKey)")
         
+        self.title = "COMMENTS"
+        
         initObservers()
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(true)
+        
+        if commentTextView.text == "" {
+            commentTextView.text = placeHolderText
+            commentTextView.textColor = UIColor.lightGrayColor()
+        } else {
+            commentTextView.textColor = UIColor.blackColor()
+        }
     }
     
     func initObservers() {
@@ -62,8 +85,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
     }
     
-    override func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(true)
+    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+        return UITableViewAutomaticDimension
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -72,10 +95,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return comments.count
-    }
-    
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        print("Selected row")
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -94,23 +113,31 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
     }
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        if textField == commentTextField && commentTextField.text != "" {
-            commentTextField.resignFirstResponder()
-            addComment(commentTextField.text!)
-            commentTextField.text = ""
-            return false
+    func textViewShouldBeginEditing(textView: UITextView) -> Bool {
+        commentTextView.textColor = UIColor.blackColor()
+        
+        if commentTextView.text == placeHolderText {
+            commentTextView.text = ""
         }
+        
         return true
     }
     
-    func textFieldDidBeginEditing(textField: UITextField) {
+    
+    func textViewDidEndEditing(textView: UITextView) {
         
-        if NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as! String! == nil {
-            errorAlert("Action not allowed!", subTitle: "Please choose a profile picture and username.")
-            commentTextField.text = ""
-            commentTextField.resignFirstResponder()
+        if commentTextView.text == "" {
+            commentTextView.text = placeHolderText
+            commentTextView.textColor = UIColor.lightGrayColor()
         }
+        
+        view.removeConstraint(commentViewHeight)
+    }
+    
+    func textViewDidBeginEditing(textView: UITextView) {
+        commentViewHeight = NSLayoutConstraint(item: commentView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 100)
+        view.addConstraint(commentViewHeight)
+        
     }
     
     func addComment(comment: String!) {
@@ -120,6 +147,21 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         let comment : Dictionary<String, String> = ["user" : currentUserKey!, "post": currentPostKey, "comment" : comment!]
         
         DataService.ds.REF_COMMENTS.childByAutoId().setValue(comment)
+    }
+    
+    @IBAction func commentBtnTapped(sender: AnyObject) {
+        
+        print("Post!")
+        
+        if commentTextView.text != "" {
+            dismissKeyboard()
+            addComment(commentTextView.text)
+            commentTextView.text = placeHolderText
+            commentTextView.textColor = UIColor.lightGrayColor()
+            print("Post comment!")
+        } else {
+            print(commentTextView.text)
+        }
     }
     
     // Dismiss keyboard on tap gesture
@@ -132,7 +174,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
             self.view.frame.origin.y -= keyboardSize.height
         }
-        
     }
     
     // Move view down

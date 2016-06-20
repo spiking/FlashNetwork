@@ -1,18 +1,27 @@
 PODS:
   - Alamofire (3.3.1)
+  - EZLoadingActivity (0.8)
   - Firebase (2.5.1)
+  - ImagePicker (1.2)
+  - MBProgressHUD (0.9.2)
   - SCLAlertView (0.5.5)
 
 DEPENDENCIES:
   - Alamofire (~> 3.3)
+  - EZLoadingActivity
   - Firebase (>= 2.3.3)
+  - ImagePicker
+  - MBProgressHUD (~> 0.9.2)
   - SCLAlertView
 
 SPEC CHECKSUMS:
   Alamofire: 369bc67b6f5ac33ded3648d7bd21c5bfb91c2ecc
+  EZLoadingActivity: 6fd75a05765a4085f4b6fef6f62edf9f144b3139
   Firebase: 3565ea88b830f28f2c77ecc524622bc71a20d085
+  ImagePicker: 85f14ed6872f46c08d210077b5540a890a6cd151
+  MBProgressHUD: 1569cf7ace17a8bac47aabfbb8580a49690386d1
   SCLAlertView: 393f6753ac73c2ede54e9a42cc220a48cc7ee3cf
 
-PODFILE CHECKSUM: 40419c705fc0a2c7407a492ce8be213766f02e03
+PODFILE CHECKSUM: a5712d8a63462b0d56328de0b8c4af10e59cd27b
 
 COCOAPODS: 1.0.0

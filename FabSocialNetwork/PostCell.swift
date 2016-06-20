@@ -9,22 +9,25 @@
 import UIKit
 import Alamofire
 import Firebase
+import MBProgressHUD
 
 class PostCell: UITableViewCell {
     
     @IBOutlet weak var profileImg: UIImageView!
     @IBOutlet weak var mainImg: UIImageView!
-    @IBOutlet weak var descriptionText: UITextView!
+    @IBOutlet weak var descriptionLbl: UILabel!
     @IBOutlet weak var likesLbl: UILabel!
+    @IBOutlet weak var likesLblText: UILabel!
     @IBOutlet weak var likeImage: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
     @IBOutlet weak var commentsBtn: UIButton!
     
     var commentsTapAction: ((UITableViewCell) -> Void)?
-    
     var request: Request?
     var likeRef: Firebase!
     var userRef: Firebase!
+    var userLikes: Firebase!
+    var userLikedPost = false
     
     private var _post: Post?
     
@@ -39,6 +42,12 @@ class PostCell: UITableViewCell {
         tapOnLike.numberOfTapsRequired = 1
         likeImage.addGestureRecognizer(tapOnLike)
         likeImage.userInteractionEnabled = true
+        
+        
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(PostCell.mainImgTapped(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        mainImg.addGestureRecognizer(doubleTap)
+        
     }
     
     override func drawRect(rect: CGRect) {
@@ -52,10 +61,18 @@ class PostCell: UITableViewCell {
         
         self._post = post
         self.mainImg.image = nil
-        self.descriptionText.text = post.postDescription
+        self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
+        
+        if post.likes == 1 {
+            self.likesLblText.text = "Like"
+        } else {
+            self.likesLblText.text = "Likes"
+        }
+        
         self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
         self.likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
+        self.userLikes = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes")
         
         // Main post image
         if post.imageUrl != nil {
@@ -112,13 +129,24 @@ class PostCell: UITableViewCell {
                 print(error.description)
         })
         
+        // If current post exist in current users likes, set heart to full (needed for reinstall)
+        userLikes.observeEventType(.Value, withBlock: { snapshot in
+    
+            if snapshot.hasChild(post.postKey) {
+                print("Current user has liked this post!")
+                self.likeImage.image = UIImage(named: "heart-full")
+            }
+        })
+        
         // Like observer
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             // In snaphsot nil does not exist, instead you use NSNull
-            if let doesNotExist = snapshot.value as? NSNull {
+            if (snapshot.value as? NSNull) != nil {
                 self.likeImage.image = UIImage(named: "heart-empty")
+                self.userLikedPost = false
             } else {
                 self.likeImage.image = UIImage(named: "heart-full")
+                self.userLikedPost = true
             }
         })
         
@@ -129,20 +157,22 @@ class PostCell: UITableViewCell {
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             //If I haven't like this, then like it, otherwise un-like it
-            if let doesNotExist = snapshot.value as? NSNull {
+            if (snapshot.value as? NSNull) != nil {
                 self.likeRef.setValue(true)
                 self.likeImage.image = UIImage(named: "heart-full")
                 self.post!.adjustLikes(true)
-                
+                self.userLikedPost = true
             } else {
                 self.likeRef.removeValue()
                 self.likeImage.image = UIImage(named: "heart-empty")
                 self.post!.adjustLikes(false)
+                self.userLikedPost = false
             }
             
             self.likesLbl.text = "\(self.post!.likes)"
         })
     }
+    
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
         print("Comments tapped!")
@@ -150,6 +180,22 @@ class PostCell: UITableViewCell {
     }
     
     func mainImgTapped(sender: UITapGestureRecognizer) {
-        print("Images tapped!")
+        
+        if !userLikedPost {
+            let loadingNotification = MBProgressHUD.showHUDAddedTo(self.mainImg, animated: true)
+            
+            loadingNotification.frame = CGRectMake(0, 0, 50, 50)
+            
+            loadingNotification.mode = MBProgressHUDMode.CustomView
+            let image = UIImage(named: "heart-full_50")
+            loadingNotification.customView = UIImageView(image: image)
+            loadingNotification.hide(true, afterDelay: 1.5)
+            
+            print("Images tapped!")
+            likeTapped(sender)
+        } else {
+            print("User already liked this post!")
+        }
+        
     }
 }

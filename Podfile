@@ -7,4 +7,7 @@ target 'FabSocialNetwork' do
   pod 'Firebase', '>= 2.3.3'
   pod 'Alamofire', '~> 3.3'
   pod 'SCLAlertView'
+  pod 'ImagePicker'
+  pod 'EZLoadingActivity'
+  pod 'MBProgressHUD', '~> 0.9.2'
 end

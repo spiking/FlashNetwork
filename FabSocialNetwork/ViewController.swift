@@ -10,6 +10,8 @@ import UIKit
 import FBSDKCoreKit
 import FBSDKLoginKit
 import SCLAlertView
+import Firebase
+import EZLoadingActivity
 
 class ViewController: UIViewController {
     
@@ -18,6 +20,7 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        alertViewSetup()
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -28,7 +31,7 @@ class ViewController: UIViewController {
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
         }
         
-        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
+        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
     }
     
@@ -39,6 +42,8 @@ class ViewController: UIViewController {
             
             if facebookError != nil {
                 print("Facebook login failed. Error \(facebookError)")
+            } else if facebookResult.isCancelled {
+                print("Facebook login was cancelled.")
             } else {
                 let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
                 print("Successfully logged in with facebook. \(accessToken)")
@@ -50,13 +55,23 @@ class ViewController: UIViewController {
                         print("Login failed! \(error)")
                     } else {
                         print("Logged In! \(authData)")
-                        
-                        // Create Firebase user
-                        let user = ["provider": authData.provider!]
-                        DataService.ds.createFirebaseUser(authData.uid, user: user)
-                        
-                        NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                        self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                        // Check if id already exist in firebase, if so -> dont re-create
+                        DataService.ds.REF_USERS.observeEventType(.Value, withBlock: { snapshot in
+                          
+                            print("Check user!")
+                            
+                            if snapshot.hasChild(authData.uid) {
+                                print("User already exists, login!")
+                                NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                            } else {
+                                print("User does not exist, create a new!")
+                                let user = ["provider": authData.provider!]
+                                DataService.ds.createFirebaseUser(authData.uid, user: user)
+                                NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                            }
+                        })
                     }
                     
                 })
@@ -71,19 +86,23 @@ class ViewController: UIViewController {
             
             DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { (error, authData) in
                 
+                // Check if account exist
                 if error != nil {
                     print(error)
-                    print("User does not exist!")
-                    // User does not exist, try to create an account
                     
-                    // Should not be zero, error codes not working properly atm
-                    if error.code != 0 {
-                        
+                    if error.code == STATUS_ACCOUNT_FIREBASE_AUTH {
+                        print("Error code FIREBASE_AUTH")
+                    }
+                    
+                    if error.code == STATUS_ACCOUNT_NONEXIST {
+                        // User does not exist, try to create an account
                         DataService.ds.REF_BASE.createUser(email, password: pwd, withValueCompletionBlock: { (error, result) in
+                            
+                            EZLoadingActivity.show("Creating account...", disableUI: false)
                             
                             // Try to creat account
                             if error != nil {
-                                errorAlert("Could not create account!", subTitle: "Problem occured when creating an account. Please try again or come back later.")
+                                errorAlert("Could not create account", subTitle: "\nProblem occured when creating an account. Please try again or come back later.")
                             } else {
                                 // Save account locally
                                 NSUserDefaults.standardUserDefaults().setValue(result[KEY_UID], forKey: KEY_UID)
@@ -92,34 +111,43 @@ class ViewController: UIViewController {
                                 DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { err, authData in
                                     
                                     if err != nil {
-                                        errorAlert("Could not authorize account!", subTitle: "Please try again.")
+                                        errorAlert("Could not authorize account", subTitle: "\nPlease try again or come back later.")
                                     } else {
                                         // Create firebase user
                                         let user = ["provider": authData.provider!]
                                         DataService.ds.createFirebaseUser(authData.uid, user: user)
                                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
-                                        
-                                    //  self.showAlert("New account created!", msg: "A new account has succesfully been created.")
                                     }
                                 })
                             }
                         })
                     } else {
-                        errorAlert("Incorrect credentials", subTitle: "Please check your email and password.")
+                        errorAlert("Incorrect credentials", subTitle: "\nPlease check your email and password.")
                     }
                 } else {
-                    self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                    
+                    EZLoadingActivity.show("Logging in...", disableUI: false)
+                    
+                    // If app has been reinstalled, add NSUser data to account
+                    
+                    if NSUserDefaults.standardUserDefaults().valueForKey("username") != nil {
+                        self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                    } else {
+                         print("Need to add NSUser data since app has been uninstalled")
+                         NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                    }
                 }
             })
             
         } else {
-            errorAlert("Invalid input", subTitle: "You must enter an email and a password.")
+            errorAlert("Invalid input", subTitle: "\nYou must enter an email and a password.")
         }
     }
     
     func dismisskeyboard() {
         view.endEditing(true)
     }
-    
+
 }
 

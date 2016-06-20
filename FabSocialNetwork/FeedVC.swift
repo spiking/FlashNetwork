@@ -10,8 +10,8 @@ import UIKit
 import Firebase
 import Alamofire
 import SCLAlertView
-
-
+import MobileCoreServices
+import EZLoadingActivity
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
@@ -30,35 +30,41 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.delegate = self
         tableView.dataSource = self
         
+        self.tableView.rowHeight = UITableViewAutomaticDimension;
+        
         imagePicker = UIImagePickerController()
         imagePicker.delegate = self
+        imagePicker.navigationBar.tintColor = UIColor.blackColor()
         
-        tableView.estimatedRowHeight = 400
-        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: "dismisskeyboard")
+        tableView.estimatedRowHeight = 500
+        let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
-        
-        let nav = self.navigationController?.navigationBar
-        nav?.titleTextAttributes =  [NSFontAttributeName: UIFont(name: "Avenir", size: 20)!]
-        nav?.tintColor = UIColor.lightTextColor()
-        nav?.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.lightTextColor()]
-        self.title = "Fab Network"
         
         // Profile btn in navigation bar
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
-        button.addTarget(self, action: "profileBtnPressed", forControlEvents: UIControlEvents.TouchUpInside)
+        button.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
         button.frame = CGRectMake(0, 0, 40, 40)
         let barButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = barButton
         
-        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil {
-            successAlert("Success", subTitle: "A new account has successfully been created!")
+        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil || NSUserDefaults.standardUserDefaults().objectForKey("username") == nil {
+            successAlert("Welcome", subTitle: "\nYou have successfully been logged in!")
         }
+        
+        self.title = "FAB NETWORK"
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
+        
+        EZLoadingActivity.show("Loading...", disableUI: false)
+        
+        loadProfileData()
         
         initObservers()
     }
     
+    
     func profileBtnPressed() {
+        dismisskeyboard()
         self.performSegueWithIdentifier("ProfileVC", sender: nil)
     }
     
@@ -79,9 +85,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 }
             }
             
+            
+            EZLoadingActivity.hide()
             self.tableView.reloadData()
         })
-
+        
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -133,6 +141,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
+        dismisskeyboard()
+        
         if segue.identifier == "CommentsVC" {
             if let commentsVC = segue.destinationViewController as? CommentsVC {
                 if let post = sender as? Post {
@@ -141,7 +151,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
         }
     }
-
+    
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
         imageSelector.image = image
@@ -153,32 +163,35 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
+        imagePicker.allowsEditing = true
         presentViewController(imagePicker, animated: true, completion: nil)
     }
     
     
     @IBAction func makePost(sender: AnyObject) {
         
-//      waitAlert("Post uploading", subTitle: "Your post is being uploaded.")
         print("Post!")
         dismisskeyboard()
         
         let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String
+        let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
         
-        if profileUrl == nil {
-            errorAlert("Not supported", subTitle: "Please add a profile picture and username.")
+        if profileUrl == nil || username == nil {
+            errorAlert("Action not allowed", subTitle: "\nPlease add a profile image and username before posting.")
             return;
         }
         
         if let txt = postField.text where txt != "" {
+            
+            EZLoadingActivity.show("Uploading...", disableUI: false)
             
             if let img = imageSelector.image where imageSelected == true {
                 
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
                 
-                // Convert to JPG & compress 60 %
-                let imgData = UIImageJPEGRepresentation(img, 0.4)!
+                // Convert to JPG & compress 70 %
+                let imgData = UIImageJPEGRepresentation(img, 0.3)!
                 
                 // Convert Imageshack API key to data format
                 let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
@@ -223,7 +236,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
         } else {
-            errorAlert("No description", subTitle: "Please add a description.")
+            infoAlert("No description", subTitle: "\nPlease add a description before posting.")
         }
     }
     
@@ -233,7 +246,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             "description": postField.text!,
             "likes": 0,
             "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
-            ]
+        ]
         
         if imgUrl != nil {
             post["imageUrl"] = imgUrl!
@@ -246,13 +259,46 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         firebasePost.setValue(post)
         imageSelected = false
         
-        // Reset
         postField.text = ""
         imageSelector.image = UIImage(named: "camera")
         
-        successAlert("Post uploaded", subTitle: "Operation successfully completed.")
-        print("Succcess!")
+        EZLoadingActivity.hide(success: true, animated: true)
         
         tableView.reloadData()
+    }
+    
+    /* If app has been reinstalled, must fetch user data from firebase */
+    
+    func loadProfileData() {
+        
+        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil  || NSUserDefaults.standardUserDefaults().objectForKey("username") == nil {
+            print("Profile url or username is nil, load from firebase")
+            
+            DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
+                
+                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                    
+                    for snap in snapshot {
+                        
+                        if snap.key == "imgUrl" {
+                            let profileUrl = snap.value
+                            NSUserDefaults.standardUserDefaults().setValue(profileUrl, forKey: "profileUrl")
+                            print("Added prof url \(profileUrl)")
+                        }
+                        
+                        if snap.key == "username" {
+                            let username = snap.value
+                            NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
+                            print("Added username \(username)")
+                        }
+                        
+                        print("Nothing to add!")
+                        
+                    }
+                }
+            })
+        } else {
+             print("Profile data is up to date")
+        }
     }
 }
