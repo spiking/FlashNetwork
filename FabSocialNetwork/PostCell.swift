@@ -95,11 +95,9 @@ class PostCell: UITableViewCell {
         
         // Profile image
         userRef.observeEventType(.Value, withBlock: { snapshot in
-            print(snapshot.value)
             
             if let username = snapshot.value["username"] as? String {
                 self.usernameLbl.text = username
-                print(username)
             } else {
                 self.usernameLbl.text = "Default Username"
             }

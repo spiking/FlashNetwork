@@ -13,15 +13,20 @@ import SCLAlertView
 import MobileCoreServices
 import EZLoadingActivity
 
-class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate {
     
     var posts = [Post]()
     static var imageCache = NSCache() // Static since single instance (global)
     var imagePicker: UIImagePickerController!
     var imageSelected = false
+    var typeOfLogin = ""
+    var placeHolderText = "Anything you would like to share?"
     
+    @IBOutlet weak var postViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var postView: MaterialView!
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var postField: MaterialTextField!
+    @IBOutlet weak var postTextViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var postTextView: MaterialTextView!
     @IBOutlet weak var imageSelector: UIImageView!
     
     override func viewDidLoad() {
@@ -31,6 +36,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.dataSource = self
         
         self.tableView.rowHeight = UITableViewAutomaticDimension;
+        
+        postTextView.delegate = self
         
         imagePicker = UIImagePickerController()
         imagePicker.delegate = self
@@ -48,9 +55,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let barButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = barButton
         
-        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil || NSUserDefaults.standardUserDefaults().objectForKey("username") == nil {
-            successAlert("Welcome", subTitle: "\nYou have successfully been logged in!")
-        }
+        loginMessage()
         
         self.title = "FAB NETWORK"
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
@@ -59,8 +64,32 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         loadProfileData()
         
+        print("User logged in as \(typeOfLogin)")
+        
         initObservers()
     }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(true)
+        
+        if postTextView.text == "" || postTextView.text == placeHolderText {
+            postTextView.text = placeHolderText
+            postTextView.textColor = UIColor.lightGrayColor()
+        } else {
+            postTextView.textColor = UIColor.blackColor()
+        }
+    }
+    
+    func loginMessage() {
+        if typeOfLogin == "OldAccount" {
+            successAlert("Welcome back", subTitle: "\nYou have successfully been logged in!")
+        } else if typeOfLogin == "NewAccount" {
+            successAlert("Welcome", subTitle: "\nA new account has successfully been created!")
+        } else {
+            // Do nothing
+        }
+    }
+    
     
     
     func profileBtnPressed() {
@@ -132,8 +161,31 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         let post = posts[indexPath.row]
         
+        let textLength = post.postDescription.characters.count
+        
+        print(textLength)
+        
+        
         if post.imageUrl == nil || post.imageUrl == "" {
-            return 200
+            
+            // Temp solution, not working properly. Need dynamic fix.
+            
+            if textLength < 75 {
+                return 200
+            } else if textLength < 100 {
+                return 225
+            } else if textLength < 125 {
+                return 250
+            } else if textLength < 150 {
+                return 275
+            } else if textLength < 175 {
+                return 300
+            } else if textLength < 200 {
+                return 325
+            } else {
+                return 350
+            }
+            
         } else {
             return tableView.estimatedRowHeight
         }
@@ -162,6 +214,35 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         view.endEditing(true)
     }
     
+    func textViewShouldBeginEditing(textView: UITextView) -> Bool {
+        postTextView.textColor = UIColor.blackColor()
+        
+        if postTextView.text == placeHolderText {
+            postTextView.text = ""
+        }
+        
+        return true
+    }
+    
+    func textViewDidEndEditing(textView: UITextView) {
+        
+        if postTextView.text == "" {
+            postTextView.text = placeHolderText
+            postTextView.textColor = UIColor.lightGrayColor()
+        }
+        
+        view.removeConstraint(postViewHeight)
+        view.removeConstraint(postTextViewHeight)
+    }
+    
+    func textViewDidBeginEditing(textView: UITextView) {
+        postViewHeight = NSLayoutConstraint(item: postView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 161)
+        postTextViewHeight = NSLayoutConstraint(item: postTextView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 89)
+        
+        view.addConstraint(postViewHeight)
+        view.addConstraint(postTextViewHeight)
+    }
+    
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
         imagePicker.allowsEditing = true
         presentViewController(imagePicker, animated: true, completion: nil)
@@ -177,11 +258,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
         
         if profileUrl == nil || username == nil {
-            errorAlert("Action not allowed", subTitle: "\nPlease add a profile image and username before posting.")
+            infoAlert("Action not allowed", subTitle: "\nPlease add a profile image and username before posting.")
             return;
         }
         
-        if let txt = postField.text where txt != "" {
+        if let txt = postTextView.text where txt != "" && postTextView.text != placeHolderText {
             
             EZLoadingActivity.show("Uploading...", disableUI: false)
             
@@ -243,7 +324,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func postToFireBase(imgUrl: String?) {
         
         var post: Dictionary<String, AnyObject> = [
-            "description": postField.text!,
+            "description": postTextView.text!,
             "likes": 0,
             "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
         ]
@@ -259,7 +340,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         firebasePost.setValue(post)
         imageSelected = false
         
-        postField.text = ""
+        postTextView.text = placeHolderText
+        postTextView.textColor = UIColor.lightGrayColor()
         imageSelector.image = UIImage(named: "camera")
         
         EZLoadingActivity.hide(success: true, animated: true)

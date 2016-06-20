@@ -153,14 +153,14 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         print("Post!")
         
-        if commentTextView.text != "" {
+        if commentTextView.text != "" && commentTextView.text != placeHolderText {
             dismissKeyboard()
             addComment(commentTextView.text)
             commentTextView.text = placeHolderText
             commentTextView.textColor = UIColor.lightGrayColor()
             print("Post comment!")
         } else {
-            print(commentTextView.text)
+            print("Nothing written")
         }
     }
     

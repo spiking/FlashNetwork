@@ -17,6 +17,7 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
+    @IBOutlet weak var logo: UIImageView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +34,9 @@ class ViewController: UIViewController {
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
+        
+        logo.layer.cornerRadius = 3.0
+        logo.clipsToBounds = true
     }
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
@@ -63,13 +67,15 @@ class ViewController: UIViewController {
                             if snapshot.hasChild(authData.uid) {
                                 print("User already exists, login!")
                                 NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                                let old = "OldAccount"
+                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
                             } else {
                                 print("User does not exist, create a new!")
                                 let user = ["provider": authData.provider!]
                                 DataService.ds.createFirebaseUser(authData.uid, user: user)
                                 NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                                let new = "NewAccount"
+                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: new)
                             }
                         })
                     }
@@ -116,7 +122,8 @@ class ViewController: UIViewController {
                                         // Create firebase user
                                         let user = ["provider": authData.provider!]
                                         DataService.ds.createFirebaseUser(authData.uid, user: user)
-                                        self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                                        let new = "NewAccount"
+                                        self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: new)
                                     }
                                 })
                             }
@@ -133,15 +140,31 @@ class ViewController: UIViewController {
                     if NSUserDefaults.standardUserDefaults().valueForKey("username") != nil {
                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
                     } else {
-                         print("Need to add NSUser data since app has been uninstalled")
                          NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+                         let old = "OldAccount"
+                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
                     }
                 }
             })
             
         } else {
             errorAlert("Invalid input", subTitle: "\nYou must enter an email and a password.")
+        }
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        print(segue.destinationViewController)
+        
+        let nav = segue.destinationViewController as! UINavigationController
+        
+        if segue.identifier == SEGUE_LOGGED_IN {
+            if let feedVC = nav.topViewController as? FeedVC {
+                if let typeOfLogin = sender as? String {
+                    print("Sender: \(typeOfLogin)")
+                    feedVC.typeOfLogin = typeOfLogin
+                }
+            }
         }
     }
     
