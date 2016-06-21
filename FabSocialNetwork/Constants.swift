@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-let SHADOW_COLOR:CGFloat = 157.0 / 255.0
+let SHADOW_COLOR: CGFloat = 100.0 / 255.0
 
 // Keys
 let KEY_UID = "uid"

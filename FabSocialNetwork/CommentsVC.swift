@@ -10,14 +10,16 @@ import UIKit
 import Firebase
 import SCLAlertView
 
-class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate {
+class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentViewHeight: NSLayoutConstraint!
     
+    var refreshControl: UIRefreshControl!
     var post: Post!
     var comments = [Comment]()
     var placeHolderText = "Leave a comment"
+    var noConnectionAlerts = 0
     
     @IBOutlet weak var stackViewHeight: NSLayoutConstraint!
     @IBOutlet weak var commentTextView: UITextView!
@@ -26,9 +28,15 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.emptyDataSetSource = self
+        tableView.emptyDataSetDelegate = self
+        tableView.tableFooterView = UIView()
+        
+        refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        tableView.addSubview(refreshControl) // not required when using UITableViewController
         
         self.tableView.estimatedRowHeight = 80;
         self.tableView.rowHeight = UITableViewAutomaticDimension;
@@ -44,11 +52,36 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         commentTextView.delegate = self
         
+        NSTimer.scheduledTimerWithTimeInterval(10, target: self, selector: #selector(CommentsVC.isConnected), userInfo: nil, repeats: true)
+        
         print("Loaded post with key: \(post.postKey)")
         
         self.title = "COMMENTS"
         
         initObservers()
+    }
+    
+    func isConnected() {
+        
+        if !isConnectedToNetwork() {
+            tableView.reloadData()
+        }
+        
+        if isConnectedToNetwork() && comments.count == 0 {
+            tableView.reloadData()
+        }
+    }
+    
+    
+    func refresh(sender:AnyObject) {
+        
+        if isConnectedToNetwork() {
+            tableView.reloadData()
+            refreshControl.endRefreshing()
+        } else {
+            refreshControl.endRefreshing()
+            infoAlert("No Internet Connection", subTitle: "\nPlease connect to a network and try again.")
+        }
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -149,21 +182,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         DataService.ds.REF_COMMENTS.childByAutoId().setValue(comment)
     }
     
-    @IBAction func commentBtnTapped(sender: AnyObject) {
-        
-        print("Post!")
-        
-        if commentTextView.text != "" && commentTextView.text != placeHolderText {
-            dismissKeyboard()
-            addComment(commentTextView.text)
-            commentTextView.text = placeHolderText
-            commentTextView.textColor = UIColor.lightGrayColor()
-            print("Post comment!")
-        } else {
-            print("Nothing written")
-        }
-    }
-    
     // Dismiss keyboard on tap gesture
     func dismissKeyboard() {
         view.endEditing(true)
@@ -180,6 +198,60 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     func keyboardWillHide(notification: NSNotification) {
         if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
             self.view.frame.origin.y += keyboardSize.height
+        }
+    }
+    
+    func titleForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            str = "No Comments"
+        } else {
+            str = "No Internet Connection"
+        }
+        
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            str = "It looks like there are no comments on this post. If you like, add one below."
+        } else {
+            str = "Please connect to a network and the comments will load automatically."
+        }
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
+        var imgName = ""
+        if isConnectedToNetwork() {
+            imgName = "write_15"
+        } else {
+            imgName = "network_20"
+        }
+        
+        return UIImage(named: imgName)
+    }
+    
+    @IBAction func commentBtnTapped(sender: AnyObject) {
+        
+        print("Post!")
+        
+        if commentTextView.text != "" && commentTextView.text != placeHolderText {
+            dismissKeyboard()
+            addComment(commentTextView.text)
+            commentTextView.text = placeHolderText
+            commentTextView.textColor = UIColor.lightGrayColor()
+            
+            if !isConnectedToNetwork() {
+                infoAlert("No Internet Connection", subTitle: "\n The comment will be uploaded when connected to a network.")
+            }
+            
+            print("Post comment!")
+        } else {
+            print("Nothing written")
         }
     }
 }

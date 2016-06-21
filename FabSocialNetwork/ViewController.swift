@@ -37,9 +37,16 @@ class ViewController: UIViewController {
         
         logo.layer.cornerRadius = 3.0
         logo.clipsToBounds = true
+        
     }
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
+        
+        if !isConnectedToNetwork() {
+            infoAlert("No Internet Connection", subTitle: "\nTo sign up or login, please connect to a network.")
+            return
+        }
+        
         let facebookLogin = FBSDKLoginManager()
         
         facebookLogin.logInWithReadPermissions(["email"]) { (facebookResult: FBSDKLoginManagerLoginResult!, facebookError: NSError!) -> Void in
@@ -89,6 +96,11 @@ class ViewController: UIViewController {
     
     @IBAction func attemptLogin(sender: UIButton!) {
         if let email = emailField.text where email != "", let pwd = passwordField.text where pwd != "" {
+            
+            if !isConnectedToNetwork() {
+                infoAlert("No Internet Connection", subTitle: "\nTo sign up or login, please connect to a network.")
+                return
+            }
             
             DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { (error, authData) in
                 

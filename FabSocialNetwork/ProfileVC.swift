@@ -87,8 +87,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func addNewUsernameToFirebase(newUsername: String!) {
-        // Update firebase and local data
-        print("Inside function")
         if newUsername != "" {
             
             DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername!)
@@ -97,6 +95,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             // Prevent double updates
             if !imageSelected {
                 print("Success!")
+                EZLoadingActivity.Settings.SuccessText = "Updated"
                 EZLoadingActivity.hide(success: true, animated: true)
             }
         }
@@ -106,6 +105,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         if imgUrl != nil {
             DataService.ds.REF_USER_CURRENT.childByAppendingPath("imgUrl").setValue(imgUrl)
             NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
+            EZLoadingActivity.Settings.SuccessText = "Updated"
             EZLoadingActivity.hide(success: true, animated: true)
         }
         imageSelected = false
@@ -130,11 +130,19 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     @IBAction func saveBtnTapped(sender: AnyObject) {
         dismisskeyboard()
         
+        print("Save")
+        
         if !changeOfUsername() && !changeOfProfileImage() {
             infoAlert("Unable to update", subTitle: "\nPlease update your profile image or username before saving.")
             return
         }
         
+        if !isConnectedToNetwork() {
+            infoAlert("No Internet Connection", subTitle: "\nTo update your profile please connect to a network.")
+            return
+        }
+        
+
         EZLoadingActivity.show("Updating...", disableUI: false)
         
         if !userHasProfileImg() || changeOfProfileImage() {

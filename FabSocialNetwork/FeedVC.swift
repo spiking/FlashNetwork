@@ -13,14 +13,17 @@ import SCLAlertView
 import MobileCoreServices
 import EZLoadingActivity
 
-class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate {
+
+class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     var posts = [Post]()
     static var imageCache = NSCache() // Static since single instance (global)
     var imagePicker: UIImagePickerController!
     var imageSelected = false
+    var noConnectionAlerts = 0
     var typeOfLogin = ""
     var placeHolderText = "Anything you would like to share?"
+    var refreshControl: UIRefreshControl!
     
     @IBOutlet weak var postViewHeight: NSLayoutConstraint!
     @IBOutlet weak var postView: MaterialView!
@@ -34,6 +37,13 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.emptyDataSetSource = self
+        tableView.emptyDataSetDelegate = self
+        tableView.tableFooterView = UIView()
+        
+        refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        tableView.addSubview(refreshControl) // not required when using UITableViewController
         
         self.tableView.rowHeight = UITableViewAutomaticDimension;
         
@@ -47,7 +57,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
-        // Profile btn in navigation bar
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
         button.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
@@ -60,7 +69,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         self.title = "FAB NETWORK"
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
-        EZLoadingActivity.show("Loading...", disableUI: false)
+        if isConnectedToNetwork() {
+            print("Connected!")
+            EZLoadingActivity.show("Loading...", disableUI: false)
+        }
+        
+        // NSTimer.scheduledTimerWithTimeInterval(10, target: self, selector: #selector(FeedVC.isConnected), userInfo: nil, repeats: true)
         
         loadProfileData()
         
@@ -80,26 +94,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func loginMessage() {
-        if typeOfLogin == "OldAccount" {
-            successAlert("Welcome back", subTitle: "\nYou have successfully been logged in!")
-        } else if typeOfLogin == "NewAccount" {
-            successAlert("Welcome", subTitle: "\nA new account has successfully been created!")
-        } else {
-            // Do nothing
-        }
-    }
-    
-    
-    
-    func profileBtnPressed() {
-        dismisskeyboard()
-        self.performSegueWithIdentifier("ProfileVC", sender: nil)
-    }
-    
     func initObservers() {
         
-        // Observe changes in Firebase, update instantly (code in closure)
+        // Observe changes in Firebase, update instantly
         DataService.ds.REF_POSTS.observeEventType(.Value, withBlock: { snapshot in
             self.posts = []
             
@@ -114,7 +111,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 }
             }
             
-            
             EZLoadingActivity.hide()
             self.tableView.reloadData()
         })
@@ -128,7 +124,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return posts.count
     }
-    
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
@@ -191,6 +186,22 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
+    func refresh(sender:AnyObject) {
+        
+        if isConnectedToNetwork() {
+            tableView.reloadData()
+            refreshControl.endRefreshing()
+        } else {
+            refreshControl.endRefreshing()
+            infoAlert("No Internet Connection", subTitle: "\nPlease connect to a network and try again.")
+        }
+    }
+    
+    func profileBtnPressed() {
+        dismisskeyboard()
+        self.performSegueWithIdentifier("ProfileVC", sender: nil)
+    }
+    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
         dismisskeyboard()
@@ -208,6 +219,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
         imageSelector.image = image
         imageSelected = true
+    }
+    
+    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
+        imagePicker.dismissViewControllerAnimated(true, completion: nil)
+        imageSelector.image = UIImage(named: "camera")
+        imageSelected = false
     }
     
     func dismisskeyboard() {
@@ -243,6 +260,114 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         view.addConstraint(postTextViewHeight)
     }
     
+    func loginMessage() {
+        if typeOfLogin == "OldAccount" {
+            successAlert("Welcome back", subTitle: "\nYou have successfully been logged in!")
+        } else if typeOfLogin == "NewAccount" {
+            successAlert("Welcome", subTitle: "\nA new account has successfully been created!")
+        } else {
+            // Do nothing
+        }
+    }
+    
+    func titleForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            str = "No Posts"
+        } else {
+            str = "No Internet Connection"
+        }
+        
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            str = "It looks like there are no posts. If you like, add one above."
+        } else {
+            str = "Please connect to a network and the feed will load automatically."
+        }
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
+        var imgName = ""
+        if isConnectedToNetwork() {
+            imgName = "write_15"
+        } else {
+            imgName = "network_20"
+        }
+        
+        return UIImage(named: imgName)
+    }
+    
+    func postToFireBase(imgUrl: String?) {
+        
+        var post: Dictionary<String, AnyObject> = [
+            "description": postTextView.text!,
+            "likes": 0,
+            "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
+        ]
+        
+        if imgUrl != nil {
+            post["imageUrl"] = imgUrl!
+        } else {
+            post["imageUrl"] = ""
+        }
+        
+        // Add post to firebase
+        let firebasePost = DataService.ds.REF_POSTS.childByAutoId()
+        firebasePost.setValue(post)
+        imageSelected = false
+        
+        postTextView.text = placeHolderText
+        postTextView.textColor = UIColor.lightGrayColor()
+        imageSelector.image = UIImage(named: "camera")
+        
+        EZLoadingActivity.Settings.SuccessText = "Uploded"
+        EZLoadingActivity.hide(success: true, animated: true)
+        
+        tableView.reloadData()
+    }
+    
+    // If app has been reinstalled, must fetch user data from firebase 
+    
+    func loadProfileData() {
+        
+        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil  || NSUserDefaults.standardUserDefaults().objectForKey("username") == nil {
+            print("Profile url or username is nil, load from firebase")
+            
+            DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
+                
+                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                    
+                    for snap in snapshot {
+                        
+                        if snap.key == "imgUrl" {
+                            let profileUrl = snap.value
+                            NSUserDefaults.standardUserDefaults().setValue(profileUrl, forKey: "profileUrl")
+                            print("Added prof url \(profileUrl)")
+                        }
+                        
+                        if snap.key == "username" {
+                            let username = snap.value
+                            NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
+                            print("Added username \(username)")
+                        }
+                        
+                        print("Nothing to add!")
+                        
+                    }
+                }
+            })
+        } else {
+            print("Profile data is up to date")
+        }
+    }
+    
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
         imagePicker.allowsEditing = true
         presentViewController(imagePicker, animated: true, completion: nil)
@@ -260,6 +385,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         if profileUrl == nil || username == nil {
             infoAlert("Action not allowed", subTitle: "\nPlease add a profile image and username before posting.")
             return;
+        }
+        
+        if !isConnectedToNetwork() {
+            infoAlert("No Internet Connection", subTitle: "\nTo make a post please connect to a network.")
+            return
         }
         
         if let txt = postTextView.text where txt != "" && postTextView.text != placeHolderText {
@@ -318,69 +448,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
         } else {
             infoAlert("No description", subTitle: "\nPlease add a description before posting.")
-        }
-    }
-    
-    func postToFireBase(imgUrl: String?) {
-        
-        var post: Dictionary<String, AnyObject> = [
-            "description": postTextView.text!,
-            "likes": 0,
-            "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
-        ]
-        
-        if imgUrl != nil {
-            post["imageUrl"] = imgUrl!
-        } else {
-            post["imageUrl"] = ""
-        }
-        
-        // Add post to firebase
-        let firebasePost = DataService.ds.REF_POSTS.childByAutoId()
-        firebasePost.setValue(post)
-        imageSelected = false
-        
-        postTextView.text = placeHolderText
-        postTextView.textColor = UIColor.lightGrayColor()
-        imageSelector.image = UIImage(named: "camera")
-        
-        EZLoadingActivity.hide(success: true, animated: true)
-        
-        tableView.reloadData()
-    }
-    
-    /* If app has been reinstalled, must fetch user data from firebase */
-    
-    func loadProfileData() {
-        
-        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil  || NSUserDefaults.standardUserDefaults().objectForKey("username") == nil {
-            print("Profile url or username is nil, load from firebase")
-            
-            DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
-                
-                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
-                    
-                    for snap in snapshot {
-                        
-                        if snap.key == "imgUrl" {
-                            let profileUrl = snap.value
-                            NSUserDefaults.standardUserDefaults().setValue(profileUrl, forKey: "profileUrl")
-                            print("Added prof url \(profileUrl)")
-                        }
-                        
-                        if snap.key == "username" {
-                            let username = snap.value
-                            NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
-                            print("Added username \(username)")
-                        }
-                        
-                        print("Nothing to add!")
-                        
-                    }
-                }
-            })
-        } else {
-             print("Profile data is up to date")
         }
     }
 }

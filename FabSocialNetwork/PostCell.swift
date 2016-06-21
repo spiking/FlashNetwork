@@ -185,7 +185,7 @@ class PostCell: UITableViewCell {
             loadingNotification.frame = CGRectMake(0, 0, 50, 50)
             
             loadingNotification.mode = MBProgressHUDMode.CustomView
-            let image = UIImage(named: "heart-full_50")
+            let image = UIImage(named: "heart_big_25")
             loadingNotification.customView = UIImageView(image: image)
             loadingNotification.hide(true, afterDelay: 1.5)
             
