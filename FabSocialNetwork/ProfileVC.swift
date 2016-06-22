@@ -11,6 +11,7 @@ import Alamofire
 import Firebase
 import SCLAlertView
 import EZLoadingActivity
+import JSSAlertView
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
@@ -34,6 +35,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ProfileVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
+        
+        let placeholderPassword = NSAttributedString(string: "Username", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
+        usernameTextField.attributedPlaceholder = placeholderPassword
         
         addImgBtn.alpha = 1.0
         
@@ -133,12 +137,12 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         print("Save")
         
         if !changeOfUsername() && !changeOfProfileImage() {
-            infoAlert("Unable to update", subTitle: "\nPlease update your profile image or username before saving.")
+            JSSAlertView().danger(self, title: "Unable to update", text: "Please update your profile image or username before saving.")
             return
         }
         
         if !isConnectedToNetwork() {
-            infoAlert("No Internet Connection", subTitle: "\nTo update your profile please connect to a network.")
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "To update your profile please connect to a network.")
             return
         }
         

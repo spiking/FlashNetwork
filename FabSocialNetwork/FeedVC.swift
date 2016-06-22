@@ -12,10 +12,12 @@ import Alamofire
 import SCLAlertView
 import MobileCoreServices
 import EZLoadingActivity
+import JSSAlertView
 
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
+    @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
     var posts = [Post]()
     static var imageCache = NSCache() // Static since single instance (global)
     var imagePicker: UIImagePickerController!
@@ -24,6 +26,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var typeOfLogin = ""
     var placeHolderText = "Anything you would like to share?"
     var refreshControl: UIRefreshControl!
+    var previousOffset = CGFloat(0)
+    var firstLogin = true
     
     @IBOutlet weak var postViewHeight: NSLayoutConstraint!
     @IBOutlet weak var postView: MaterialView!
@@ -40,7 +44,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
         tableView.tableFooterView = UIView()
-        
+    
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
@@ -63,8 +67,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         button.frame = CGRectMake(0, 0, 40, 40)
         let barButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = barButton
-        
-        loginMessage()
         
         self.title = "FAB NETWORK"
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
@@ -90,11 +92,13 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             postTextView.text = placeHolderText
             postTextView.textColor = UIColor.lightGrayColor()
         } else {
-            postTextView.textColor = UIColor.blackColor()
+            postTextView.textColor = UIColor.whiteColor()
         }
     }
     
     func initObservers() {
+        
+        print("Init!")
         
         // Observe changes in Firebase, update instantly
         DataService.ds.REF_POSTS.observeEventType(.Value, withBlock: { snapshot in
@@ -105,16 +109,58 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
-                        self.posts.append(post)
-                        
+                        self.posts.append(post)                        
                     }
                 }
             }
             
             EZLoadingActivity.hide()
+            if self.firstLogin {
+                self.loginMessage()
+                self.firstLogin = false
+            }
             self.tableView.reloadData()
         })
         
+    }
+
+    // Animate push of post view when user starts scrolling
+    
+    func scrollViewDidScroll(scrollView: UIScrollView) {
+        // If we reach bottom
+        if (self.tableView.contentOffset.y >= (self.tableView.contentSize.height - self.tableView.bounds.size.height)) {
+            return
+        }
+
+        let height = scrollView.frame.size.height;
+        print("Height: \(height)")
+        var currentOffset = scrollView.contentOffset.y
+        let distanceToBottom = scrollView.contentSize.height - previousOffset
+        print("Distance: \(distanceToBottom)")
+        
+        print("CurrentOff: \(currentOffset)")
+        print("PreviousOff: \(previousOffset)")
+        
+        // Scroll down
+        if previousOffset < currentOffset && distanceToBottom > height {
+            if currentOffset > height {
+                currentOffset = height
+                print("Current offset > height")
+            }
+            self.postViewTopConstraint.constant += previousOffset - currentOffset
+            print("CONSTRAINT: \(self.postViewTopConstraint.constant)")
+            previousOffset = currentOffset
+            print("IF")
+            
+        // Scroll up
+        } else {
+            if currentOffset < 0 {
+                currentOffset = 0
+            }
+            self.postViewTopConstraint.constant += previousOffset - currentOffset
+            previousOffset = currentOffset
+            print("ELSE")
+        }
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -193,7 +239,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             refreshControl.endRefreshing()
         } else {
             refreshControl.endRefreshing()
-            infoAlert("No Internet Connection", subTitle: "\nPlease connect to a network and try again.")
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
         }
     }
     
@@ -232,7 +278,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func textViewShouldBeginEditing(textView: UITextView) -> Bool {
-        postTextView.textColor = UIColor.blackColor()
+        postTextView.textColor = UIColor.whiteColor()
         
         if postTextView.text == placeHolderText {
             postTextView.text = ""
@@ -253,8 +299,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-        postViewHeight = NSLayoutConstraint(item: postView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 161)
-        postTextViewHeight = NSLayoutConstraint(item: postTextView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 89)
+        postViewHeight = NSLayoutConstraint(item: postView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 171)
+        postTextViewHeight = NSLayoutConstraint(item: postTextView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 110)
         
         view.addConstraint(postViewHeight)
         view.addConstraint(postTextViewHeight)
@@ -262,9 +308,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func loginMessage() {
         if typeOfLogin == "OldAccount" {
-            successAlert("Welcome back", subTitle: "\nYou have successfully been logged in!")
+            successAlertNew("Welcome back", msg: "You have successfully been logged in!")
+            EZLoadingActivity.hide()
         } else if typeOfLogin == "NewAccount" {
-            successAlert("Welcome", subTitle: "\nA new account has successfully been created!")
+            successAlertNew("Welcome", msg: "A new account has successfully been created!")
+            EZLoadingActivity.hide()
         } else {
             // Do nothing
         }
@@ -368,11 +416,22 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
+    func successAlertNew(title: String, msg: String) {
+        let alertview = JSSAlertView().show(self, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.setTitleFont("Avenir-Heavy")
+        alertview.setTextFont("Avenir-Light")
+        alertview.setButtonFont("Avenir-Heavy")
+    }
+    
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
         imagePicker.allowsEditing = true
         presentViewController(imagePicker, animated: true, completion: nil)
     }
     
+    func callBack() {
+        print("Callback")
+    }
     
     @IBAction func makePost(sender: AnyObject) {
         
@@ -383,12 +442,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
         
         if profileUrl == nil || username == nil {
-            infoAlert("Action not allowed", subTitle: "\nPlease add a profile image and username before posting.")
+            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before posting.")
             return;
         }
         
         if !isConnectedToNetwork() {
-            infoAlert("No Internet Connection", subTitle: "\nTo make a post please connect to a network.")
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
             return
         }
         
@@ -447,7 +506,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
         } else {
-            infoAlert("No description", subTitle: "\nPlease add a description before posting.")
+            JSSAlertView().danger(self, title: "No Description", text: "Please add a description before posting.")
         }
     }
 }

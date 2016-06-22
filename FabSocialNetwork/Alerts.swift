@@ -9,6 +9,7 @@
 import Foundation
 import SCLAlertView
 import EZLoadingActivity
+import JSSAlertView
 
 // Global alert functions
 
@@ -26,6 +27,18 @@ func waitAlert(title: String, subTitle: String) {
 }
 
 func successAlert(title: String, subTitle: String) {
+    SCLAlertView().showTitle(
+        title,
+        subTitle: subTitle,
+        duration: 3.0,
+        completeText: "Done",
+        style: .Success,
+        colorStyle: 0x6AE368,
+        colorTextButton: 0xFFFFFF
+    )
+}
+
+func successAlertTest(title: String, subTitle: String) {
     SCLAlertView().showTitle(
         title,
         subTitle: subTitle,
@@ -61,9 +74,19 @@ func infoAlert(title: String, subTitle: String) {
     )
 }
 
+
 func alertViewSetup() {
     EZLoadingActivity.Settings.BackgroundColor = UIColor.blackColor()
     EZLoadingActivity.Settings.TextColor = UIColor.whiteColor()
     EZLoadingActivity.Settings.FontName = "Avenir"
     EZLoadingActivity.Settings.ActivityColor = UIColor.whiteColor()
+    EZLoadingActivity.Settings.SuccessColor = UIColor(red: 37/255, green: 193/255, blue: 81/255, alpha: 0.88)
+}
+
+func successAlertNew(vc: UIViewController, title: String, msg: String) {
+    let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
+    alertview.setTextTheme(.Light)
+    alertview.setTitleFont("Avenir-Heavy")
+    alertview.setTextFont("Avenir-Light")
+    alertview.setButtonFont("Avenir-Heavy")
 }

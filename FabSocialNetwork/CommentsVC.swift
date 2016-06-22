@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import SCLAlertView
+import JSSAlertView
 
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
@@ -80,7 +81,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             refreshControl.endRefreshing()
         } else {
             refreshControl.endRefreshing()
-            infoAlert("No Internet Connection", subTitle: "\nPlease connect to a network and try again.")
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
         }
     }
     
@@ -91,7 +92,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.text = placeHolderText
             commentTextView.textColor = UIColor.lightGrayColor()
         } else {
-            commentTextView.textColor = UIColor.blackColor()
+            commentTextView.textColor = UIColor.whiteColor()
         }
     }
     
@@ -147,7 +148,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     
     func textViewShouldBeginEditing(textView: UITextView) -> Bool {
-        commentTextView.textColor = UIColor.blackColor()
+        commentTextView.textColor = UIColor.whiteColor()
         
         if commentTextView.text == placeHolderText {
             commentTextView.text = ""
@@ -246,7 +247,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.textColor = UIColor.lightGrayColor()
             
             if !isConnectedToNetwork() {
-                infoAlert("No Internet Connection", subTitle: "\n The comment will be uploaded when connected to a network.")
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "The comment will be uploaded when connected to a network.")
             }
             
             print("Post comment!")

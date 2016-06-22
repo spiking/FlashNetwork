@@ -1,9 +1,9 @@
 EMBEDDED_CONTENT_CONTAINS_SWIFT = YES
-FRAMEWORK_SEARCH_PATHS = $(inherited) "$PODS_CONFIGURATION_BUILD_DIR/Alamofire" "$PODS_CONFIGURATION_BUILD_DIR/EZLoadingActivity" "$PODS_CONFIGURATION_BUILD_DIR/Firebase" "$PODS_CONFIGURATION_BUILD_DIR/MBProgressHUD" "$PODS_CONFIGURATION_BUILD_DIR/SCLAlertView"
+FRAMEWORK_SEARCH_PATHS = $(inherited) "$PODS_CONFIGURATION_BUILD_DIR/Alamofire" "$PODS_CONFIGURATION_BUILD_DIR/EZLoadingActivity" "$PODS_CONFIGURATION_BUILD_DIR/Firebase" "$PODS_CONFIGURATION_BUILD_DIR/JSSAlertView" "$PODS_CONFIGURATION_BUILD_DIR/MBProgressHUD" "$PODS_CONFIGURATION_BUILD_DIR/SCLAlertView"
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
 LD_RUNPATH_SEARCH_PATHS = $(inherited) '@executable_path/Frameworks' '@loader_path/Frameworks'
-OTHER_CFLAGS = $(inherited) -iquote "$PODS_CONFIGURATION_BUILD_DIR/Alamofire/Alamofire.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/EZLoadingActivity/EZLoadingActivity.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/Firebase/Firebase.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/MBProgressHUD/MBProgressHUD.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/SCLAlertView/SCLAlertView.framework/Headers"
-OTHER_LDFLAGS = $(inherited) -ObjC -framework "Alamofire" -framework "EZLoadingActivity" -framework "Firebase" -framework "MBProgressHUD" -framework "SCLAlertView"
+OTHER_CFLAGS = $(inherited) -iquote "$PODS_CONFIGURATION_BUILD_DIR/Alamofire/Alamofire.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/EZLoadingActivity/EZLoadingActivity.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/Firebase/Firebase.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/JSSAlertView/JSSAlertView.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/MBProgressHUD/MBProgressHUD.framework/Headers" -iquote "$PODS_CONFIGURATION_BUILD_DIR/SCLAlertView/SCLAlertView.framework/Headers"
+OTHER_LDFLAGS = $(inherited) -ObjC -framework "Alamofire" -framework "EZLoadingActivity" -framework "Firebase" -framework "JSSAlertView" -framework "MBProgressHUD" -framework "SCLAlertView"
 OTHER_SWIFT_FLAGS = $(inherited) "-D" "COCOAPODS"
 PODS_BUILD_DIR = $BUILD_DIR
 PODS_CONFIGURATION_BUILD_DIR = $PODS_BUILD_DIR/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)

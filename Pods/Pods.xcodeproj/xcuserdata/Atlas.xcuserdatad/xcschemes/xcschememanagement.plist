@@ -19,6 +19,16 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
+		<key>JSSAlertView-JSSAlertView.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
+		<key>JSSAlertView.xcscheme</key>
+		<dict>
+			<key>isShown</key>
+			<false/>
+		</dict>
 		<key>MBProgressHUD.xcscheme</key>
 		<dict>
 			<key>isShown</key>
@@ -37,17 +47,27 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>0748BDF8A1B86BB2C9850A98A3B82587</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>79C040AFDDCE1BCBF6D8B5EB0B85887F</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>8A689D0229A18D6E8C44CDF5035A7D36</key>
+		<key>7FAB61F61C8FCBB136AA463609F6C698</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
 		<key>903A108934E1A089B76F443DC34C8E54</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>AD323711AE430DFCADA96049B1EF6AD0</key>
 		<dict>
 			<key>primary</key>
 			<true/>
@@ -62,7 +82,7 @@
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>EFB7D224EEA73137C4ACAD0E98A0C401</key>
+		<key>FE7B09D7AABB33662D3B092926DCFF8E</key>
 		<dict>
 			<key>primary</key>
 			<true/>

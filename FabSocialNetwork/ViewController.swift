@@ -11,6 +11,7 @@ import FBSDKCoreKit
 import FBSDKLoginKit
 import SCLAlertView
 import Firebase
+import JSSAlertView
 import EZLoadingActivity
 
 class ViewController: UIViewController {
@@ -35,15 +36,17 @@ class ViewController: UIViewController {
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
-        logo.layer.cornerRadius = 3.0
-        logo.clipsToBounds = true
+        let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
+        emailField.attributedPlaceholder = placeholderEmail
+        let placeholderPassword = NSAttributedString(string: "Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
+        passwordField.attributedPlaceholder = placeholderPassword
         
     }
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
         
         if !isConnectedToNetwork() {
-            infoAlert("No Internet Connection", subTitle: "\nTo sign up or login, please connect to a network.")
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "To sign up or login, please connect to a network.")
             return
         }
         
@@ -95,10 +98,13 @@ class ViewController: UIViewController {
     }
     
     @IBAction func attemptLogin(sender: UIButton!) {
+        
+        dismisskeyboard()
+        
         if let email = emailField.text where email != "", let pwd = passwordField.text where pwd != "" {
             
             if !isConnectedToNetwork() {
-                infoAlert("No Internet Connection", subTitle: "\nTo sign up or login, please connect to a network.")
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "To sign up or login, please connect to a network.")
                 return
             }
             
@@ -120,7 +126,7 @@ class ViewController: UIViewController {
                             
                             // Try to creat account
                             if error != nil {
-                                errorAlert("Could not create account", subTitle: "\nProblem occured when creating an account. Please try again or come back later.")
+                                JSSAlertView().danger(self, title: "Could not create account", text: "Problem occured when creating an account. Please try again or come back later.")
                             } else {
                                 // Save account locally
                                 NSUserDefaults.standardUserDefaults().setValue(result[KEY_UID], forKey: KEY_UID)
@@ -129,7 +135,7 @@ class ViewController: UIViewController {
                                 DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { err, authData in
                                     
                                     if err != nil {
-                                        errorAlert("Could not authorize account", subTitle: "\nPlease try again or come back later.")
+                                        JSSAlertView().danger(self, title: "Could not authorize account", text: "Please try again or come back later.")
                                     } else {
                                         // Create firebase user
                                         let user = ["provider": authData.provider!]
@@ -141,7 +147,7 @@ class ViewController: UIViewController {
                             }
                         })
                     } else {
-                        errorAlert("Incorrect credentials", subTitle: "\nPlease check your email and password.")
+                        JSSAlertView().danger(self, title: "Incorrect Credentials", text: "Please check your email and password.")
                     }
                 } else {
                     
@@ -160,7 +166,7 @@ class ViewController: UIViewController {
             })
             
         } else {
-            errorAlert("Invalid input", subTitle: "\nYou must enter an email and a password.")
+            JSSAlertView().danger(self, title: "Invalid Input", text: "You must enter a valid email and a password.")
         }
     }
     
