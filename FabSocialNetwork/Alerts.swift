@@ -10,8 +10,24 @@ import Foundation
 import SCLAlertView
 import EZLoadingActivity
 import JSSAlertView
+import MBProgressHUD
 
 // Global alert functions
+
+var likeAnimation = MBProgressHUD()
+
+func startLikeAnimation(view: UIView) {
+    likeAnimation = MBProgressHUD.showHUDAddedTo(view, animated: true)
+    likeAnimation.frame = CGRectMake(0, 0, 50, 50)
+    likeAnimation.mode = MBProgressHUDMode.CustomView
+    let image = UIImage(named: "Heart")
+    likeAnimation.customView = UIImageView(image: image)
+    likeAnimation.hide(true, afterDelay: 1.0)
+}
+
+func stopLikeAnimation() {
+    likeAnimation.hide(false)
+}
 
 func waitAlert(title: String, subTitle: String) {
     

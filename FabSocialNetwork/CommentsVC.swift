@@ -55,8 +55,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         NSTimer.scheduledTimerWithTimeInterval(10, target: self, selector: #selector(CommentsVC.isConnected), userInfo: nil, repeats: true)
         
-        print("Loaded post with key: \(post.postKey)")
-        
         self.title = "COMMENTS"
         
         initObservers()
@@ -228,9 +226,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
         var imgName = ""
         if isConnectedToNetwork() {
-            imgName = "write_15"
+            imgName = "Write"
         } else {
-            imgName = "network_20"
+            imgName = "Wifi"
         }
         
         return UIImage(named: imgName)

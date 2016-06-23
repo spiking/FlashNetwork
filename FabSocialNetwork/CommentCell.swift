@@ -47,16 +47,13 @@ class CommentCell: UITableViewCell {
     }
     
     func configureCell(comment: Comment) {
+        
         print("Configure comment cell")
         self._comment = comment
-        
-        print("\(comment.userKey)")
-        
         self._userRef = DataService.ds.REF_USERS.childByAppendingPath(comment.userKey)
         self.textLbl.text = comment.commentText
         
         _userRef.observeEventType(.Value, withBlock: { snapshot in
-            print(snapshot.value)
             
             if let username = snapshot.value["username"] as? String {
                 self.usernameLbl.text = username
@@ -65,8 +62,6 @@ class CommentCell: UITableViewCell {
             }
             
             if let profileUrl = snapshot.value["imgUrl"] as? String {
-                
-                print(profileUrl)
                 
                 // Not in cache, download and add to cache
                 self.request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in

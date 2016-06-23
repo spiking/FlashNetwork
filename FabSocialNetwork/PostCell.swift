@@ -46,7 +46,6 @@ class PostCell: UITableViewCell {
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(PostCell.mainImgTapped(_:)))
         doubleTap.numberOfTapsRequired = 2
         mainImg.addGestureRecognizer(doubleTap)
-        
     }
     
     override func drawRect(rect: CGRect) {
@@ -127,13 +126,13 @@ class PostCell: UITableViewCell {
         })
         
         // If current post exist in current users likes, set heart to full (needed for reinstall)
-//        userLikes.observeEventType(.Value, withBlock: { snapshot in
-//    
-//            if snapshot.hasChild(post.postKey) {
-//                print("Current user has liked this post!")
-//                self.likeImage.image = UIImage(named: "heart-full")
-//            }
-//        })
+        userLikes.observeEventType(.Value, withBlock: { snapshot in
+    
+            if snapshot.hasChild(post.postKey) {
+                print("Current user has liked this post!")
+                self.likeImage.image = UIImage(named: "heart-full")
+            }
+        })
         
         // Like observer
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -179,18 +178,7 @@ class PostCell: UITableViewCell {
     func mainImgTapped(sender: UITapGestureRecognizer) {
         
         if !userLikedPost {
-            
-            
-            
-            let loadingNotification = MBProgressHUD.showHUDAddedTo(self.mainImg, animated: true)
-            
-            loadingNotification.frame = CGRectMake(0, 0, 50, 50)
-            
-            loadingNotification.mode = MBProgressHUDMode.CustomView
-            let image = UIImage(named: "heart_big_25")
-            loadingNotification.customView = UIImageView(image: image)
-            loadingNotification.hide(true, afterDelay: 1.0)
-            
+            startLikeAnimation(self)
             print("Images tapped!")
             likeTapped(sender)
         } else {

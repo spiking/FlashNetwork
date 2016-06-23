@@ -274,8 +274,8 @@
                                                                         <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="QEW-oz-lgN">
                                                                             <rect key="frame" x="494" y="0.0" width="50" height="50"/>
                                                                             <subviews>
-                                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="1048" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YCy-cH-Wm9">
-                                                                                    <rect key="frame" x="0.0" y="0.0" width="50" height="21"/>
+                                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" text="1048" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YCy-cH-Wm9">
+                                                                                    <rect key="frame" x="0.0" y="0.0" width="50" height="32"/>
                                                                                     <constraints>
                                                                                         <constraint firstAttribute="width" constant="50" id="GFd-fu-sxa"/>
                                                                                     </constraints>
@@ -283,8 +283,8 @@
                                                                                     <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                                                                     <nil key="highlightedColor"/>
                                                                                 </label>
-                                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Likes" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Nro-zF-gl7">
-                                                                                    <rect key="frame" x="0.0" y="21" width="50" height="29"/>
+                                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" text="Likes" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Nro-zF-gl7">
+                                                                                    <rect key="frame" x="0.0" y="32" width="50" height="18"/>
                                                                                     <constraints>
                                                                                         <constraint firstAttribute="width" constant="50" id="Xh0-Oc-JFi"/>
                                                                                     </constraints>

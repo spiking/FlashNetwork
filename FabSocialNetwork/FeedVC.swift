@@ -13,11 +13,13 @@ import SCLAlertView
 import MobileCoreServices
 import EZLoadingActivity
 import JSSAlertView
+import BTNavigationDropdownMenu
 
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
+    
     var posts = [Post]()
     static var imageCache = NSCache() // Static since single instance (global)
     var imagePicker: UIImagePickerController!
@@ -28,6 +30,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var refreshControl: UIRefreshControl!
     var previousOffset = CGFloat(0)
     var firstLogin = true
+    var loadingData = false
+    var postsShown = 20
+    var alert = false
+    
+    var sortedOn = "NotSorted"
+    
+    var timer: NSTimer?
+    var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
     
     @IBOutlet weak var postViewHeight: NSLayoutConstraint!
     @IBOutlet weak var postView: MaterialView!
@@ -44,7 +54,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
         tableView.tableFooterView = UIView()
-    
+        tableView.allowsSelection = true
+        
+        
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
@@ -61,12 +73,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
-        let button: UIButton = UIButton(type: UIButtonType.Custom)
-        button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
-        button.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
-        button.frame = CGRectMake(0, 0, 40, 40)
-        let barButton = UIBarButtonItem(customView: button)
-        self.navigationItem.rightBarButtonItem = barButton
+        setupProfileButton()
+        setupSortMenu()
         
         self.title = "FAB NETWORK"
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
@@ -76,13 +84,16 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             EZLoadingActivity.show("Loading...", disableUI: false)
         }
         
-        // NSTimer.scheduledTimerWithTimeInterval(10, target: self, selector: #selector(FeedVC.isConnected), userInfo: nil, repeats: true)
-        
         loadProfileData()
         
         print("User logged in as \(typeOfLogin)")
         
         initObservers()
+        
+        spinner.hidesWhenStopped = true
+        spinner.color = UIColor.grayColor()
+        spinner.frame = CGRectMake(0, 0, 320, 44);
+        self.tableView.tableFooterView = spinner;
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -96,12 +107,138 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
+    func setupProfileButton() {
+        let button: UIButton = UIButton(type: UIButtonType.Custom)
+        button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
+        button.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
+        button.frame = CGRectMake(0, 0, 40, 40)
+        let barButton = UIBarButtonItem(customView: button)
+        self.navigationItem.rightBarButtonItem = barButton
+    }
+    
+    func setupSortMenu() {
+        let items = ["Most Popular", "Hottest", "Latest"]
+        let menuView = BTNavigationDropdownMenu(navigationController: self.navigationController, title: items.first!, items: items)
+        menuView.cellTextLabelColor = UIColor.lightTextColor()
+        menuView.cellTextLabelFont = UIFont(name: "Avenir", size: 16)
+        menuView.menuTitleColor = UIColor.whiteColor()
+        menuView.cellSelectionColor = UIColor.darkGrayColor()
+        
+        self.navigationItem.titleView = menuView
+        
+        menuView.didSelectItemAtIndexHandler = {[weak self] (indexPath: Int) -> () in
+            print("Did select item at index: \(indexPath)")
+            
+            switch indexPath {
+            case 0:
+                self!.loadMostPopular()
+            case 1:
+                self!.loadHottest()
+            case 2:
+                self!.loadLatest()
+            default:
+                print("DEFAULT")
+            }
+        }
+    }
+    
+    func loadMostPopular() {
+        if sortedOn != "Likes" {
+            sortOnLikes()
+            print("Load most popular")
+            sortedOn = "Likes"
+        } else {
+            print("Already sorted on popular")
+        }
+    }
+    
+    func loadHottest() {
+        print("Load hottest")
+    }
+    
+    func loadLatest() {
+        if sortedOn != "Latest" {
+            sortOnLatest()
+            print("Load latest")
+            sortedOn = "Latest"
+        } else {
+            print("Already sorted on latest")
+        }
+    }
+    
+    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+        // Loads 20 posts each refresh
+        if posts.count % 20 != 0 {
+            print("No more data to load")
+            spinner.stopAnimating()
+            return
+        }
+        
+        if !loadingData && indexPath.row == postsShown - 1 {
+            spinner.startAnimating()
+            startTimerForRefresh()
+        }
+    }
+    
+    func startTimerForRefresh() {
+        timer = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(FeedVC.tryToRefresh), userInfo: nil, repeats: true)
+    }
+    
+    func stopTimerForRefresh() {
+        timer?.invalidate()
+    }
+    
+    func tryToRefresh() {
+        if isConnectedToNetwork() {
+            loadingData = true
+            alert = false
+            stopTimerForRefresh()
+            refreshMore()
+        } else {
+            if !alert {
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and the feed will load automatically.")
+                alert = true
+            }
+        }
+    }
+    
+    func refreshMore() {
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
+            // this runs on the background queue
+            
+            print("Get more data")
+            self.postsShown += 20
+            self.initObservers()
+            
+            dispatch_async(dispatch_get_main_queue()) {
+                // this runs on the main queue
+                
+                self.tableView.reloadData()
+                self.loadingData = false
+                
+                print("Done!")
+            }
+        }
+    }
+    
+    func sortOnLikes() {
+//        posts.sortInPlace() { $0.0.likes > $0.1.likes }
+//        tableView.reloadData()
+    }
+    
+    func sortOnLatest() {
+//        posts = posts.reverse()
+//        tableView.reloadData()
+    }
+    
     func initObservers() {
         
         print("Init!")
         
+        let count = posts.count
+        
         // Observe changes in Firebase, update instantly
-        DataService.ds.REF_POSTS.observeEventType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_POSTS.queryLimitedToFirst(UInt(postsShown)).observeEventType(.Value, withBlock: { snapshot in
             self.posts = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
@@ -109,57 +246,89 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
-                        self.posts.append(post)                        
+                        self.posts.append(post)
                     }
                 }
             }
             
-            EZLoadingActivity.hide()
+            print("LOAD")
+            
+            if count == 0 {
+                EZLoadingActivity.hide()
+            }
+            
             if self.firstLogin {
                 self.loginMessage()
                 self.firstLogin = false
             }
-            self.tableView.reloadData()
+            
+            print("Count after: \(self.posts.count)")
+            
+            if self.sortedOn == "Likes" {
+                self.sortOnLikes()
+            } else if self.sortedOn == "Latest" {
+                self.sortOnLatest()
+            } else {
+                self.tableView.reloadData()
+            }
+            
+            
         })
         
     }
-
+    
+    func isVisible(view: UIView) -> Bool {
+        func isVisible(view: UIView, inView: UIView?) -> Bool {
+            guard let inView = inView else { return true }
+            let viewFrame = inView.convertRect(view.bounds, fromView: view)
+            if CGRectIntersectsRect(viewFrame, inView.bounds) {
+                return isVisible(view, inView: inView.superview)
+            }
+            return false
+        }
+        return isVisible(view, inView: view.superview)
+    }
+    
     // Animate push of post view when user starts scrolling
     
     func scrollViewDidScroll(scrollView: UIScrollView) {
+        
+        dismisskeyboard()
+        stopLikeAnimation()
+        self.postTextViewHeight.constant = 110
+        
         // If we reach bottom
         if (self.tableView.contentOffset.y >= (self.tableView.contentSize.height - self.tableView.bounds.size.height)) {
             return
         }
-
-        let height = scrollView.frame.size.height;
-        print("Height: \(height)")
-        var currentOffset = scrollView.contentOffset.y
-        let distanceToBottom = scrollView.contentSize.height - previousOffset
-        print("Distance: \(distanceToBottom)")
         
-        print("CurrentOff: \(currentOffset)")
-        print("PreviousOff: \(previousOffset)")
+        let height = scrollView.frame.size.height // Screen height
+        var currentOffset = scrollView.contentOffset.y // Above screen
+        let distanceToBottom = scrollView.contentSize.height - previousOffset // Below screen
         
         // Scroll down
         if previousOffset < currentOffset && distanceToBottom > height {
+            
+            // Is postview visible
+            if !isVisible(postView) {
+                return
+            }
+            
             if currentOffset > height {
                 currentOffset = height
                 print("Current offset > height")
             }
-            self.postViewTopConstraint.constant += previousOffset - currentOffset
-            print("CONSTRAINT: \(self.postViewTopConstraint.constant)")
-            previousOffset = currentOffset
-            print("IF")
             
-        // Scroll up
+            self.postViewTopConstraint.constant += previousOffset - currentOffset
+            previousOffset = currentOffset
+            
+            // Scroll up
         } else {
             if currentOffset < 0 {
                 currentOffset = 0
             }
             self.postViewTopConstraint.constant += previousOffset - currentOffset
             previousOffset = currentOffset
-            print("ELSE")
         }
     }
     
@@ -172,6 +341,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        
         
         if let cell = tableView.dequeueReusableCellWithIdentifier("PostCell") as? PostCell {
             
@@ -203,9 +374,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let post = posts[indexPath.row]
         
         let textLength = post.postDescription.characters.count
-        
-        print(textLength)
-        
         
         if post.imageUrl == nil || post.imageUrl == "" {
             
@@ -239,7 +407,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             refreshControl.endRefreshing()
         } else {
             refreshControl.endRefreshing()
-            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and the feed will load automatically.")
         }
     }
     
@@ -294,16 +462,15 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             postTextView.textColor = UIColor.lightGrayColor()
         }
         
-        view.removeConstraint(postViewHeight)
-        view.removeConstraint(postTextViewHeight)
+        postViewHeight.constant = 101
+        postTextViewHeight.constant = 40
+        
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-        postViewHeight = NSLayoutConstraint(item: postView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 171)
-        postTextViewHeight = NSLayoutConstraint(item: postTextView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 110)
         
-        view.addConstraint(postViewHeight)
-        view.addConstraint(postTextViewHeight)
+        postViewHeight.constant = 171
+        postTextViewHeight.constant = 110
     }
     
     func loginMessage() {
@@ -344,9 +511,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
         var imgName = ""
         if isConnectedToNetwork() {
-            imgName = "write_15"
+            imgName = "Write"
         } else {
-            imgName = "network_20"
+            imgName = "Wifi"
         }
         
         return UIImage(named: imgName)
@@ -381,7 +548,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.reloadData()
     }
     
-    // If app has been reinstalled, must fetch user data from firebase 
+    // If app has been reinstalled, must fetch user data from firebase
     
     func loadProfileData() {
         

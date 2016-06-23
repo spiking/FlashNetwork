@@ -20,3 +20,4 @@ let SEGUE_LOGGED_IN = "loggedIn"
 // Status Codes
 let STATUS_ACCOUNT_NONEXIST = -8
 let STATUS_ACCOUNT_FIREBASE_AUTH = -6
+

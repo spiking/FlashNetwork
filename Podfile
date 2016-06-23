@@ -10,4 +10,5 @@ target 'FabSocialNetwork' do
   pod 'EZLoadingActivity'
   pod 'MBProgressHUD', '~> 0.9.2'
   pod 'JSSAlertView'
+  pod 'BTNavigationDropdownMenu'
 end
