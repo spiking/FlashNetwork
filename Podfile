@@ -11,4 +11,5 @@ target 'FabSocialNetwork' do
   pod 'MBProgressHUD', '~> 0.9.2'
   pod 'JSSAlertView'
   pod 'BTNavigationDropdownMenu'
+  pod 'MGSwipeTableCell'
 end

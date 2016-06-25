@@ -14,7 +14,25 @@ import MBProgressHUD
 
 // Global alert functions
 
+func heightForView(text:String, width:CGFloat) -> CGFloat {
+    let label:UILabel = UILabel(frame: CGRectMake(0, 0, width, CGFloat.max))
+    label.numberOfLines = 0
+    label.lineBreakMode = NSLineBreakMode.ByWordWrapping
+    label.text = text
+    label.sizeToFit()
+    
+    return label.frame.height
+}
+
+var Timestamp: String {
+    return "\(NSDate().timeIntervalSince1970 * 1)"
+}
+
 var likeAnimation = MBProgressHUD()
+
+func userProfileAdded() -> Bool {
+    return NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") != nil  && NSUserDefaults.standardUserDefaults().objectForKey("username") != nil
+}
 
 func startLikeAnimation(view: UIView) {
     likeAnimation = MBProgressHUD.showHUDAddedTo(view, animated: true)

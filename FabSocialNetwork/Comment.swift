@@ -32,6 +32,10 @@ class Comment {
         return _userKey
     }
     
+    var commentKey: String? {
+        return _commentKey
+    }
+    
     init(commentKey: String, dictionary: Dictionary<String, AnyObject>) {
         self._commentKey = commentKey
         

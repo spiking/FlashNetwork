@@ -13,6 +13,8 @@ import MBProgressHUD
 
 class PostCell: UITableViewCell {
     
+    @IBOutlet weak var descLblHeight: NSLayoutConstraint!
+    @IBOutlet weak var likesLblWidth: NSLayoutConstraint!
     @IBOutlet weak var profileImg: UIImageView!
     @IBOutlet weak var mainImg: UIImageView!
     @IBOutlet weak var descriptionLbl: UILabel!
@@ -62,15 +64,17 @@ class PostCell: UITableViewCell {
         self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
         
-        if post.likes == 1 {
-            self.likesLblText.text = "Like"
-        } else {
-            self.likesLblText.text = "Likes"
-        }
+        print("Width = \(self.likesLbl.intrinsicContentSize().width)")
+        
+        self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 2
         
         self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
         self.likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
         self.userLikes = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes")
+        
+        let height = heightForView(post.postDescription, width: screenWidth - 51)
+        print("HEIGHT = \(height)")
+        self.descLblHeight.constant = height
         
         // Main post image
         if post.imageUrl != nil {
@@ -126,7 +130,10 @@ class PostCell: UITableViewCell {
         })
         
         // If current post exist in current users likes, set heart to full (needed for reinstall)
-        userLikes.observeEventType(.Value, withBlock: { snapshot in
+        
+        
+        
+        userLikes.observeSingleEventOfType(.Value, withBlock: { snapshot in
     
             if snapshot.hasChild(post.postKey) {
                 print("Current user has liked this post!")
@@ -137,6 +144,7 @@ class PostCell: UITableViewCell {
         // Like observer
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             // In snaphsot nil does not exist, instead you use NSNull
+            
             if (snapshot.value as? NSNull) != nil {
                 self.likeImage.image = UIImage(named: "heart-empty")
                 self.userLikedPost = false

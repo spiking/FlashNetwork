@@ -10,6 +10,7 @@ import UIKit
 import Firebase
 import SCLAlertView
 import JSSAlertView
+import EZLoadingActivity
 
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
@@ -39,8 +40,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        self.tableView.estimatedRowHeight = 80;
-        self.tableView.rowHeight = UITableViewAutomaticDimension;
+        self.tableView.estimatedRowHeight = 100
+        self.tableView.rowHeight = UITableViewAutomaticDimension
         
         self.edgesForExtendedLayout = UIRectEdge.None
         
@@ -58,7 +59,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         self.title = "COMMENTS"
         
         initObservers()
+        
     }
+    
     
     func isConnected() {
         
@@ -70,7 +73,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             tableView.reloadData()
         }
     }
-    
     
     func refresh(sender:AnyObject) {
         
@@ -138,6 +140,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             let comment = comments[indexPath.row]
             cell.configureCell(comment)
             
+            let backgroundView = UIView()
+            backgroundView.backgroundColor = UIColor.blackColor()
+            cell.selectedBackgroundView = backgroundView
+            
             return cell
         } else {
             return CommentCell()
@@ -176,7 +182,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         let currentUserKey = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String!
         let currentPostKey = post.postKey
-        let comment : Dictionary<String, String> = ["user" : currentUserKey!, "post": currentPostKey, "comment" : comment!]
+        let comment : Dictionary<String, String> = ["user" : currentUserKey!, "post": currentPostKey, "comment" : comment!, "timestamp": Timestamp]
         
         DataService.ds.REF_COMMENTS.childByAutoId().setValue(comment)
     }
@@ -234,9 +240,70 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         return UIImage(named: imgName)
     }
     
+    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        
+        let comment = comments[indexPath.row]
+        
+        print("Comment user: \(comment.userKey) AND \(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID))")
+        
+        if comment.userKey! == String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!) {
+            print("User wrote the comment")
+            return true
+        }
+        print("User did not write the comment")
+        return false
+    }
+    
+    func tableView(tableView: UITableView, titleForDeleteConfirmationButtonForRowAtIndexPath indexPath: NSIndexPath) -> String? {
+        return "Remove"
+    }
+    
+    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+        
+        if editingStyle == UITableViewCellEditingStyle.Delete {
+            
+            if !isConnectedToNetwork() {
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
+                tableView.setEditing(false, animated: true)
+                return
+            }
+            
+            let commentToRemove = comments[indexPath.row]
+            removeComment(commentToRemove)
+            comments.removeAtIndex(indexPath.row)
+            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+            
+        }
+    }
+    
+    func removeComment(commentToRemove: Comment!) {
+        
+        DataService.ds.REF_COMMENTS.childByAppendingPath(commentToRemove.commentKey).removeValueWithCompletionBlock { (error, ref) in
+            
+            if error != nil {
+                print("Remove failed")
+                EZLoadingActivity.showWithDelay("Failure", disableUI: true, seconds: 1.0)
+                EZLoadingActivity.Settings.SuccessText = "Failure"
+                EZLoadingActivity.hide(success: false, animated: true)
+            } else {
+                EZLoadingActivity.showWithDelay("Removed", disableUI: true, seconds: 1.0)
+                EZLoadingActivity.Settings.SuccessText = "Removed"
+                EZLoadingActivity.hide(success: true, animated: true)
+                print("Remove")
+                
+            }
+        }
+        
+    }
+    
     @IBAction func commentBtnTapped(sender: AnyObject) {
         
         print("Post!")
+        
+        if !userProfileAdded() {
+            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before commenting.")
+            return;
+        }
         
         if commentTextView.text != "" && commentTextView.text != placeHolderText {
             dismissKeyboard()
@@ -244,11 +311,16 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.text = placeHolderText
             commentTextView.textColor = UIColor.lightGrayColor()
             
-            if !isConnectedToNetwork() {
-                JSSAlertView().danger(self, title: "No Internet Connection", text: "The comment will be uploaded when connected to a network.")
-            }
-            
             print("Post comment!")
+            
+            tableView.reloadData()
+            
+//            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+//                let indexPath = NSIndexPath(forRow: self.comments.count-1, inSection: 0)
+//                self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
+//                
+//            })
+
         } else {
             print("Nothing written")
         }

@@ -41,6 +41,8 @@ class ViewController: UIViewController {
         let placeholderPassword = NSAttributedString(string: "Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
         passwordField.attributedPlaceholder = placeholderPassword
         
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
+        
     }
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
@@ -108,6 +110,11 @@ class ViewController: UIViewController {
                 return
             }
             
+            if passwordField.text?.characters.count < 6 {
+                JSSAlertView().danger(self, title: "Invalid Password", text: "The password must have atleast 6 characters.")
+                return
+            }
+            
             DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { (error, authData) in
                 
                 // Check if account exist
@@ -138,7 +145,7 @@ class ViewController: UIViewController {
                                         JSSAlertView().danger(self, title: "Could not authorize account", text: "Please try again or come back later.")
                                     } else {
                                         // Create firebase user
-                                        let user = ["provider": authData.provider!]
+                                        let user = ["provider": authData.provider!, "timestamp": Timestamp]
                                         DataService.ds.createFirebaseUser(authData.uid, user: user)
                                         let new = "NewAccount"
                                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: new)
@@ -174,21 +181,32 @@ class ViewController: UIViewController {
         
         print(segue.destinationViewController)
         
-        let nav = segue.destinationViewController as! UINavigationController
-        
-        if segue.identifier == SEGUE_LOGGED_IN {
-            if let feedVC = nav.topViewController as? FeedVC {
-                if let typeOfLogin = sender as? String {
-                    print("Sender: \(typeOfLogin)")
-                    feedVC.typeOfLogin = typeOfLogin
+        if let nav = segue.destinationViewController as? UINavigationController {
+            
+            if segue.identifier == SEGUE_LOGGED_IN {
+                if let feedVC = nav.topViewController as? FeedVC {
+                    if let typeOfLogin = sender as? String {
+                        print("Sender: \(typeOfLogin)")
+                        feedVC.typeOfLogin = typeOfLogin
+                    }
                 }
             }
+        }
+        
+        if segue.identifier == "resetPassword" {
+            print("Reset!")
         }
     }
     
     func dismisskeyboard() {
         view.endEditing(true)
     }
+    
+    @IBAction func forgotButtonTapped(sender: AnyObject) {
+        
+        print("Load screen")
+    }
+
 
 }
 

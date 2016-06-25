@@ -9,6 +9,10 @@
 import Foundation
 import UIKit
 
+let screenSize: CGRect = UIScreen.mainScreen().bounds
+
+let screenWidth = screenSize.width
+
 let SHADOW_COLOR: CGFloat = 100.0 / 255.0
 
 // Keys

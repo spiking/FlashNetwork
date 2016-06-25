@@ -39,9 +39,13 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         let placeholderPassword = NSAttributedString(string: "Username", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
         usernameTextField.attributedPlaceholder = placeholderPassword
         
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
+        
         addImgBtn.alpha = 1.0
         
         self.title = "PROFILE"
+        
+        setupSettingsButton()
         
         loadProfileData()
     }
@@ -67,6 +71,29 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
             usernameTextField.text = username
+        }
+    }
+    
+    func setupSettingsButton() {
+        let button: UIButton = UIButton(type: UIButtonType.Custom)
+        button.setImage(UIImage(named: "Settings"), forState: UIControlState.Normal)
+        button.addTarget(self, action: #selector(ProfileVC.settingsBtnTapped), forControlEvents: UIControlEvents.TouchUpInside)
+        button.frame = CGRectMake(0, 0, 25, 25)
+        let barButton = UIBarButtonItem(customView: button)
+        self.navigationItem.rightBarButtonItem = barButton
+    }
+    
+    func settingsBtnTapped() {
+        self.performSegueWithIdentifier("settings", sender: nil)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        print("Prepare!")
+        
+        if segue.identifier == "settings" {
+            if let settingsVC = segue.destinationViewController as? SettingsVC {
+                print("YES")
+            }
         }
     }
     
@@ -134,10 +161,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     @IBAction func saveBtnTapped(sender: AnyObject) {
         dismisskeyboard()
         
-        print("Save")
-        
         if !changeOfUsername() && !changeOfProfileImage() {
-            JSSAlertView().danger(self, title: "Unable to update", text: "Please update your profile image or username before saving.")
             return
         }
         

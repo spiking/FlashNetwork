@@ -48,7 +48,6 @@ class CommentCell: UITableViewCell {
     
     func configureCell(comment: Comment) {
         
-        print("Configure comment cell")
         self._comment = comment
         self._userRef = DataService.ds.REF_USERS.childByAppendingPath(comment.userKey)
         self.textLbl.text = comment.commentText
@@ -72,7 +71,6 @@ class CommentCell: UITableViewCell {
                     }
                 })
             } else {
-                print("No profile img")
                 self.profileImg.hidden = true
             }
             
@@ -80,8 +78,6 @@ class CommentCell: UITableViewCell {
             }, withCancelBlock: { error in
                 print(error.description)
         })
-
-        print("Configure cell, text entered: \(comment.commentText)")
         
     }
 }

@@ -14,10 +14,10 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = 'primary'
-               BlueprintIdentifier = '1B21DB0A4844EC24069BB5AA6B45ED88'
-               BlueprintName = 'SCLAlertView'
+               BlueprintIdentifier = '4E1263BFF45F6446CF3DE29AE234C893'
+               BlueprintName = 'MGSwipeTableCell'
                ReferencedContainer = 'container:Pods.xcodeproj'
-               BuildableName = 'SCLAlertView.framework'>
+               BuildableName = 'MGSwipeTableCell.framework'>
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "FabSocialNetwork/FeedVC.swift"
-            timestampString = "488408475.322053"
+            timestampString = "488581670.187993"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "706"
-            endingLineNumber = "706">
+            startingLineNumber = "791"
+            endingLineNumber = "791">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

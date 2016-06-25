@@ -34,7 +34,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var postsShown = 20
     var alert = false
     
-    var sortedOn = "NotSorted"
+    var sortedOn = "STANDARD"
     
     var timer: NSTimer?
     var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
@@ -49,6 +49,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        print(Timestamp)
+        
         tableView.delegate = self
         tableView.dataSource = self
         tableView.emptyDataSetSource = self
@@ -61,7 +63,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        self.tableView.rowHeight = UITableViewAutomaticDimension;
+        self.tableView.estimatedRowHeight = 500
+        self.tableView.rowHeight = UITableViewAutomaticDimension
         
         postTextView.delegate = self
         
@@ -69,7 +72,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker.delegate = self
         imagePicker.navigationBar.tintColor = UIColor.blackColor()
         
-        tableView.estimatedRowHeight = 500
+        
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
@@ -88,12 +91,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         print("User logged in as \(typeOfLogin)")
         
-        initObservers()
-        
         spinner.hidesWhenStopped = true
         spinner.color = UIColor.grayColor()
         spinner.frame = CGRectMake(0, 0, 320, 44);
         self.tableView.tableFooterView = spinner;
+        
+        loadStandardFromFirebase()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -111,13 +114,13 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
         button.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
-        button.frame = CGRectMake(0, 0, 40, 40)
+        button.frame = CGRectMake(0, 0, 32, 32)
         let barButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = barButton
     }
     
     func setupSortMenu() {
-        let items = ["Most Popular", "Hottest", "Latest"]
+        let items = ["Standard", "Most Popular", "Latest"]
         let menuView = BTNavigationDropdownMenu(navigationController: self.navigationController, title: items.first!, items: items)
         menuView.cellTextLabelColor = UIColor.lightTextColor()
         menuView.cellTextLabelFont = UIFont(name: "Avenir", size: 16)
@@ -131,38 +134,57 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             switch indexPath {
             case 0:
-                self!.loadMostPopular()
+                self!.loadHottestSelected()
             case 1:
-                self!.loadHottest()
+                self!.loadMostPopularSelected()
             case 2:
-                self!.loadLatest()
+                self!.loadLatestSelected()
             default:
                 print("DEFAULT")
             }
         }
     }
     
-    func loadMostPopular() {
-        if sortedOn != "Likes" {
-            sortOnLikes()
+    func scrollToTop() {
+        tableView.setContentOffset(CGPointZero, animated:true)
+        
+        dispatch_async(dispatch_get_main_queue(), { () -> Void in
+            let indexPath = NSIndexPath(forRow: 0, inSection: 0)
+            self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
+            
+        })
+    }
+    
+    func loadMostPopularSelected() {
+        
+        if sortedOn != "POPULAR" {
+            sortedOn = "POPULAR"
+            postsShown = 20
+            loadMostPopularFromFirebase()
+            scrollToTop()
             print("Load most popular")
-            sortedOn = "Likes"
-        } else {
-            print("Already sorted on popular")
         }
     }
     
-    func loadHottest() {
-        print("Load hottest")
+    func loadHottestSelected() {
+        
+        if sortedOn != "STANDARD" {
+            sortedOn = "STANDARD"
+            postsShown = 20
+            loadStandardFromFirebase()
+            scrollToTop()
+            print("Load standard")
+        }
     }
     
-    func loadLatest() {
-        if sortedOn != "Latest" {
-            sortOnLatest()
+    func loadLatestSelected() {
+        
+        if sortedOn != "LATEST" {
+            sortedOn = "LATEST"
+            postsShown = 20
+            loadLatestFromFirebase()
+            scrollToTop()
             print("Load latest")
-            sortedOn = "Latest"
-        } else {
-            print("Already sorted on latest")
         }
     }
     
@@ -208,7 +230,18 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             print("Get more data")
             self.postsShown += 20
-            self.initObservers()
+            
+            if self.sortedOn == "POPULAR" {
+                self.loadMostPopularFromFirebase()
+            } else if self.sortedOn == "STANDARD" {
+                // STANDARD AT THE MOMENT
+                self.loadStandardFromFirebase()
+            } else if self.sortedOn == "LATEST" {
+                self.loadLatestFromFirebase()
+            } else {
+                // STANDARD
+                self.loadStandardFromFirebase()
+            }
             
             dispatch_async(dispatch_get_main_queue()) {
                 // this runs on the main queue
@@ -221,24 +254,15 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func sortOnLikes() {
-//        posts.sortInPlace() { $0.0.likes > $0.1.likes }
-//        tableView.reloadData()
-    }
     
-    func sortOnLatest() {
-//        posts = posts.reverse()
-//        tableView.reloadData()
-    }
-    
-    func initObservers() {
+    func loadStandardFromFirebase() {
         
         print("Init!")
         
         let count = posts.count
         
         // Observe changes in Firebase, update instantly
-        DataService.ds.REF_POSTS.queryLimitedToFirst(UInt(postsShown)).observeEventType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_POSTS.queryLimitedToFirst(UInt(postsShown)).observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
@@ -247,6 +271,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         self.posts.append(post)
+                        print("ADD")
                     }
                 }
             }
@@ -264,15 +289,81 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             print("Count after: \(self.posts.count)")
             
-            if self.sortedOn == "Likes" {
-                self.sortOnLikes()
-            } else if self.sortedOn == "Latest" {
-                self.sortOnLatest()
-            } else {
-                self.tableView.reloadData()
+            self.tableView.reloadData()
+        })
+        
+    }
+    
+    func loadMostPopularFromFirebase() {
+        
+        let count = posts.count
+        
+        print("LOADING POPULAR")
+        
+        // Observe changes in Firebase, update instantly
+        DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("likes").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            self.posts = []
+            
+            if let likes = snapshot.value["likes"] as? Int {
+                print("\(snapshot.key) has \(likes) likes")
             }
             
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    
+                    if let postDict = snap.value as? Dictionary<String, AnyObject> {
+                        let key = snap.key
+                        let post = Post(postKey: key, dictionary: postDict)
+                        self.posts.append(post)
+                        print("APPEND")
+                    }
+                }
+            }
             
+            if count == 0 {
+                EZLoadingActivity.hide()
+            }
+            
+            self.posts = self.posts.reverse()
+            self.tableView.reloadData()
+            
+        })
+    }
+    
+    func loadLatestFromFirebase() {
+        
+        let count = posts.count
+        
+        // Observe changes in Firebase, update instantly
+        DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).observeSingleEventOfType(.Value, withBlock: { snapshot in
+            self.posts = []
+            
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    if let postDict = snap.value as? Dictionary<String, AnyObject> {
+                        let key = snap.key
+                        let post = Post(postKey: key, dictionary: postDict)
+                        self.posts.append(post)
+                         print("ADD")
+                    }
+                }
+            }
+            
+            print("LOAD")
+            
+            if count == 0 {
+                EZLoadingActivity.hide()
+            }
+            
+            if self.firstLogin {
+                self.loginMessage()
+                self.firstLogin = false
+            }
+            
+            print("Count after: \(self.posts.count)")
+            
+            self.posts = self.posts.reverse()
+            self.tableView.reloadData()
         })
         
     }
@@ -363,6 +454,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.performSegueWithIdentifier("CommentsVC", sender: post)
             }
             
+            cell.layoutIfNeeded()
+            
             return cell
             
         } else {
@@ -370,30 +463,13 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
+    
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         let post = posts[indexPath.row]
         
-        let textLength = post.postDescription.characters.count
-        
         if post.imageUrl == nil || post.imageUrl == "" {
-            
-            // Temp solution, not working properly. Need dynamic fix.
-            
-            if textLength < 75 {
-                return 200
-            } else if textLength < 100 {
-                return 225
-            } else if textLength < 125 {
-                return 250
-            } else if textLength < 150 {
-                return 275
-            } else if textLength < 175 {
-                return 300
-            } else if textLength < 200 {
-                return 325
-            } else {
-                return 350
-            }
+            // This shit must work
+            return 100 + heightForView(post.postDescription, width: screenWidth - 51)
             
         } else {
             return tableView.estimatedRowHeight
@@ -413,6 +489,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func profileBtnPressed() {
         dismisskeyboard()
+        
         self.performSegueWithIdentifier("ProfileVC", sender: nil)
     }
     
@@ -524,7 +601,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         var post: Dictionary<String, AnyObject> = [
             "description": postTextView.text!,
             "likes": 0,
-            "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
+            "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String,
+            "timestamp" : Timestamp
         ]
         
         if imgUrl != nil {
@@ -545,14 +623,24 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         EZLoadingActivity.Settings.SuccessText = "Uploded"
         EZLoadingActivity.hide(success: true, animated: true)
         
-        tableView.reloadData()
+        if sortedOn == "POPULAR" {
+            print("ADDE NEW POST")
+            loadMostPopularFromFirebase()
+        } else if sortedOn == "STANDARD" {
+                 print("ADDE NEW POST")
+            loadStandardFromFirebase()
+        } else if sortedOn == "LATEST" {
+                 print("ADDE NEW POST")
+            loadLatestFromFirebase()
+        }
+        
     }
     
     // If app has been reinstalled, must fetch user data from firebase
     
     func loadProfileData() {
         
-        if NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") == nil  || NSUserDefaults.standardUserDefaults().objectForKey("username") == nil {
+        if !userProfileAdded() {
             print("Profile url or username is nil, load from firebase")
             
             DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
@@ -605,11 +693,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         print("Post!")
         dismisskeyboard()
         
-        let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String
-        let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
-        
-        if profileUrl == nil || username == nil {
-            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before posting.")
+        if !userProfileAdded() {
+            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before posting. You can find the profile in the upper right corner.")
             return;
         }
         

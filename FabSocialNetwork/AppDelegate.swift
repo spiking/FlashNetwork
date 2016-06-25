@@ -21,10 +21,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         
         UINavigationBar.appearance().titleTextAttributes = [
-                    NSFontAttributeName: UIFont(name: "Avenir", size: 14)!, NSForegroundColorAttributeName: UIColor.lightTextColor()
+                    NSFontAttributeName: UIFont(name: "Avenir", size: 14)!, NSForegroundColorAttributeName: UIColor.whiteColor()
         ]
         
-        UINavigationBar.appearance().tintColor = UIColor.lightTextColor()
+        UINavigationBar.appearance().tintColor = UIColor.whiteColor()
         
         NSThread.sleepForTimeInterval(1);
         
