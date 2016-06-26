@@ -90,26 +90,16 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         self.performSegueWithIdentifier("settings", sender: nil)
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        print("Prepare!")
-        
-        if segue.identifier == "settings" {
-            if let settingsVC = segue.destinationViewController as? SettingsVC {
-                print("YES")
-            }
-        }
-    }
-    
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
         imageSelector.image = image
         addImgBtn.alpha = 0.05
         imageSelected = true
-        print("Selected an image!")
     }
     
     func changeOfUsername() -> Bool {
-        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameTextField.text && usernameTextField.text != ""
+        let usernameEntered = usernameTextField.text?.lowercaseString
+        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameTextField.text != ""
     }
     
     func changeOfProfileImage() -> Bool {
@@ -166,41 +156,22 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             dispatch_get_main_queue(), closure)
     }
     
-        func addUsernameToFirebaseEfficient() {
+    func addUsernameToFirebaseEfficient(newUsername: String!) {
+        
+        EZLoadingActivity.show("Updating...", disableUI: true)
+        DataService.ds.REF_USERS.queryOrderedByChild("username").queryEqualToValue(newUsername).observeSingleEventOfType(.Value, withBlock: { snap in
             
-            DataService.ds.REF_USERS.queryOrderedByChild("username").queryEqualToValue(usernameTextField.text!).observeSingleEventOfType(.ChildAdded, withBlock: { snapshot in
-    
-                print("KEY: \(snapshot.key)")
+            if snap.value is NSNull {
+                print("NSNull \(snap.value)")
+                self.usernameTaken = false
+                self.usernameIsNotTaken(newUsername)
+            } else {
+                print("NOT NSNull \(snap.value)")
                 self.usernameTaken = true
-                dispatch_group_leave(self.myGroup)
-            })
-            
-            print("NEXT!")
-    
-            dispatch_group_notify(myGroup, dispatch_get_main_queue(), {
-                print("Finished all requests.")
-    
-                if self.usernameTaken {
-                    JSSAlertView().danger(self, title: "Username Taken", text: "The username entered is already taken. Please try something else.")
-                    EZLoadingActivity.hide()
-                } else {
-                    // We should never get here
-                }
-    
-            })
-            
-    
-            delay(3.0) {
-    
-                if !self.usernameTaken {
-                    print("DELAY")
-//                    DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername)
-//                    NSUserDefaults.standardUserDefaults().setValue(newUsername, forKey: "username")
-                    self.usernameTaken = false
-                    EZLoadingActivity.hide()
-                }
+                self.usernameIsTaken()
             }
-        }
+        })
+    }
     
     func usernameIsTaken() {
         let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
@@ -212,41 +183,37 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     func usernameIsNotTaken(newUsername: String!) {
         DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername)
-        NSUserDefaults.standardUserDefaults().setValue(newUsername, forKey: "username")
+        NSUserDefaults.standardUserDefaults().setValue(newUsername.lowercaseString, forKey: "username")
         self.usernameTaken = false
         EZLoadingActivity.Settings.SuccessText = "Updated"
         EZLoadingActivity.hide(success: true, animated: true)
     }
     
-    // Not efficient, should put on server side
-    func addNewUsernameToFirebase(newUsername: String!) {
-        
-        DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
-                for snap in snapshot {
-                    if let userDict = snap.value as? Dictionary<String, AnyObject> {
-                        if let username = userDict["username"] as? String {
-                            if newUsername == username.lowercaseString {
-                                print("USERNAME = \(username)")
-                                self.usernameIsTaken()
-                                return
-                            } else {
-                                print("\(username)")
-                            }
-                        }
-                    }
-                }
-            }
-            
-            self.usernameIsNotTaken(newUsername!)
-            return
-        })
-        
+    func accessCamera() {
+        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
+        imagePicker.allowsEditing = true
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
+    func accessLibrary() {
+        imagePicker.allowsEditing = true
+        self.presentViewController(imagePicker, animated: true, completion: nil)
     }
     
     @IBAction func addImgBtnTapped(sender: AnyObject) {
-        presentViewController(imagePicker, animated: true, completion: nil)
+        dismisskeyboard()
+        
+        if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera) {
+            
+            let alertview = JSSAlertView().show(self, title: "Access Photo Library Or Camera?", text: "", buttonText: "Library", cancelButtonText: "Camera", color: UIColorFromHex(0x25c051, alpha: 1))
+            alertview.setTextTheme(.Light)
+            alertview.addAction(accessLibrary)
+            alertview.addCancelAction(accessCamera)
+            
+        } else {
+            imagePicker.allowsEditing = true
+            self.presentViewController(imagePicker, animated: true, completion: nil)
+        }
     }
     
     @IBAction func saveBtnTapped(sender: AnyObject) {
@@ -271,11 +238,11 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             return
         }
         
-        EZLoadingActivity.show("Updating...", disableUI: false)
-        
         if !userHasProfileImg() || changeOfProfileImage() {
             
             if let img = imageSelector.image where imageSelected == true {
+                
+                EZLoadingActivity.show("Updating...", disableUI: true)
                 
                 let urlStr = "https://post.imageshack.us/upload_api.php"
                 let url = NSURL(string: urlStr)!
@@ -331,10 +298,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         if !userHasUsername() || changeOfUsername() {
-            
             print("Update firebase and local data for new username")
             let newUsername = usernameTextField.text?.lowercaseString
-            addNewUsernameToFirebase(newUsername)
+            addUsernameToFirebaseEfficient(newUsername)
         }
     }
 }
