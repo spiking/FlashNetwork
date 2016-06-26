@@ -66,7 +66,7 @@ class PostCell: UITableViewCell {
         
         print("Width = \(self.likesLbl.intrinsicContentSize().width)")
         
-        self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 2
+        self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
         
         self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
         self.likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
@@ -99,7 +99,7 @@ class PostCell: UITableViewCell {
         userRef.observeEventType(.Value, withBlock: { snapshot in
             
             if let username = snapshot.value["username"] as? String {
-                self.usernameLbl.text = username
+                self.usernameLbl.text = username.capitalizedString
             } else {
                 self.usernameLbl.text = "Default Username"
             }
@@ -120,8 +120,7 @@ class PostCell: UITableViewCell {
 
                 }
             } else {
-                print("No profile img")
-                self.profileImg.hidden = true
+                self.profileImg.image = UIImage(named:"profile2.png")
             }
             
             

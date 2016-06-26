@@ -85,6 +85,15 @@ class SettingsVC: UIViewController {
     
     func answeredYes() {
         print("Yes")
+        
+        // Reset NSUserData
+        let appDomain = NSBundle.mainBundle().bundleIdentifier!
+        NSUserDefaults.standardUserDefaults().removePersistentDomainForName(appDomain)
+        
+        // Push to login view
+        let loginVC: UIViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("InitalNavigationController")
+        self.presentViewController(loginVC!, animated: true, completion: nil)
+        
     }
     
     func answeredNo() {
@@ -97,8 +106,6 @@ class SettingsVC: UIViewController {
         alertview.setTextTheme(.Light)
         alertview.addAction(answeredYes)
         alertview.addCancelAction(answeredNo)
-        print("Log Out")
         
-        //        DataService.ds.REF_BASE.unauth()
     }
 }

@@ -36,6 +36,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     var sortedOn = "STANDARD"
     
+    var menuView: BTNavigationDropdownMenu!
+    
     var timer: NSTimer?
     var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
     
@@ -48,8 +50,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        print(Timestamp)
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -71,6 +71,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker = UIImagePickerController()
         imagePicker.delegate = self
         imagePicker.navigationBar.tintColor = UIColor.blackColor()
+        imagePicker.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.blackColor()]
         
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
@@ -95,7 +96,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         spinner.color = UIColor.grayColor()
         spinner.frame = CGRectMake(0, 0, 320, 44);
         self.tableView.tableFooterView = spinner;
-        
+    
         loadStandardFromFirebase()
     }
     
@@ -120,10 +121,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func setupSortMenu() {
-        let items = ["Standard", "Most Popular", "Latest"]
-        let menuView = BTNavigationDropdownMenu(navigationController: self.navigationController, title: items.first!, items: items)
+        let items = ["STANDARD", "MOST POPULAR", "LATEST"]
+        menuView = BTNavigationDropdownMenu(navigationController: self.navigationController, title: items.first!, items: items)
         menuView.cellTextLabelColor = UIColor.lightTextColor()
-        menuView.cellTextLabelFont = UIFont(name: "Avenir", size: 16)
+        menuView.cellTextLabelFont = UIFont(name: "Avenir", size: 14)
         menuView.menuTitleColor = UIColor.whiteColor()
         menuView.cellSelectionColor = UIColor.darkGrayColor()
         
@@ -433,8 +434,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
-        
-        
         if let cell = tableView.dequeueReusableCellWithIdentifier("PostCell") as? PostCell {
             
             // Cancel request if user scrolls
@@ -489,6 +488,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func profileBtnPressed() {
         dismisskeyboard()
+        menuView.hide()
         
         self.performSegueWithIdentifier("ProfileVC", sender: nil)
     }
@@ -505,6 +505,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
         }
     }
+    
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
@@ -555,7 +556,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             successAlertNew("Welcome back", msg: "You have successfully been logged in!")
             EZLoadingActivity.hide()
         } else if typeOfLogin == "NewAccount" {
-            successAlertNew("Welcome", msg: "A new account has successfully been created!")
+            successAlertNew("Welcome", msg: "A new account has successfully been created! Before you start posting, you should add a username and a profile image. To do so, click the profile icon in the upper right corner.")
             EZLoadingActivity.hide()
         } else {
             // Do nothing
@@ -679,9 +680,30 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         alertview.setButtonFont("Avenir-Heavy")
     }
     
-    @IBAction func selectImage(sender: UITapGestureRecognizer) {
+    func accessCamera() {
+        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
         imagePicker.allowsEditing = true
-        presentViewController(imagePicker, animated: true, completion: nil)
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
+    func accessLibrary() {
+        imagePicker.allowsEditing = true
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
+    @IBAction func selectImage(sender: UITapGestureRecognizer) {
+        
+        if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera) {
+        
+        let alertview = JSSAlertView().show(self, title: "Access Photo Library Or Camera?", text: "", buttonText: "Library", cancelButtonText: "Camera", color: UIColorFromHex(0x25c051, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(accessLibrary)
+        alertview.addCancelAction(accessCamera)
+            
+        } else {
+            imagePicker.allowsEditing = true
+            self.presentViewController(imagePicker, animated: true, completion: nil)
+        }
     }
     
     func callBack() {
@@ -694,7 +716,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         dismisskeyboard()
         
         if !userProfileAdded() {
-            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before posting. You can find the profile in the upper right corner.")
+            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a username and a profile image before posting. You can find the profile by clicking on the icon in the upper right corner.")
             return;
         }
         

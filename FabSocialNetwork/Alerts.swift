@@ -31,7 +31,7 @@ var Timestamp: String {
 var likeAnimation = MBProgressHUD()
 
 func userProfileAdded() -> Bool {
-    return NSUserDefaults.standardUserDefaults().objectForKey("profileUrl") != nil  && NSUserDefaults.standardUserDefaults().objectForKey("username") != nil
+    return NSUserDefaults.standardUserDefaults().objectForKey("username") != nil
 }
 
 func startLikeAnimation(view: UIView) {

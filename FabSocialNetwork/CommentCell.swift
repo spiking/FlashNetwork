@@ -55,7 +55,7 @@ class CommentCell: UITableViewCell {
         _userRef.observeEventType(.Value, withBlock: { snapshot in
             
             if let username = snapshot.value["username"] as? String {
-                self.usernameLbl.text = username
+                self.usernameLbl.text = username.capitalizedString
             } else {
                 self.usernameLbl.text = "Default Username"
             }
@@ -71,7 +71,7 @@ class CommentCell: UITableViewCell {
                     }
                 })
             } else {
-                self.profileImg.hidden = true
+                self.profileImg.image = UIImage(named:"profile2.png")
             }
             
             

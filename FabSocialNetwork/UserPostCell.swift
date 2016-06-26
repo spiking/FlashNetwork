@@ -52,7 +52,7 @@ class UserPostCell: UITableViewCell {
                 })
             }
         } else {
-            self.postImage.image = UIImage(named: "NoImage.png")
+            self.postImage.image = UIImage(named: "NoImage2.png")
         }
     }
 

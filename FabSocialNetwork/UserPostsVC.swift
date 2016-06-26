@@ -264,7 +264,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource 
         }
         
     }
-
+    
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         
         if editingStyle == UITableViewCellEditingStyle.Delete {

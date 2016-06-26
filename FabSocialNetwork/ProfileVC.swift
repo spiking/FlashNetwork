@@ -22,6 +22,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     var imagePicker: UIImagePickerController!
     var imageSelected = false
     var request: Request?
+    var usernameTaken = false
+    
+    var myGroup = dispatch_group_create()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,7 +73,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
-            usernameTextField.text = username
+            usernameTextField.text = username.capitalizedString
         }
     }
     
@@ -117,18 +120,17 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
     }
     
-    func addNewUsernameToFirebase(newUsername: String!) {
-        if newUsername != "" {
-            
-            DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername!)
-            NSUserDefaults.standardUserDefaults().setValue(newUsername, forKey: "username")
-            
-            // Prevent double updates
-            if !imageSelected {
-                print("Success!")
-                EZLoadingActivity.Settings.SuccessText = "Updated"
-                EZLoadingActivity.hide(success: true, animated: true)
-            }
+    func usernameContainsSpaces() -> Bool {
+        let whitespace = NSCharacterSet.whitespaceCharacterSet()
+        let range = usernameTextField.text!.rangeOfCharacterFromSet(whitespace)
+        
+        if range != nil {
+            print("whitespace found")
+            return true
+        }
+        else {
+            print("whitespace not found")
+            return false
         }
     }
     
@@ -154,10 +156,99 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         return NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") != nil
     }
     
+    // Top-level utility function for delay with async requests
+    func delay(delay:Double, closure:()->()) {
+        dispatch_after(
+            dispatch_time(
+                DISPATCH_TIME_NOW,
+                Int64(delay * Double(NSEC_PER_SEC))
+            ),
+            dispatch_get_main_queue(), closure)
+    }
+    
+        func addUsernameToFirebaseEfficient() {
+            
+            DataService.ds.REF_USERS.queryOrderedByChild("username").queryEqualToValue(usernameTextField.text!).observeSingleEventOfType(.ChildAdded, withBlock: { snapshot in
+    
+                print("KEY: \(snapshot.key)")
+                self.usernameTaken = true
+                dispatch_group_leave(self.myGroup)
+            })
+            
+            print("NEXT!")
+    
+            dispatch_group_notify(myGroup, dispatch_get_main_queue(), {
+                print("Finished all requests.")
+    
+                if self.usernameTaken {
+                    JSSAlertView().danger(self, title: "Username Taken", text: "The username entered is already taken. Please try something else.")
+                    EZLoadingActivity.hide()
+                } else {
+                    // We should never get here
+                }
+    
+            })
+            
+    
+            delay(3.0) {
+    
+                if !self.usernameTaken {
+                    print("DELAY")
+//                    DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername)
+//                    NSUserDefaults.standardUserDefaults().setValue(newUsername, forKey: "username")
+                    self.usernameTaken = false
+                    EZLoadingActivity.hide()
+                }
+            }
+        }
+    
+    func usernameIsTaken() {
+        let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
+        self.usernameTextField.text = username?.capitalizedString
+        
+        JSSAlertView().danger(self, title: "Username Taken", text: "The username entered is already taken. Please try something else.")
+        EZLoadingActivity.hide()
+    }
+    
+    func usernameIsNotTaken(newUsername: String!) {
+        DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername)
+        NSUserDefaults.standardUserDefaults().setValue(newUsername, forKey: "username")
+        self.usernameTaken = false
+        EZLoadingActivity.Settings.SuccessText = "Updated"
+        EZLoadingActivity.hide(success: true, animated: true)
+    }
+    
+    // Not efficient, should put on server side
+    func addNewUsernameToFirebase(newUsername: String!) {
+        
+        DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    if let userDict = snap.value as? Dictionary<String, AnyObject> {
+                        if let username = userDict["username"] as? String {
+                            if newUsername == username.lowercaseString {
+                                print("USERNAME = \(username)")
+                                self.usernameIsTaken()
+                                return
+                            } else {
+                                print("\(username)")
+                            }
+                        }
+                    }
+                }
+            }
+            
+            self.usernameIsNotTaken(newUsername!)
+            return
+        })
+        
+    }
+    
     @IBAction func addImgBtnTapped(sender: AnyObject) {
         presentViewController(imagePicker, animated: true, completion: nil)
     }
-
+    
     @IBAction func saveBtnTapped(sender: AnyObject) {
         dismisskeyboard()
         
@@ -170,7 +261,16 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             return
         }
         
-
+        if usernameTextField.text?.characters.count > 25 {
+            JSSAlertView().danger(self, title: "Too Long Username", text: "The username can not be longer than 25 characters.")
+            return
+        }
+        
+        if usernameContainsSpaces() {
+            JSSAlertView().danger(self, title: "Username Contains Spaces", text: "The username can not be longer than 25 characters.")
+            return
+        }
+        
         EZLoadingActivity.show("Updating...", disableUI: false)
         
         if !userHasProfileImg() || changeOfProfileImage() {
@@ -231,8 +331,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         if !userHasUsername() || changeOfUsername() {
+            
             print("Update firebase and local data for new username")
-            let newUsername = usernameTextField.text
+            let newUsername = usernameTextField.text?.lowercaseString
             addNewUsernameToFirebase(newUsername)
         }
     }
