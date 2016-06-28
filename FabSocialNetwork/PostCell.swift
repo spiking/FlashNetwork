@@ -23,6 +23,7 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var likeImage: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
     @IBOutlet weak var commentsBtn: UIButton!
+    @IBOutlet weak var timeLbl: UILabel!
     
     var commentsTapAction: ((UITableViewCell) -> Void)?
     var request: Request?
@@ -64,7 +65,9 @@ class PostCell: UITableViewCell {
         self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
         
-        print("Width = \(self.likesLbl.intrinsicContentSize().width)")
+        var date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
+        let diff = NSDate().offsetFrom(date)
+        self.timeLbl.text = diff
         
         self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
         
@@ -176,12 +179,6 @@ class PostCell: UITableViewCell {
         })
     }
     
-    
-    @IBAction func commentsBtnTapped(sender: AnyObject) {
-        print("Comments tapped!")
-        commentsTapAction?(self)
-    }
-    
     func mainImgTapped(sender: UITapGestureRecognizer) {
         
         if !userLikedPost {
@@ -193,4 +190,10 @@ class PostCell: UITableViewCell {
         }
         
     }
+    
+    @IBAction func commentsBtnTapped(sender: AnyObject) {
+        print("Comments tapped!")
+        commentsTapAction?(self)
+    }
+    
 }

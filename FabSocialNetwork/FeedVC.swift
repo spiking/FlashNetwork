@@ -132,7 +132,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         menuView.didSelectItemAtIndexHandler = {[weak self] (indexPath: Int) -> () in
             print("Did select item at index: \(indexPath)")
-            
             switch indexPath {
             case 0:
                 self!.loadHottestSelected()
@@ -450,7 +449,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             // Push comment segue which will be executed when tapped
             cell.commentsTapAction = { (cell) in
-                self.performSegueWithIdentifier("CommentsVC", sender: post)
+                self.performSegueWithIdentifier(SEGUE_COMMENTSVC, sender: post)
             }
             
             cell.layoutIfNeeded()
@@ -468,7 +467,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         if post.imageUrl == nil || post.imageUrl == "" {
             // This shit must work
-            return 100 + heightForView(post.postDescription, width: screenWidth - 51)
+            return 115 + heightForView(post.postDescription, width: screenWidth - 51)
             
         } else {
             return tableView.estimatedRowHeight
@@ -490,14 +489,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         dismisskeyboard()
         menuView.hide()
         
-        self.performSegueWithIdentifier("ProfileVC", sender: nil)
+        self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: nil)
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
         dismisskeyboard()
         
-        if segue.identifier == "CommentsVC" {
+        if segue.identifier == SEGUE_COMMENTSVC {
             if let commentsVC = segue.destinationViewController as? CommentsVC {
                 if let post = sender as? Post {
                     commentsVC.post = post
@@ -553,10 +552,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func loginMessage() {
         if typeOfLogin == "OldAccount" {
-            successAlertNew("Welcome back", msg: "You have successfully been logged in!")
+            successAlertFeedVC(self, title: "Welcome back", msg: "You have successfully been logged in!")
             EZLoadingActivity.hide()
         } else if typeOfLogin == "NewAccount" {
-            successAlertNew("Welcome", msg: "A new account has successfully been created! Before you start posting, you should add a username and a profile image. To do so, click the profile icon in the upper right corner.")
+            successAlertFeedVC(self, title: "Welcome", msg: "A new account has successfully been created! Before you start posting, you should add a username and a profile image. To do so, click the profile icon in the upper right corner.")
             EZLoadingActivity.hide()
         } else {
             // Do nothing
@@ -672,14 +671,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func successAlertNew(title: String, msg: String) {
-        let alertview = JSSAlertView().show(self, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.setTitleFont("Avenir-Heavy")
-        alertview.setTextFont("Avenir-Light")
-        alertview.setButtonFont("Avenir-Heavy")
-    }
-    
     func accessCamera() {
         imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
         imagePicker.allowsEditing = true
@@ -784,3 +775,4 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
 }
+

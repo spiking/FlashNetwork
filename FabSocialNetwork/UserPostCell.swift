@@ -15,6 +15,7 @@ class UserPostCell: UITableViewCell {
     @IBOutlet weak var postImage:
     UIImageView!
     @IBOutlet weak var likesLabel: UILabel!
+    @IBOutlet weak var timeLabel: UILabel!
     
     var request: Request?
     private var _post: Post?
@@ -35,6 +36,18 @@ class UserPostCell: UITableViewCell {
         self.postLabel.text = post.postDescription
         self.likesLabel.text = String(post.likes)
         self.postImage.image = nil
+        
+        print(post.timestamp)
+        
+        var date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
+        
+        print(date)
+        
+        let diff = NSDate().offsetFrom(date)
+        
+        print(diff)
+        
+        self.timeLabel.text = diff
         
         // Main post image
         if post.imageUrl != "" {

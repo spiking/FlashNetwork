@@ -16,6 +16,7 @@ class Post {
     private var _postKey: String!
     private var _postRef: Firebase!
     private var _userKey: String!
+    private var _timestamp: String!
     
     var postDescription: String! {
         return _postDescription
@@ -40,6 +41,13 @@ class Post {
         return ""
     }
     
+    var timestamp: String {
+        if _timestamp != nil {
+            return _timestamp
+        }
+        return "0"
+    }
+    
     init(postKey: String, dictionary: Dictionary<String, AnyObject>) {
         self._postKey = postKey
         
@@ -57,6 +65,10 @@ class Post {
         
         if let user = dictionary["user"] as? String {
             self._userKey = user
+        }
+        
+        if let timestamp = dictionary["timestamp"] as? String {
+            self._timestamp = timestamp
         }
         
         self._postRef = DataService.ds.REF_POSTS.childByAppendingPath(self._postKey)

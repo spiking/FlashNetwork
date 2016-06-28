@@ -12,7 +12,9 @@ import EZLoadingActivity
 import JSSAlertView
 import MBProgressHUD
 
-// Global alert functions
+// Global functions and variables
+
+var likeAnimation = MBProgressHUD()
 
 func heightForView(text:String, width:CGFloat) -> CGFloat {
     let label:UILabel = UILabel(frame: CGRectMake(0, 0, width, CGFloat.max))
@@ -27,8 +29,6 @@ func heightForView(text:String, width:CGFloat) -> CGFloat {
 var Timestamp: String {
     return "\(NSDate().timeIntervalSince1970 * 1)"
 }
-
-var likeAnimation = MBProgressHUD()
 
 func userProfileAdded() -> Bool {
     return NSUserDefaults.standardUserDefaults().objectForKey("username") != nil
@@ -117,10 +117,73 @@ func alertViewSetup() {
     EZLoadingActivity.Settings.SuccessColor = UIColor(red: 37/255, green: 193/255, blue: 81/255, alpha: 0.88)
 }
 
-func successAlertNew(vc: UIViewController, title: String, msg: String) {
+func successAlertFeedVC(vc: FeedVC, title: String, msg: String) {
     let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
     alertview.setTextTheme(.Light)
     alertview.setTitleFont("Avenir-Heavy")
-    alertview.setTextFont("Avenir-Light")
+    alertview.setTextFont("Avenir-Medium")
     alertview.setButtonFont("Avenir-Heavy")
 }
+
+func successAlertsSettingsVC(vc: SettingsVC, title: String, msg: String) {
+    let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
+    alertview.setTextTheme(.Light)
+    alertview.setTitleFont("Avenir-Heavy")
+    alertview.setTextFont("Avenir-Medium")
+    alertview.setButtonFont("Avenir-Heavy")
+}
+
+extension NSDate {
+    func yearsFrom(date: NSDate) -> Int {
+        return NSCalendar.currentCalendar().components(.Year, fromDate: date, toDate: self, options: []).year
+    }
+    func monthsFrom(date: NSDate) -> Int {
+        return NSCalendar.currentCalendar().components(.Month, fromDate: date, toDate: self, options: []).month
+    }
+    func weeksFrom(date: NSDate) -> Int {
+        return NSCalendar.currentCalendar().components(.WeekOfYear, fromDate: date, toDate: self, options: []).weekOfYear
+    }
+    func daysFrom(date: NSDate) -> Int {
+        return NSCalendar.currentCalendar().components(.Day, fromDate: date, toDate: self, options: []).day
+    }
+    func hoursFrom(date: NSDate) -> Int {
+        return NSCalendar.currentCalendar().components(.Hour, fromDate: date, toDate: self, options: []).hour
+    }
+    func minutesFrom(date: NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Minute, fromDate: date, toDate: self, options: []).minute
+    }
+    func secondsFrom(date: NSDate) -> Int{
+        return NSCalendar.currentCalendar().components(.Second, fromDate: date, toDate: self, options: []).second
+    }
+    func offsetFrom(date: NSDate) -> String {
+        print("CHECKING DATE")
+        if yearsFrom(date)   > 0 { return "\(yearsFrom(date)) y"   }
+        if monthsFrom(date)  > 0 { return "\(monthsFrom(date)) M"  }
+        if weeksFrom(date)   > 0 { return "\(weeksFrom(date)) w"   }
+        if daysFrom(date)    > 0 { return "\(daysFrom(date)) d"    }
+        if hoursFrom(date)   > 0 { return "\(hoursFrom(date)) h"   }
+        if minutesFrom(date) > 0 { return "\(minutesFrom(date)) m" }
+        if secondsFrom(date) > 0 { return "\(secondsFrom(date)) s" }
+        return ""
+    }
+    
+    func offsetFromTest(date:NSDate) -> String {
+        
+        let dayHourMinuteSecond: NSCalendarUnit = [.Day, .Hour, .Minute, .Second]
+        let difference = NSCalendar.currentCalendar().components(dayHourMinuteSecond, fromDate: date, toDate: self, options: [])
+        
+        let seconds = "\(difference.second)s"
+        let minutes = "\(difference.minute)m" + " " + seconds
+        let hours = "\(difference.hour)h" + " " + minutes
+        let days = "\(difference.day)d" + " " + hours
+        
+        if difference.day    > 0 { return days }
+        if difference.hour   > 0 { return hours }
+        if difference.minute > 0 { return minutes }
+        if difference.second > 0 { return seconds }
+        return ""
+    }
+    
+}
+
+

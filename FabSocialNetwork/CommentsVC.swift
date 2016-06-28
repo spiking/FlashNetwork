@@ -16,6 +16,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var commentTextViewHeight: NSLayoutConstraint!
     
     var refreshControl: UIRefreshControl!
     var post: Post!
@@ -98,19 +99,17 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     func initObservers() {
         
-        // Observe changes in Firebase, update instantly (code in closure)
-        DataService.ds.REF_COMMENTS.observeEventType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_COMMENTS.queryOrderedByChild("post").queryEqualToValue(self.post.postKey).observeEventType(.Value, withBlock: { snapshot in
             self.comments = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
                 for snap in snapshot {
-                    if "\(snap.value.objectForKey("post")!)" == self.post.postKey {
-                        if let commentDict = snap.value as? Dictionary<String, AnyObject> {
-                            let key = snap.key
-                            let comment = Comment(commentKey: key, dictionary: commentDict)
-                            self.comments.append(comment)
-                        }
+                    if let commentDict = snap.value as? Dictionary<String, AnyObject> {
+                        let key = snap.key
+                        let comment = Comment(commentKey: key, dictionary: commentDict)
+                        self.comments.append(comment)
                     }
+                    
                 }
             }
             
@@ -169,13 +168,13 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.textColor = UIColor.lightGrayColor()
         }
         
-        view.removeConstraint(commentViewHeight)
+        commentViewHeight.constant = 101
+        commentTextViewHeight.constant = 45
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-        commentViewHeight = NSLayoutConstraint(item: commentView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 100)
-        view.addConstraint(commentViewHeight)
-        
+        commentViewHeight.constant = 101+50
+        commentTextViewHeight.constant = 45+50
     }
     
     func addComment(comment: String!) {
@@ -244,13 +243,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         let comment = comments[indexPath.row]
         
-        print("Comment user: \(comment.userKey) AND \(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID))")
-        
         if comment.userKey! == String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!) {
-            print("User wrote the comment")
             return true
         }
-        print("User did not write the comment")
         return false
     }
     
@@ -315,12 +310,12 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             tableView.reloadData()
             
-//            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-//                let indexPath = NSIndexPath(forRow: self.comments.count-1, inSection: 0)
-//                self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
-//                
-//            })
-
+            //            dispatch_async(dispatch_get_main_queue(), { () -> Void in
+            //                let indexPath = NSIndexPath(forRow: self.comments.count-1, inSection: 0)
+            //                self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
+            //
+            //            })
+            
         } else {
             print("Nothing written")
         }

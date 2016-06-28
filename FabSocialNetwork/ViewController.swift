@@ -14,7 +14,7 @@ import Firebase
 import JSSAlertView
 import EZLoadingActivity
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
@@ -41,9 +41,20 @@ class ViewController: UIViewController {
         let placeholderPassword = NSAttributedString(string: "Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
         passwordField.attributedPlaceholder = placeholderPassword
         
+        emailField.delegate = self
+        
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
     }
+    
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        if textField == emailField {
+            self.passwordField.becomeFirstResponder()
+        }
+        
+        return true
+    }
+    
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
         

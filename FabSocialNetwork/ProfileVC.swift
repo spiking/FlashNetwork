@@ -87,7 +87,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func settingsBtnTapped() {
-        self.performSegueWithIdentifier("settings", sender: nil)
+        self.performSegueWithIdentifier(SEGUE_SETTINGSVC, sender: nil)
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {

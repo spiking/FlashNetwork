@@ -19,7 +19,10 @@ let SHADOW_COLOR: CGFloat = 100.0 / 255.0
 let KEY_UID = "uid"
 
 //Segues
-let SEGUE_LOGGED_IN = "loggedIn"
+let SEGUE_LOGGED_IN = "feedVC"
+let SEGUE_COMMENTSVC = "commentsVC"
+let SEGUE_SETTINGSVC = "settingsVC"
+let SEGUE_PROFILEVC = "profileVC"
 
 // Status Codes
 let STATUS_ACCOUNT_NONEXIST = -8

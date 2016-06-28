@@ -69,18 +69,10 @@ class SettingsVC: UIViewController {
                                                                 } else {
                                                                     print("Password changed!")
                                                                     self.setupPlaceholders()
-                                                                    self.successAlertNew("Password Changed", msg: "You have successfully changed your password.")
+                                                                    successAlertsSettingsVC(self, title: "Password Changed", msg: "You have successfully changed your password.")
                                                                 }
         })
         
-    }
-    
-    func successAlertNew(title: String, msg: String) {
-        let alertview = JSSAlertView().show(self, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.setTitleFont("Avenir-Heavy")
-        alertview.setTextFont("Avenir-Light")
-        alertview.setButtonFont("Avenir-Heavy")
     }
     
     func answeredYes() {

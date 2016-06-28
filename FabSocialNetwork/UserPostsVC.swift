@@ -12,7 +12,7 @@ import Alamofire
 import EZLoadingActivity
 import JSSAlertView
 
-class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -27,13 +27,15 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource 
         
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.emptyDataSetSource = self
+        tableView.emptyDataSetDelegate = self
         
         let longpress = UILongPressGestureRecognizer(target: self, action: #selector(UserPostsVC.longPressGestureRecognized(_:)))
         tableView.addGestureRecognizer(longpress)
         
         setupDeleteButton()
-        
-        loadUserPosts()
+    
+        loadUserPostsFromFirebase()
     }
     
     override func setEditing(editing: Bool, animated: Bool) {
@@ -160,29 +162,52 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource 
         return cellSnapshot
     }
     
-    
-    func loadUserPosts() {
+    func loadUserPostsFromFirebase() {
+        let userKey = String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!)
         
-        // Observe changes in Firebase, update instantly
-        DataService.ds.REF_POSTS.observeEventType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_POSTS.queryOrderedByChild("user").queryEqualToValue(userKey).observeEventType(.Value, withBlock: { snapshot in
             self.userPosts = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
                 for snap in snapshot {
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
-                        if String(postDict["user"]) == String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)) {
-                            let key = snap.key
-                            let post = Post(postKey: key, dictionary: postDict)
-                            self.userPosts.append(post)
-                        }
+                        let key = snap.key
+                        let post = Post(postKey: key, dictionary: postDict)
+                        self.userPosts.append(post)
                     }
                 }
             }
             
-            self.tableView.reloadData()
             
+            if self.userPosts.count == 0 {
+                self.tableView.separatorStyle = UITableViewCellSeparatorStyle.None
+            }
+            
+            self.tableView.reloadData()
         })
+    }
+    
+    func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            str = "It looks like you have not made any posts. Go back to the main view to create a post."
+        } else {
+            str = "Please connect to a network and the feed will load automatically."
+        }
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
+        var imgName = ""
         
+        if isConnectedToNetwork() {
+            imgName = "Write"
+        } else {
+            imgName = "Wifi"
+        }
+        
+        return UIImage(named: imgName)
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
