@@ -18,6 +18,8 @@ class ResetPasswordVC: UIViewController {
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
+        
+        setupPlaceholders()
     }
     
     func dismisskeyboard() {

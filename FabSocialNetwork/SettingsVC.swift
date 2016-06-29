@@ -8,7 +8,6 @@
 
 import UIKit
 import JSSAlertView
-import SlackTextViewController
 
 class SettingsVC: UIViewController {
     

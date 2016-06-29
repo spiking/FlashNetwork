@@ -630,10 +630,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func accessCamera() {
         imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
+        imagePicker.allowsEditing = false
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
     
     func accessLibrary() {
+        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
         imagePicker.allowsEditing = true
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
