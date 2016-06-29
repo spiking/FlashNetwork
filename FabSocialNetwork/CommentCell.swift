@@ -52,7 +52,7 @@ class CommentCell: UITableViewCell {
         self._userRef = DataService.ds.REF_USERS.childByAppendingPath(comment.userKey)
         self.textLbl.text = comment.commentText
         
-        _userRef.observeEventType(.Value, withBlock: { snapshot in
+        _userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if let username = snapshot.value["username"] as? String {
                 self.usernameLbl.text = username.capitalizedString

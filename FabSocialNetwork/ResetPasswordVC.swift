@@ -11,14 +11,10 @@ import JSSAlertView
 
 class ResetPasswordVC: UIViewController {
     
-    @IBOutlet weak var emailTextField: MaterialTextField!
+    @IBOutlet weak var emailField: DarkTextField!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        print("Loaded pw reset view!")
-        
-        let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
-        emailTextField.attributedPlaceholder = placeholderEmail
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
@@ -26,6 +22,19 @@ class ResetPasswordVC: UIViewController {
     
     func dismisskeyboard() {
         view.endEditing(true)
+    }
+    
+    func setupPlaceholders() {
+        let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
+        emailField.attributedPlaceholder = placeholderEmail
+    }
+    
+    func successAlertNew(title: String, msg: String) {
+        let alertview = JSSAlertView().show(self, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.setTitleFont("Avenir-Heavy")
+        alertview.setTextFont("Avenir-Light")
+        alertview.setButtonFont("Avenir-Heavy")
     }
     
     @IBAction func resetPassword() {
@@ -36,7 +45,7 @@ class ResetPasswordVC: UIViewController {
         
         dismisskeyboard()
         
-        DataService.ds.REF_USERS.resetPasswordForUser(emailTextField.text, withCompletionBlock: { error in
+        DataService.ds.REF_USERS.resetPasswordForUser(emailField.text, withCompletionBlock: { error in
             if error != nil {
                 JSSAlertView().danger(self, title: "No User Found", text: "There is no user with that email address. Please try again.")
             } else {
@@ -45,13 +54,5 @@ class ResetPasswordVC: UIViewController {
 
             }
         })
-    }
-    
-    func successAlertNew(title: String, msg: String) {
-        let alertview = JSSAlertView().show(self, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.setTitleFont("Avenir-Heavy")
-        alertview.setTextFont("Avenir-Light")
-        alertview.setButtonFont("Avenir-Heavy")
     }
 }

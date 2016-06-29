@@ -39,17 +39,7 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>MGSwipeTableCell.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>Pods-FabSocialNetwork.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>SCLAlertView.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -57,12 +47,7 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>1B21DB0A4844EC24069BB5AA6B45ED88</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>4E1263BFF45F6446CF3DE29AE234C893</key>
+		<key>2D528485A549F6CCB3F22A2EF101BA3A</key>
 		<dict>
 			<key>primary</key>
 			<true/>
@@ -78,11 +63,6 @@
 			<true/>
 		</dict>
 		<key>AD323711AE430DFCADA96049B1EF6AD0</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>B10971EAA7436746144C945FD8D3B380</key>
 		<dict>
 			<key>primary</key>
 			<true/>

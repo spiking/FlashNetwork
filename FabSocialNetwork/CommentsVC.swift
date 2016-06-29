@@ -8,7 +8,7 @@
 
 import UIKit
 import Firebase
-import SCLAlertView
+
 import JSSAlertView
 import EZLoadingActivity
 
@@ -41,7 +41,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        self.tableView.estimatedRowHeight = 100
+        self.tableView.estimatedRowHeight = 80
         self.tableView.rowHeight = UITableViewAutomaticDimension
         
         self.edgesForExtendedLayout = UIRectEdge.None
@@ -168,13 +168,13 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.textColor = UIColor.lightGrayColor()
         }
         
-        commentViewHeight.constant = 101
-        commentTextViewHeight.constant = 45
+//        commentViewHeight.constant = 101
+//        commentTextViewHeight.constant = 45
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-        commentViewHeight.constant = 101+50
-        commentTextViewHeight.constant = 45+50
+//        commentViewHeight.constant = 101+50
+//        commentTextViewHeight.constant = 45+50
     }
     
     func addComment(comment: String!) {

@@ -9,7 +9,6 @@
 import UIKit
 import Alamofire
 import Firebase
-import SCLAlertView
 import EZLoadingActivity
 import JSSAlertView
 
@@ -17,14 +16,12 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     @IBOutlet weak var addImgBtn: UIButton!
     @IBOutlet weak var imageSelector: UIImageView!
-    @IBOutlet weak var usernameTextField: MaterialTextField!
+    @IBOutlet weak var usernameField: DarkTextField!
     
     var imagePicker: UIImagePickerController!
     var imageSelected = false
     var request: Request?
     var usernameTaken = false
-    
-    var myGroup = dispatch_group_create()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,7 +37,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         view.addGestureRecognizer(tap)
         
         let placeholderPassword = NSAttributedString(string: "Username", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
-        usernameTextField.attributedPlaceholder = placeholderPassword
+        usernameField.attributedPlaceholder = placeholderPassword
         
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
@@ -73,7 +70,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
-            usernameTextField.text = username.capitalizedString
+            usernameField.text = username.capitalizedString
         }
     }
     
@@ -81,7 +78,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "Settings"), forState: UIControlState.Normal)
         button.addTarget(self, action: #selector(ProfileVC.settingsBtnTapped), forControlEvents: UIControlEvents.TouchUpInside)
-        button.frame = CGRectMake(0, 0, 25, 25)
+        button.frame = CGRectMake(0, 0, 22, 22)
         let barButton = UIBarButtonItem(customView: button)
         self.navigationItem.rightBarButtonItem = barButton
     }
@@ -98,8 +95,8 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func changeOfUsername() -> Bool {
-        let usernameEntered = usernameTextField.text?.lowercaseString
-        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameTextField.text != ""
+        let usernameEntered = usernameField.text?.lowercaseString
+        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameField.text != ""
     }
     
     func changeOfProfileImage() -> Bool {
@@ -112,7 +109,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     func usernameContainsSpaces() -> Bool {
         let whitespace = NSCharacterSet.whitespaceCharacterSet()
-        let range = usernameTextField.text!.rangeOfCharacterFromSet(whitespace)
+        let range = usernameField.text!.rangeOfCharacterFromSet(whitespace)
         
         if range != nil {
             print("whitespace found")
@@ -156,7 +153,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             dispatch_get_main_queue(), closure)
     }
     
-    func addUsernameToFirebaseEfficient(newUsername: String!) {
+    func addUsernameToFirebase(newUsername: String!) {
         
         EZLoadingActivity.show("Updating...", disableUI: true)
         DataService.ds.REF_USERS.queryOrderedByChild("username").queryEqualToValue(newUsername).observeSingleEventOfType(.Value, withBlock: { snap in
@@ -175,7 +172,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     func usernameIsTaken() {
         let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
-        self.usernameTextField.text = username?.capitalizedString
+        self.usernameField.text = username?.capitalizedString
         
         JSSAlertView().danger(self, title: "Username Taken", text: "The username entered is already taken. Please try something else.")
         EZLoadingActivity.hide()
@@ -228,13 +225,13 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             return
         }
         
-        if usernameTextField.text?.characters.count > 25 {
+        if usernameField.text?.characters.count > 25 {
             JSSAlertView().danger(self, title: "Too Long Username", text: "The username can not be longer than 25 characters.")
             return
         }
         
         if usernameContainsSpaces() {
-            JSSAlertView().danger(self, title: "Username Contains Spaces", text: "The username can not be longer than 25 characters.")
+            JSSAlertView().danger(self, title: "Username Contains Whitespace", text: "The username is not allowed to contain whitespaces.")
             return
         }
         
@@ -299,8 +296,8 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         if !userHasUsername() || changeOfUsername() {
             print("Update firebase and local data for new username")
-            let newUsername = usernameTextField.text?.lowercaseString
-            addUsernameToFirebaseEfficient(newUsername)
+            let newUsername = usernameField.text?.lowercaseString
+            addUsernameToFirebase(newUsername)
         }
     }
 }

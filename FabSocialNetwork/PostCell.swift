@@ -25,7 +25,7 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var commentsBtn: UIButton!
     @IBOutlet weak var timeLbl: UILabel!
     
-    var commentsTapAction: ((UITableViewCell) -> Void)?
+    var commentTapAction: ((UITableViewCell) -> Void)?
     var request: Request?
     var likeRef: Firebase!
     var userRef: Firebase!
@@ -65,9 +65,9 @@ class PostCell: UITableViewCell {
         self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
         
-        var date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
-        let diff = NSDate().offsetFrom(date)
-        self.timeLbl.text = diff
+        let date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
+        let dateDiff = NSDate().offsetFrom(date)
+        self.timeLbl.text = dateDiff
         
         self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
         
@@ -76,7 +76,6 @@ class PostCell: UITableViewCell {
         self.userLikes = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes")
         
         let height = heightForView(post.postDescription, width: screenWidth - 51)
-        print("HEIGHT = \(height)")
         self.descLblHeight.constant = height
         
         // Main post image
@@ -89,7 +88,6 @@ class PostCell: UITableViewCell {
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.mainImg.image = img
-                        print("Add to cache!")
                         FeedVC.imageCache.setObject(img, forKey: self.post!.imageUrl!)
                     }
                 })
@@ -99,7 +97,7 @@ class PostCell: UITableViewCell {
         }
         
         // Profile image
-        userRef.observeEventType(.Value, withBlock: { snapshot in
+        userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if let username = snapshot.value["username"] as? String {
                 self.usernameLbl.text = username.capitalizedString
@@ -132,13 +130,10 @@ class PostCell: UITableViewCell {
         })
         
         // If current post exist in current users likes, set heart to full (needed for reinstall)
-        
-        
-        
+
         userLikes.observeSingleEventOfType(.Value, withBlock: { snapshot in
     
             if snapshot.hasChild(post.postKey) {
-                print("Current user has liked this post!")
                 self.likeImage.image = UIImage(named: "heart-full")
             }
         })
@@ -183,17 +178,12 @@ class PostCell: UITableViewCell {
         
         if !userLikedPost {
             startLikeAnimation(self)
-            print("Images tapped!")
             likeTapped(sender)
-        } else {
-            print("User already liked this post!")
         }
-        
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
-        print("Comments tapped!")
-        commentsTapAction?(self)
+        commentTapAction?(self)
     }
     
 }

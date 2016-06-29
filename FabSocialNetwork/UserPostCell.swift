@@ -16,7 +16,7 @@ class UserPostCell: UITableViewCell {
     UIImageView!
     @IBOutlet weak var likesLabel: UILabel!
     @IBOutlet weak var timeLabel: UILabel!
-    
+
     var request: Request?
     private var _post: Post?
     

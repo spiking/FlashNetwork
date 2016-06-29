@@ -6,10 +6,8 @@ target 'FabSocialNetwork' do
   use_frameworks!
   pod 'Firebase', '>= 2.3.3'
   pod 'Alamofire', '~> 3.3'
-  pod 'SCLAlertView'
   pod 'EZLoadingActivity'
   pod 'MBProgressHUD', '~> 0.9.2'
   pod 'JSSAlertView'
   pod 'BTNavigationDropdownMenu'
-  pod 'MGSwipeTableCell'
 end

@@ -9,7 +9,6 @@
 import UIKit
 import Firebase
 import Alamofire
-import SCLAlertView
 import MobileCoreServices
 import EZLoadingActivity
 import JSSAlertView
@@ -17,8 +16,6 @@ import BTNavigationDropdownMenu
 
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
-    
-    @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
     
     var posts = [Post]()
     static var imageCache = NSCache() // Static since single instance (global)
@@ -34,17 +31,22 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var postsShown = 20
     var alert = false
     
-    var sortedOn = "STANDARD"
+    enum FeedMode {
+        case Popular
+        case Hottest
+        case Latest
+    }
     
+    var feedMode = FeedMode.Popular
     var menuView: BTNavigationDropdownMenu!
-    
     var timer: NSTimer?
     var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
     
-    @IBOutlet weak var postViewHeight: NSLayoutConstraint!
-    @IBOutlet weak var postView: MaterialView!
+    @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
+    @IBOutlet weak var postView: UIView!
+//    @IBOutlet weak var postViewHeight: NSLayoutConstraint!
     @IBOutlet weak var tableView: UITableView!
-    @IBOutlet weak var postTextViewHeight: NSLayoutConstraint!
+//    @IBOutlet weak var postTextViewHeight: NSLayoutConstraint!
     @IBOutlet weak var postTextView: MaterialTextView!
     @IBOutlet weak var imageSelector: UIImageView!
     
@@ -57,14 +59,19 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.emptyDataSetDelegate = self
         tableView.tableFooterView = UIView()
         tableView.allowsSelection = true
-        
+        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
         
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        self.tableView.estimatedRowHeight = 500
-        self.tableView.rowHeight = UITableViewAutomaticDimension
+        spinner.hidesWhenStopped = true
+        spinner.color = UIColor.grayColor()
+        spinner.frame = CGRectMake(0, 0, 320, 44);
+        tableView.tableFooterView = spinner;
+        
+        tableView.estimatedRowHeight = 550
+        tableView.rowHeight = UITableViewAutomaticDimension
         
         postTextView.delegate = self
         
@@ -73,15 +80,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker.navigationBar.tintColor = UIColor.blackColor()
         imagePicker.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.blackColor()]
         
-        
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
         setupProfileButton()
         setupSortMenu()
         
-        self.title = "FAB NETWORK"
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
+        title = "FAB NETWORK"
+        navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
         if isConnectedToNetwork() {
             print("Connected!")
@@ -89,15 +95,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
         
         loadProfileData()
-        
-        print("User logged in as \(typeOfLogin)")
-        
-        spinner.hidesWhenStopped = true
-        spinner.color = UIColor.grayColor()
-        spinner.frame = CGRectMake(0, 0, 320, 44);
-        self.tableView.tableFooterView = spinner;
-    
-        loadStandardFromFirebase()
+        loadMostPopularFromFirebase()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -121,7 +119,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func setupSortMenu() {
-        let items = ["STANDARD", "MOST POPULAR", "LATEST"]
+        let items = ["MOST POPULAR", "HOTTEST", "LATEST"]
         menuView = BTNavigationDropdownMenu(navigationController: self.navigationController, title: items.first!, items: items)
         menuView.cellTextLabelColor = UIColor.lightTextColor()
         menuView.cellTextLabelFont = UIFont(name: "Avenir", size: 14)
@@ -134,11 +132,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             print("Did select item at index: \(indexPath)")
             switch indexPath {
             case 0:
-                self!.loadHottestSelected()
+                self!.feedMode = .Popular
+                self!.loadDataFromFirebase()
             case 1:
-                self!.loadMostPopularSelected()
+                self!.feedMode = .Hottest
+                self!.loadDataFromFirebase()
             case 2:
-                self!.loadLatestSelected()
+                self!.feedMode = .Latest
+                self!.loadDataFromFirebase()
             default:
                 print("DEFAULT")
             }
@@ -146,52 +147,31 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func scrollToTop() {
-        tableView.setContentOffset(CGPointZero, animated:true)
-        
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            let indexPath = NSIndexPath(forRow: 0, inSection: 0)
-            self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
-            
-        })
+        self.tableView.contentOffset = CGPointMake(0, 0 - self.tableView.contentInset.top);
     }
     
-    func loadMostPopularSelected() {
+    func loadDataFromFirebase() {
         
-        if sortedOn != "POPULAR" {
-            sortedOn = "POPULAR"
-            postsShown = 20
+        switch feedMode {
+        case .Popular:
             loadMostPopularFromFirebase()
-            scrollToTop()
-            print("Load most popular")
-        }
-    }
-    
-    func loadHottestSelected() {
-        
-        if sortedOn != "STANDARD" {
-            sortedOn = "STANDARD"
-            postsShown = 20
-            loadStandardFromFirebase()
-            scrollToTop()
-            print("Load standard")
-        }
-    }
-    
-    func loadLatestSelected() {
-        
-        if sortedOn != "LATEST" {
-            sortedOn = "LATEST"
-            postsShown = 20
+            print("Lost most popular")
+        case .Hottest:
+            loadHottestFromFirebase()
+            print("Load hottest")
+        case .Latest:
             loadLatestFromFirebase()
-            scrollToTop()
             print("Load latest")
         }
+        
+        scrollToTop()
+        postsShown = 20
     }
     
     func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+        
         // Loads 20 posts each refresh
         if posts.count % 20 != 0 {
-            print("No more data to load")
             spinner.stopAnimating()
             return
         }
@@ -226,21 +206,21 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func refreshMore() {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
-            // this runs on the background queue
             
-            print("Get more data")
+            // This runs on the background queue
+            
             self.postsShown += 20
             
-            if self.sortedOn == "POPULAR" {
+            switch self.feedMode {
+            case .Popular:
                 self.loadMostPopularFromFirebase()
-            } else if self.sortedOn == "STANDARD" {
-                // STANDARD AT THE MOMENT
-                self.loadStandardFromFirebase()
-            } else if self.sortedOn == "LATEST" {
+                print("Lost most popular")
+            case .Hottest:
+                self.loadHottestFromFirebase()
+                print("Load hottest")
+            case .Latest:
                 self.loadLatestFromFirebase()
-            } else {
-                // STANDARD
-                self.loadStandardFromFirebase()
+                print("Load latest")
             }
             
             dispatch_async(dispatch_get_main_queue()) {
@@ -255,14 +235,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     
-    func loadStandardFromFirebase() {
-        
-        print("Init!")
+    func loadHottestFromFirebase() {
         
         let count = posts.count
+        let lastTwoDays = Double(Timestamp)! - (86000.0 * 2)
+        let lastDayStr = String(lastTwoDays)
         
         // Observe changes in Firebase, update instantly
-        DataService.ds.REF_POSTS.queryLimitedToFirst(UInt(postsShown)).observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("timestamp").queryStartingAtValue(lastDayStr, childKey: "timestamp").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
@@ -271,12 +251,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         self.posts.append(post)
-                        print("ADD")
                     }
                 }
             }
-            
-            print("LOAD")
             
             if count == 0 {
                 EZLoadingActivity.hide()
@@ -286,9 +263,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.loginMessage()
                 self.firstLogin = false
             }
-            
-            print("Count after: \(self.posts.count)")
-            
+    
+            // Sort hottest, most likes in the last 48 h
+            self.posts.sortInPlace({ $0.likes > $1.likes })
             self.tableView.reloadData()
         })
         
@@ -297,8 +274,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func loadMostPopularFromFirebase() {
         
         let count = posts.count
-        
-        print("LOADING POPULAR")
         
         // Observe changes in Firebase, update instantly
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("likes").observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -315,13 +290,17 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         self.posts.append(post)
-                        print("APPEND")
                     }
                 }
             }
             
             if count == 0 {
                 EZLoadingActivity.hide()
+            }
+            
+            if self.firstLogin {
+                self.loginMessage()
+                self.firstLogin = false
             }
             
             self.posts = self.posts.reverse()
@@ -344,13 +323,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         self.posts.append(post)
-                         print("ADD")
                     }
                 }
             }
-            
-            print("LOAD")
-            
+
             if count == 0 {
                 EZLoadingActivity.hide()
             }
@@ -359,8 +335,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.loginMessage()
                 self.firstLogin = false
             }
-            
-            print("Count after: \(self.posts.count)")
             
             self.posts = self.posts.reverse()
             self.tableView.reloadData()
@@ -386,7 +360,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         dismisskeyboard()
         stopLikeAnimation()
-        self.postTextViewHeight.constant = 110
         
         // If we reach bottom
         if (self.tableView.contentOffset.y >= (self.tableView.contentSize.height - self.tableView.bounds.size.height)) {
@@ -407,7 +380,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             if currentOffset > height {
                 currentOffset = height
-                print("Current offset > height")
             }
             
             self.postViewTopConstraint.constant += previousOffset - currentOffset
@@ -448,7 +420,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             cell.configureCell(post, img: img)
             
             // Push comment segue which will be executed when tapped
-            cell.commentsTapAction = { (cell) in
+            cell.commentTapAction = { (cell) in
                 self.performSegueWithIdentifier(SEGUE_COMMENTSVC, sender: post)
             }
             
@@ -468,9 +440,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         if post.imageUrl == nil || post.imageUrl == "" {
             // This shit must work
             return 115 + heightForView(post.postDescription, width: screenWidth - 51)
-            
         } else {
-            return tableView.estimatedRowHeight
+            return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 51)
         }
     }
     
@@ -538,26 +509,22 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             postTextView.text = placeHolderText
             postTextView.textColor = UIColor.lightGrayColor()
         }
-        
-        postViewHeight.constant = 101
-        postTextViewHeight.constant = 40
-        
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-        
-        postViewHeight.constant = 171
-        postTextViewHeight.constant = 110
+
     }
     
     func loginMessage() {
-        if typeOfLogin == "OldAccount" {
+        
+        switch typeOfLogin {
+        case "OLD_ACCOUNT":
             successAlertFeedVC(self, title: "Welcome back", msg: "You have successfully been logged in!")
             EZLoadingActivity.hide()
-        } else if typeOfLogin == "NewAccount" {
+        case "NEW_ACCOUNT":
             successAlertFeedVC(self, title: "Welcome", msg: "A new account has successfully been created! Before you start posting, you should add a username and a profile image. To do so, click the profile icon in the upper right corner.")
             EZLoadingActivity.hide()
-        } else {
+        default: break
             // Do nothing
         }
     }
@@ -623,32 +590,26 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         EZLoadingActivity.Settings.SuccessText = "Uploded"
         EZLoadingActivity.hide(success: true, animated: true)
         
-        if sortedOn == "POPULAR" {
-            print("ADDE NEW POST")
+        switch feedMode {
+        case .Popular:
             loadMostPopularFromFirebase()
-        } else if sortedOn == "STANDARD" {
-                 print("ADDE NEW POST")
-            loadStandardFromFirebase()
-        } else if sortedOn == "LATEST" {
-                 print("ADDE NEW POST")
+        case .Hottest:
+            loadHottestFromFirebase()
+        case .Latest:
             loadLatestFromFirebase()
         }
-        
     }
     
-    // If app has been reinstalled, must fetch user data from firebase
+    // If app has been reinstalled or user has logged out, must fetch user data from firebase
     
     func loadProfileData() {
         
         if !userProfileAdded() {
-            print("Profile url or username is nil, load from firebase")
             
             DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
                 
                 if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
-                    
                     for snap in snapshot {
-                        
                         if snap.key == "imgUrl" {
                             let profileUrl = snap.value
                             NSUserDefaults.standardUserDefaults().setValue(profileUrl, forKey: "profileUrl")
@@ -661,19 +622,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                             print("Added username \(username)")
                         }
                         
-                        print("Nothing to add!")
-                        
                     }
                 }
             })
-        } else {
-            print("Profile data is up to date")
         }
     }
     
     func accessCamera() {
         imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
-        imagePicker.allowsEditing = true
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
     
@@ -696,14 +652,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             self.presentViewController(imagePicker, animated: true, completion: nil)
         }
     }
-    
-    func callBack() {
-        print("Callback")
-    }
-    
+
     @IBAction func makePost(sender: AnyObject) {
-        
-        print("Post!")
         dismisskeyboard()
         
         if !userProfileAdded() {

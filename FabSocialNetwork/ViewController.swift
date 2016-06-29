@@ -9,7 +9,6 @@
 import UIKit
 import FBSDKCoreKit
 import FBSDKLoginKit
-import SCLAlertView
 import Firebase
 import JSSAlertView
 import EZLoadingActivity
@@ -18,7 +17,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
-    @IBOutlet weak var logo: UIImageView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,15 +34,20 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
+        setupPlaceholders()
+        
+        emailField.delegate = self
+        
+        navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
+        
+    }
+    
+    func setupPlaceholders() {
         let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
         emailField.attributedPlaceholder = placeholderEmail
         let placeholderPassword = NSAttributedString(string: "Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
         passwordField.attributedPlaceholder = placeholderPassword
-        
-        emailField.delegate = self
-        
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
-        
+        emailField.attributedPlaceholder = placeholderEmail
     }
     
     func textFieldShouldReturn(textField: UITextField) -> Bool {
@@ -158,7 +161,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                         // Create firebase user
                                         let user = ["provider": authData.provider!, "timestamp": Timestamp]
                                         DataService.ds.createFirebaseUser(authData.uid, user: user)
-                                        let new = "NewAccount"
+                                        let new = "NEW_ACCOUNT"
                                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: new)
                                     }
                                 })
@@ -177,7 +180,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
                     } else {
                          NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                         let old = "OldAccount"
+                         let old = "OLD_ACCOUNT"
                          self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
                     }
                 }
@@ -189,23 +192,15 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
-        print(segue.destinationViewController)
-        
+
         if let nav = segue.destinationViewController as? UINavigationController {
-            
             if segue.identifier == SEGUE_LOGGED_IN {
                 if let feedVC = nav.topViewController as? FeedVC {
                     if let typeOfLogin = sender as? String {
-                        print("Sender: \(typeOfLogin)")
                         feedVC.typeOfLogin = typeOfLogin
                     }
                 }
             }
-        }
-        
-        if segue.identifier == "resetPassword" {
-            print("Reset!")
         }
     }
     
@@ -214,10 +209,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func forgotButtonTapped(sender: AnyObject) {
-        
         print("Load screen")
     }
-
-
 }
 
