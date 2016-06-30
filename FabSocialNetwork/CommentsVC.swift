@@ -23,6 +23,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     var comments = [Comment]()
     var placeHolderText = "Leave a comment"
     var noConnectionAlerts = 0
+    var keyboardVisible = false
+    var emojiClicked = false
     
     @IBOutlet weak var stackViewHeight: NSLayoutConstraint!
     @IBOutlet weak var commentTextView: UITextView!
@@ -30,6 +32,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        loadCommentsFromFirebase()
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -41,7 +45,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        self.tableView.estimatedRowHeight = 80
+        self.tableView.estimatedRowHeight = 75
         self.tableView.rowHeight = UITableViewAutomaticDimension
         
         self.edgesForExtendedLayout = UIRectEdge.None
@@ -59,9 +63,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         self.title = "COMMENTS"
         
-        initObservers()
-        
     }
+    
+    
     
     
     func isConnected() {
@@ -97,7 +101,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
     }
     
-    func initObservers() {
+    func loadCommentsFromFirebase() {
         
         DataService.ds.REF_COMMENTS.queryOrderedByChild("post").queryEqualToValue(self.post.postKey).observeEventType(.Value, withBlock: { snapshot in
             self.comments = []
@@ -167,14 +171,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.text = placeHolderText
             commentTextView.textColor = UIColor.lightGrayColor()
         }
-        
-//        commentViewHeight.constant = 101
-//        commentTextViewHeight.constant = 45
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-//        commentViewHeight.constant = 101+50
-//        commentTextViewHeight.constant = 45+50
+
     }
     
     func addComment(comment: String!) {
@@ -193,15 +193,44 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     // Move view up
     func keyboardWillShow(notification: NSNotification) {
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
+        
+        // Emoji keyboard different height compared to normal keyboard
+        if keyboardVisible {
+            if !emojiClicked {
+                self.view.frame.origin.y -= 40
+                emojiClicked = true
+            } else {
+                self.view.frame.origin.y += 40
+                emojiClicked = false
+            }
+            return
+        }
+        
+        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.CGRectValue() {
             self.view.frame.origin.y -= keyboardSize.height
+             keyboardVisible = true
         }
     }
     
     // Move view down
     func keyboardWillHide(notification: NSNotification) {
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
+        
+        // Emoji keyboard different height compared to normal keyboard
+        if !keyboardVisible {
+            if emojiClicked {
+                self.view.frame.origin.y += 40
+                emojiClicked = false
+            } else {
+                self.view.frame.origin.y -= 40
+                emojiClicked = true
+            }
+            return
+        }
+        
+        
+        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.CGRectValue() {
             self.view.frame.origin.y += keyboardSize.height
+            keyboardVisible = false
         }
     }
     
@@ -305,19 +334,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             addComment(commentTextView.text)
             commentTextView.text = placeHolderText
             commentTextView.textColor = UIColor.lightGrayColor()
-            
-            print("Post comment!")
-            
             tableView.reloadData()
-            
-            //            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            //                let indexPath = NSIndexPath(forRow: self.comments.count-1, inSection: 0)
-            //                self.tableView.scrollToRowAtIndexPath(indexPath, atScrollPosition: .Bottom, animated: true)
-            //
-            //            })
-            
-        } else {
-            print("Nothing written")
         }
     }
 }

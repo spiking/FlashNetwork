@@ -22,7 +22,7 @@ class SettingsVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.title = "SETTINGS"
+        title = "SETTINGS"
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
@@ -61,7 +61,7 @@ class SettingsVC: UIViewController {
     
     @IBAction func logoutBtnTapped(sender: AnyObject) {
         
-        let alertview = JSSAlertView().show(self, title: "Are You Sure?", text: "You will now be logged out.", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        let alertview = JSSAlertView().show(self, title: "Logout", text: "Do you want to logout?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
         alertview.addAction(answeredYes)
         alertview.addCancelAction(answeredNo)
@@ -90,7 +90,7 @@ class SettingsVC: UIViewController {
                                                                 } else {
                                                                     print("Password changed!")
                                                                     self.setupPlaceholders()
-                                                                    successAlertsSettingsVC(self, title: "Password Changed", msg: "You have successfully changed your password.")
+                                                                    successAlertSettingsVC(self, title: "Password Changed", msg: "You have successfully changed your password.")
                                                                 }
         })
         

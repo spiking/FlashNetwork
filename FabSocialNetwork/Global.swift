@@ -26,7 +26,7 @@ func heightForView(text:String, width:CGFloat) -> CGFloat {
     label.text = text
     label.sizeToFit()
     
-    return label.frame.height * 0.75
+    return label.frame.height * 0.80
 }
 
 func userProfileAdded() -> Bool {
@@ -62,7 +62,15 @@ func successAlertFeedVC(vc: FeedVC, title: String, msg: String) {
     alertview.setButtonFont("Avenir-Heavy")
 }
 
-func successAlertsSettingsVC(vc: SettingsVC, title: String, msg: String) {
+func successAlertSettingsVC(vc: SettingsVC, title: String, msg: String) {
+    let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
+    alertview.setTextTheme(.Light)
+    alertview.setTitleFont("Avenir-Heavy")
+    alertview.setTextFont("Avenir-Medium")
+    alertview.setButtonFont("Avenir-Heavy")
+}
+
+func successAlertResetPasswordVC(vc: ResetPasswordVC, title: String, msg: String) {
     let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
     alertview.setTextTheme(.Light)
     alertview.setTitleFont("Avenir-Heavy")

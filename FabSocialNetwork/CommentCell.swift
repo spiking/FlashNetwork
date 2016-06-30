@@ -71,7 +71,7 @@ class CommentCell: UITableViewCell {
                     }
                 })
             } else {
-                self.profileImg.image = UIImage(named:"profile2.png")
+                self.profileImg.image = UIImage(named:"NoProfileImage.png")
             }
             
             

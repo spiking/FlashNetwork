@@ -19,6 +19,7 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         print(post.postDescription)
         
         title = "POST"
+        
         tableView.estimatedRowHeight = 550
         tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
         

@@ -43,7 +43,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         addImgBtn.alpha = 1.0
         
-        self.title = "PROFILE"
+        title = "PROFILE"
         
         setupSettingsButton()
         

@@ -25,7 +25,7 @@
                                 </constraints>
                                 <fontDescription key="fontDescription" name="Avenir-Light" family="Avenir" pointSize="15"/>
                                 <state key="normal" title="Forgot Password?">
-                                    <color key="titleColor" cocoaTouchSystemColor="lightTextColor"/>
+                                    <color key="titleColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                 </state>
                                 <connections>
                                     <segue destination="wyH-gQ-Orj" kind="show" identifier="" id="ivH-z7-0Wl"/>
@@ -43,7 +43,7 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="40" id="Ypf-Z8-XNy"/>
                                                 </constraints>
-                                                <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                                <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits" keyboardAppearance="alert"/>
                                             </textField>
@@ -60,7 +60,7 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="40" id="Wk9-aH-SfX"/>
                                                 </constraints>
-                                                <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                                <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits" keyboardAppearance="alert" enablesReturnKeyAutomatically="YES" secureTextEntry="YES"/>
                                             </textField>
@@ -416,7 +416,7 @@
                                     <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" scrollEnabled="NO" textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="h2b-hV-6bp">
                                         <rect key="frame" x="8" y="8" width="584" height="40"/>
                                         <color key="backgroundColor" red="0.11503708964646464" green="0.11503708964646464" blue="0.11503708964646464" alpha="1" colorSpace="calibratedRGB"/>
-                                        <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                         <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" autocapitalizationType="sentences" keyboardAppearance="alert"/>
                                     </textView>
@@ -463,8 +463,8 @@
                     <navigationItem key="navigationItem" id="UdI-fT-ANB"/>
                     <connections>
                         <outlet property="imageSelector" destination="iwB-BJ-df8" id="gIa-8j-Rzb"/>
-                        <outlet property="postTextView" destination="h2b-hV-6bp" id="gUz-td-Hhr"/>
-                        <outlet property="postView" destination="HEf-39-R1U" id="M90-ur-0kC"/>
+                        <outlet property="postTextView" destination="h2b-hV-6bp" id="zvr-JM-2go"/>
+                        <outlet property="postView" destination="HEf-39-R1U" id="RTP-m2-XsQ"/>
                         <outlet property="postViewTopConstraint" destination="Tkf-Np-VbU" id="3n5-By-TtA"/>
                         <outlet property="tableView" destination="6Rs-1W-p7d" id="5KL-CO-eIc"/>
                         <segue destination="3DD-qm-gT2" kind="show" identifier="profileVC" id="9dC-QU-hD3"/>
@@ -498,7 +498,7 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="P0Z-MD-UUT"/>
                                 </constraints>
-                                <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences" keyboardType="alphabet" keyboardAppearance="alert"/>
                             </textField>
@@ -715,7 +715,7 @@
                                         <constraints>
                                             <constraint firstAttribute="height" constant="40" id="l6D-j0-mcS"/>
                                         </constraints>
-                                        <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                         <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" keyboardAppearance="alert"/>
                                     </textField>
@@ -732,7 +732,7 @@
                                         <constraints>
                                             <constraint firstAttribute="height" constant="40" id="ayI-nW-eBS"/>
                                         </constraints>
-                                        <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                         <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" keyboardAppearance="alert" enablesReturnKeyAutomatically="YES" secureTextEntry="YES"/>
                                     </textField>
@@ -749,7 +749,7 @@
                                         <constraints>
                                             <constraint firstAttribute="height" constant="40" id="2V9-3r-dO5"/>
                                         </constraints>
-                                        <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                         <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" keyboardAppearance="alert" enablesReturnKeyAutomatically="YES" secureTextEntry="YES"/>
                                     </textField>
@@ -1401,19 +1401,19 @@
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="CommentCell" rowHeight="80" id="UNZ-KP-EQk" userLabel="CommentCell" customClass="CommentCell" customModule="FabSocialNetwork" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="28" width="600" height="80"/>
                                         <autoresizingMask key="autoresizingMask"/>
-                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" ambiguous="YES" tableViewCell="UNZ-KP-EQk" id="cYu-1F-Ahg">
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="UNZ-KP-EQk" id="cYu-1F-Ahg">
                                             <rect key="frame" x="0.0" y="0.0" width="600" height="79"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" image="profile2" translatesAutoresizingMaskIntoConstraints="NO" id="sdL-PC-Wra">
-                                                    <rect key="frame" x="26" y="15" width="50" height="50"/>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="profile2" translatesAutoresizingMaskIntoConstraints="NO" id="sdL-PC-Wra">
+                                                    <rect key="frame" x="22" y="12" width="50" height="50"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="50" id="GK3-tw-kiP"/>
                                                         <constraint firstAttribute="width" constant="50" id="h9k-bK-hiq"/>
                                                     </constraints>
                                                 </imageView>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" text="James Bond" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Mo8-Xn-6ec">
-                                                    <rect key="frame" x="84" y="15" width="141" height="21"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="James Bond" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Mo8-Xn-6ec">
+                                                    <rect key="frame" x="84" y="10" width="141" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="21" id="Rsa-ic-bxO"/>
                                                     </constraints>
@@ -1421,8 +1421,8 @@
                                                     <color key="textColor" red="1" green="1" blue="1" alpha="0.90355257601351358" colorSpace="calibratedRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" misplaced="YES" text="This is my fab comment! This is my fab comment! This is my fab comment!" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="c0q-yF-IR4">
-                                                    <rect key="frame" x="84" y="32" width="486" height="39"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="This is my fab comment! This is my fab comment! This is my fab comment!" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="c0q-yF-IR4">
+                                                    <rect key="frame" x="84" y="32" width="494" height="29"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="29" id="Y2H-kT-ji1"/>
                                                     </constraints>
@@ -1436,12 +1436,12 @@
                                                 <constraint firstAttribute="trailingMargin" secondItem="c0q-yF-IR4" secondAttribute="trailing" constant="15" id="9d6-18-o3w"/>
                                                 <constraint firstItem="Mo8-Xn-6ec" firstAttribute="leading" secondItem="sdL-PC-Wra" secondAttribute="trailing" constant="12" id="AJr-0d-Eee"/>
                                                 <constraint firstAttribute="trailingMargin" secondItem="c0q-yF-IR4" secondAttribute="trailing" constant="13" id="GPb-b9-17n"/>
-                                                <constraint firstItem="sdL-PC-Wra" firstAttribute="top" secondItem="cYu-1F-Ahg" secondAttribute="topMargin" constant="12" id="HSV-Mr-ntD"/>
-                                                <constraint firstItem="c0q-yF-IR4" firstAttribute="top" secondItem="Mo8-Xn-6ec" secondAttribute="bottom" constant="3" id="Vqc-nF-zyj"/>
-                                                <constraint firstItem="Mo8-Xn-6ec" firstAttribute="top" secondItem="cYu-1F-Ahg" secondAttribute="topMargin" constant="14" id="pKP-my-cNu"/>
+                                                <constraint firstItem="sdL-PC-Wra" firstAttribute="top" secondItem="cYu-1F-Ahg" secondAttribute="topMargin" constant="4" id="HSV-Mr-ntD"/>
+                                                <constraint firstItem="c0q-yF-IR4" firstAttribute="top" secondItem="Mo8-Xn-6ec" secondAttribute="bottom" constant="2" id="Vqc-nF-zyj"/>
+                                                <constraint firstItem="Mo8-Xn-6ec" firstAttribute="top" secondItem="cYu-1F-Ahg" secondAttribute="topMargin" constant="4" id="pKP-my-cNu"/>
                                                 <constraint firstItem="c0q-yF-IR4" firstAttribute="leading" secondItem="sdL-PC-Wra" secondAttribute="trailing" constant="12" id="rF5-79-0bv"/>
-                                                <constraint firstItem="sdL-PC-Wra" firstAttribute="leading" secondItem="cYu-1F-Ahg" secondAttribute="leadingMargin" constant="13" id="zTE-2W-czh"/>
-                                                <constraint firstAttribute="bottomMargin" secondItem="c0q-yF-IR4" secondAttribute="bottom" constant="8" id="zZV-M4-2GB"/>
+                                                <constraint firstItem="sdL-PC-Wra" firstAttribute="leading" secondItem="cYu-1F-Ahg" secondAttribute="leadingMargin" constant="14" id="zTE-2W-czh"/>
+                                                <constraint firstAttribute="bottomMargin" secondItem="c0q-yF-IR4" secondAttribute="bottom" constant="4" id="zZV-M4-2GB"/>
                                             </constraints>
                                             <variation key="default">
                                                 <mask key="constraints">
@@ -1594,7 +1594,7 @@
                                         <constraints>
                                             <constraint firstAttribute="height" constant="40" id="XYd-Go-Ukr"/>
                                         </constraints>
-                                        <color key="textColor" cocoaTouchSystemColor="lightTextColor"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
                                         <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                         <textInputTraits key="textInputTraits" keyboardAppearance="alert" enablesReturnKeyAutomatically="YES"/>
                                     </textField>

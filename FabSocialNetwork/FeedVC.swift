@@ -44,10 +44,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
     @IBOutlet weak var postView: UIView!
-//    @IBOutlet weak var postViewHeight: NSLayoutConstraint!
     @IBOutlet weak var tableView: UITableView!
-//    @IBOutlet weak var postTextViewHeight: NSLayoutConstraint!
-    @IBOutlet weak var postTextView: MaterialTextView!
+    @IBOutlet weak var postTextView: UITextView!
     @IBOutlet weak var imageSelector: UIImageView!
     
     override func viewDidLoad() {
@@ -59,7 +57,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.emptyDataSetDelegate = self
         tableView.tableFooterView = UIView()
         tableView.allowsSelection = true
-        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
+        
+        tableView.estimatedRowHeight = 550
+        tableView.rowHeight = UITableViewAutomaticDimension
         
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
@@ -69,9 +69,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         spinner.color = UIColor.grayColor()
         spinner.frame = CGRectMake(0, 0, 320, 44);
         tableView.tableFooterView = spinner;
-        
-        tableView.estimatedRowHeight = 550
-        tableView.rowHeight = UITableViewAutomaticDimension
         
         postTextView.delegate = self
         
@@ -94,8 +91,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             EZLoadingActivity.show("Loading...", disableUI: false)
         }
         
-        loadProfileData()
         loadMostPopularFromFirebase()
+        loadProfileData()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -241,7 +238,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let lastTwoDays = Double(Timestamp)! - (86000.0 * 2)
         let lastDayStr = String(lastTwoDays)
         
-        // Observe changes in Firebase, update instantly
+        // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("timestamp").queryStartingAtValue(lastDayStr, childKey: "timestamp").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
@@ -275,7 +272,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         let count = posts.count
         
-        // Observe changes in Firebase, update instantly
+        // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("likes").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
@@ -313,7 +310,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         let count = posts.count
         
-        // Observe changes in Firebase, update instantly
+        // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
@@ -448,6 +445,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func refresh(sender:AnyObject) {
         
         if isConnectedToNetwork() {
+            loadDataFromFirebase()
             tableView.reloadData()
             refreshControl.endRefreshing()
         } else {

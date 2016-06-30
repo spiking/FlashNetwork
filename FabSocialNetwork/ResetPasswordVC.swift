@@ -31,14 +31,6 @@ class ResetPasswordVC: UIViewController {
         emailField.attributedPlaceholder = placeholderEmail
     }
     
-    func successAlertNew(title: String, msg: String) {
-        let alertview = JSSAlertView().show(self, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.setTitleFont("Avenir-Heavy")
-        alertview.setTextFont("Avenir-Light")
-        alertview.setButtonFont("Avenir-Heavy")
-    }
-    
     @IBAction func resetPassword() {
         
         if !isConnectedToNetwork() {
@@ -52,8 +44,7 @@ class ResetPasswordVC: UIViewController {
                 JSSAlertView().danger(self, title: "No User Found", text: "There is no user with that email address. Please try again.")
             } else {
                 print("Success")
-                self.successAlertNew("Email Sent", msg: "Reset instruction has been sent to the entered email address.")
-
+                successAlertResetPasswordVC(self, title: "Email Sent", msg: "Reset instruction has been sent to the entered email address.")
             }
         })
     }

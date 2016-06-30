@@ -29,7 +29,6 @@
 		6FA4D02F1D0464770002EB33 /* PostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA4D02E1D0464770002EB33 /* PostCell.swift */; };
 		6FA4D0341D06C9170002EB33 /* ProfileVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA4D0331D06C9170002EB33 /* ProfileVC.swift */; };
 		6FA4D0381D06D53D0002EB33 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA4D0371D06D53D0002EB33 /* Post.swift */; };
-		6FAC0C2A1D17CE0E003C290B /* MaterialTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C291D17CE0E003C290B /* MaterialTextView.swift */; };
 		6FAC0C2E1D192FAD003C290B /* UIScrollView+EmptyDataSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */; };
 		6FAC0C301D193C6E003C290B /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C2F1D193C6E003C290B /* NetworkReachability.swift */; };
 		6FD61B2A1D22B234000327B3 /* ShowUserPostVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */; };
@@ -63,7 +62,6 @@
 		6FA4D02E1D0464770002EB33 /* PostCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PostCell.swift; sourceTree = "<group>"; };
 		6FA4D0331D06C9170002EB33 /* ProfileVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileVC.swift; sourceTree = "<group>"; };
 		6FA4D0371D06D53D0002EB33 /* Post.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
-		6FAC0C291D17CE0E003C290B /* MaterialTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MaterialTextView.swift; sourceTree = "<group>"; };
 		6FAC0C2B1D192FAC003C290B /* FabSocialNetwork-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "FabSocialNetwork-Bridging-Header.h"; sourceTree = "<group>"; };
 		6FAC0C2C1D192FAD003C290B /* UIScrollView+EmptyDataSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+EmptyDataSet.h"; sourceTree = "<group>"; };
 		6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+EmptyDataSet.m"; sourceTree = "<group>"; };
@@ -165,7 +163,6 @@
 				6F8AAD921D01813200750F11 /* DarkTextField.swift */,
 				6FA4D02E1D0464770002EB33 /* PostCell.swift */,
 				6F2000D01D09711100E199B5 /* CommentCell.swift */,
-				6FAC0C291D17CE0E003C290B /* MaterialTextView.swift */,
 				6F5593D61D1D448E00B36D19 /* UserPostCell.swift */,
 			);
 			name = View;
@@ -335,7 +332,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FAC0C2A1D17CE0E003C290B /* MaterialTextView.swift in Sources */,
 				6F2000D11D09711100E199B5 /* CommentCell.swift in Sources */,
 				6F5593D11D1C920B00B36D19 /* ResetPasswordVC.swift in Sources */,
 				6FF8FB3F1D0ABD3100883CF4 /* Global.swift in Sources */,
@@ -411,7 +407,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -450,7 +446,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;

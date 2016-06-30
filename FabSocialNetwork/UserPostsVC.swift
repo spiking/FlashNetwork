@@ -29,7 +29,8 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "POSTS"
+        
+        loadUserPostsFromFirebase()
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -40,14 +41,14 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         tableView.addGestureRecognizer(longpress)
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
-        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
+//        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
+        
+        title = "POSTS"
         
         navigationItem.leftItemsSupplementBackButton = true
         let deleteButton = setupDeleteButton()
         let viewButton = setupViewButton()
         navigationItem.setRightBarButtonItems([deleteButton, viewButton], animated: true)
-    
-        loadUserPostsFromFirebase()
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -74,7 +75,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         
         if typeOfCell == TypeOfCell.PostCell {
             typeOfCell = .UserPostCell
-            tableView.separatorStyle = UITableViewCellSeparatorStyle.SingleLineEtched
             tableView.reloadData()
         }
         
@@ -108,7 +108,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         if typeOfCell == TypeOfCell.UserPostCell {
             typeOfCell = .PostCell
             zoomBarButton.setImage(UIImage(named: "ZoomOut"), forState: UIControlState.Normal)
-            tableView.separatorStyle = UITableViewCellSeparatorStyle.None
             
             if tableView.editing {
                 tableView.setEditing(false, animated: true)
@@ -117,7 +116,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         } else {
             typeOfCell = .UserPostCell
             zoomBarButton.setImage(UIImage(named: "ZoomIn"), forState: UIControlState.Normal)
-            tableView.separatorStyle = UITableViewCellSeparatorStyle.SingleLineEtched
         }
         
         tableView.reloadData()

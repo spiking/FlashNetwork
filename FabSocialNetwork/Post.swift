@@ -74,13 +74,34 @@ class Post {
         self._postRef = DataService.ds.REF_POSTS.childByAppendingPath(self._postKey)
     }
     
+    func currentUser() -> String {
+        if let currentUser = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as? String {
+            return currentUser
+        } else {
+            return "Unknown User"
+        }
+    }
+    
     func adjustLikes(addLike: Bool) {
         if addLike {
             _likes = _likes + 1
+            
+            let userlike = [currentUser() : Timestamp]
+            let userlikeRef = _postRef.childByAppendingPath("likesfromusers").childByAutoId()
+            userlikeRef.setValue(userlike)
+            
         } else {
             _likes = _likes - 1
+            removeLike()
+            
         }
-        
         _postRef.childByAppendingPath("likes").setValue(_likes)
+    }
+    
+    func removeLike() {
+        
+        _postRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            // Not implemented yet
+        })
     }
 }

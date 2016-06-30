@@ -37,16 +37,8 @@ class UserPostCell: UITableViewCell {
         self.likesLabel.text = String(post.likes)
         self.postImage.image = nil
         
-        print(post.timestamp)
-        
-        var date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
-        
-        print(date)
-        
+        let date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
         let diff = NSDate().offsetFrom(date)
-        
-        print(diff)
-        
         self.timeLabel.text = diff
         
         // Main post image

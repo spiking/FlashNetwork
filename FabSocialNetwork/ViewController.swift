@@ -72,6 +72,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
             
             if facebookError != nil {
                 print("Facebook login failed. Error \(facebookError)")
+                JSSAlertView().danger(self, title: "Facebook Login Failed", text: "An unexpected error occured. Please try again.")
             } else if facebookResult.isCancelled {
                 print("Facebook login was cancelled.")
             } else {
@@ -206,10 +207,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     func dismisskeyboard() {
         view.endEditing(true)
-    }
-    
-    @IBAction func forgotButtonTapped(sender: AnyObject) {
-        print("Load screen")
     }
 }
 
