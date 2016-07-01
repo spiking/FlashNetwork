@@ -14,7 +14,6 @@ import EZLoadingActivity
 import JSSAlertView
 import BTNavigationDropdownMenu
 
-
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     var posts = [Post]()
@@ -86,6 +85,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         title = "FAB NETWORK"
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
+        if firstLogin {
+            EZLoadingActivity.hide()
+        }
+        
         if isConnectedToNetwork() {
             print("Connected!")
             EZLoadingActivity.show("Loading...", disableUI: false)
@@ -93,6 +96,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         loadMostPopularFromFirebase()
         loadProfileData()
+
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -654,6 +658,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
 
     @IBAction func makePost(sender: AnyObject) {
+        
         dismisskeyboard()
         
         if !userProfileAdded() {
@@ -668,6 +673,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         if let txt = postTextView.text where txt != "" && postTextView.text != placeHolderText {
             
+            print(txt.characters.count)
+        
             EZLoadingActivity.show("Uploading...", disableUI: false)
             
             if let img = imageSelector.image where imageSelected == true {

@@ -205,6 +205,7 @@ class PostCell: UITableViewCell {
             startLikeAnimation(self.mainImg)
             likeTapped(sender)
         }
+        
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {

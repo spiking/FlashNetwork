@@ -222,7 +222,7 @@
                                                                 <constraint firstAttribute="width" constant="50" id="eLn-Yl-4AF"/>
                                                             </constraints>
                                                         </imageView>
-                                                        <imageView contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="screen" translatesAutoresizingMaskIntoConstraints="NO" id="T23-XC-3aP">
+                                                        <imageView contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="T23-XC-3aP">
                                                             <rect key="frame" x="0.0" y="126" width="600" height="213"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="534" id="Wqs-Tu-l4H"/>
@@ -1668,6 +1668,7 @@
         <image name="camera" width="50" height="50"/>
         <image name="comments" width="50" height="50"/>
         <image name="heart-empty" width="150" height="147"/>
+        <image name="logo" width="1024" height="1024"/>
         <image name="profile2" width="280" height="280"/>
         <image name="screen" width="300" height="534"/>
     </resources>

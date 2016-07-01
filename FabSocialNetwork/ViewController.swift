@@ -172,7 +172,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         JSSAlertView().danger(self, title: "Incorrect Credentials", text: "Please check your email and password.")
                     }
                 } else {
-                    
+                    print("SHOW")
                     EZLoadingActivity.show("Logging in...", disableUI: false)
                     
                     // If app has been reinstalled, add NSUser data to account
