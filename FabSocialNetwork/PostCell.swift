@@ -46,11 +46,11 @@ class PostCell: UITableViewCell {
         tapOnLike.numberOfTapsRequired = 1
         likeImage.addGestureRecognizer(tapOnLike)
         likeImage.userInteractionEnabled = true
-
+        
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(PostCell.mainImgTapped(_:)))
         doubleTap.numberOfTapsRequired = 2
         mainImg.addGestureRecognizer(doubleTap)
-    
+        
     }
     
     override func drawRect(rect: CGRect) {
@@ -119,7 +119,7 @@ class PostCell: UITableViewCell {
                             FeedVC.imageCache.setObject(img, forKey: profileUrl)
                         }
                     })
-
+                    
                 }
             } else {
                 self.profileImg.image = UIImage(named:"NoProfileImage.png")
@@ -131,9 +131,9 @@ class PostCell: UITableViewCell {
         })
         
         // If current post exists in current users likes, set heart to full (needed for reinstall)
-
+        
         userLikes.observeSingleEventOfType(.Value, withBlock: { snapshot in
-    
+            
             if snapshot.hasChild(post.postKey) {
                 self.likeImage.image = UIImage(named: "heart-full")
             }
@@ -159,24 +159,32 @@ class PostCell: UITableViewCell {
             return
         }
         
-        likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
-            // If User haven't like this, then like it, otherwise un-like it
-            
-            if (snapshot.value as? NSNull) != nil {
-                self.userLikedPost = true
-                self.likeRef.setValue(true)
-                self.likeImage.image = UIImage(named: "heart-full")
-                self.post!.adjustLikes(true)
+            if snapshot.hasChild(self.post!.postKey) {
+                
+                self.likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
+                    
+                    // If User haven't like this, then like it, otherwise un-like it
+                    
+                    if (snapshot.value as? NSNull) != nil {
+                        self.userLikedPost = true
+                        self.likeRef.setValue(true)
+                        self.likeImage.image = UIImage(named: "heart-full")
+                        self.post!.adjustLikes(true)
+                    } else {
+                        self.userLikedPost = false
+                        self.likeRef.removeValue()
+                        self.likeImage.image = UIImage(named: "heart-empty")
+                        self.post!.adjustLikes(false)
+                    }
+                    
+                    self.likesLbl.text = "\(self.post!.likes)"
+                    
+                })
             } else {
-                self.userLikedPost = false
-                self.likeRef.removeValue()
-                self.likeImage.image = UIImage(named: "heart-empty")
-                self.post!.adjustLikes(false)
+                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
             }
-            
-            self.likesLbl.text = "\(self.post!.likes)"
-            
         })
         
         self.likeImage.userInteractionEnabled = false
@@ -205,11 +213,25 @@ class PostCell: UITableViewCell {
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
-        commentTapAction?(self)
+        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if snapshot.hasChild(self.post!.postKey) {
+                self.commentTapAction?(self)
+            } else {
+                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
+            }
+        })
     }
     
     @IBAction func reportBtnTapped(sender: AnyObject) {
-        reportTapAction?(self)
+        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if snapshot.hasChild(self.post!.postKey) {
+                self.reportTapAction?(self)
+            } else {
+                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
+            }
+        })
     }
     
 }

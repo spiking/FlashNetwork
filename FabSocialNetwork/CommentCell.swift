@@ -71,7 +71,7 @@ class CommentCell: UITableViewCell {
                     }
                 })
             } else {
-                self.profileImg.image = UIImage(named:"NoProfileImage.png")
+                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
             }
             
             }, withCancelBlock: { error in

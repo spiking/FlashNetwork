@@ -20,6 +20,8 @@ class ResetPasswordVC: UIViewController {
         view.addGestureRecognizer(tap)
         
         setupPlaceholders()
+        
+        isUserAuthenticated(self)
     }
     
     func setupPlaceholders() {

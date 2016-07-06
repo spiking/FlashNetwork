@@ -28,6 +28,8 @@ class SettingsVC: UIViewController {
         title = "SETTINGS"
         
         setupPlaceholders()
+
+        isUserAuthenticated(self)
     }
     
     func setupPlaceholders() {

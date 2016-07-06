@@ -15,8 +15,6 @@ import EZLoadingActivity
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     @IBOutlet weak var commentView: UIView!
-    @IBOutlet weak var commentViewHeight: NSLayoutConstraint!
-    @IBOutlet weak var commentTextViewHeight: NSLayoutConstraint!
     
     var refreshControl: UIRefreshControl!
     var post: Post!
@@ -367,13 +365,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         })
     }
     
-    @IBAction func commentBtnTapped(sender: AnyObject) {
-        
-        if !userProfileAdded() {
-            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before commenting.")
-            return;
-        }
-        
+    func postComment() {
         if commentTextView.text != "" && commentTextView.text != placeHolderText {
             dismissKeyboard()
             addComment(commentTextView.text)
@@ -381,5 +373,22 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.textColor = UIColor.lightGrayColor()
             tableView.reloadData()
         }
+    }
+    
+    @IBAction func commentBtnTapped(sender: AnyObject) {
+        
+        if !userProfileAdded() {
+            JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before commenting.")
+            return;
+        }
+        
+        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if snapshot.hasChild(self.post.postKey) {
+                self.postComment()
+            } else {
+                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
+            }
+        })
     }
 }

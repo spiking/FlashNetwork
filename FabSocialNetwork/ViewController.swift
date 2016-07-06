@@ -31,7 +31,12 @@ class ViewController: UIViewController, UITextFieldDelegate {
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
-        if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil {
+        if userBanned {
+            JSSAlertView().danger(self, title: "Banned", text: "You have violated the user license agreement. Your account has been permanetly banned from Flash Network.")
+            NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: #selector(ViewController.terminateApp), userInfo: nil, repeats: false)
+        }
+        
+        if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil && NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String == "TRUE" {
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
         }
         
@@ -62,6 +67,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
         return true
     }
     
+    func terminateApp() {
+        exit(0)
+    }
     
     @IBAction func fbBtnPressed(sender: UIButton!) {
         
@@ -90,10 +98,25 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         print("Login failed! \(error)")
                     } else {
                         print("Logged In! \(authData)")
-                        // Check if id already exist in firebase, if so -> dont re-create
-                        DataService.ds.REF_USERS.observeEventType(.Value, withBlock: { snapshot in
+                        // Check if id already exist in firebase, if so, dont recreate
+                        DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
                             
-                            if snapshot.hasChild(authData.uid) {
+                            print(snapshot)
+                            print(authData.uid)
+                            
+                            if !snapshot.hasChild(authData.uid) {
+                                
+                                EZLoadingActivity.show("Creating account...", disableUI: false)
+
+                                let user = ["provider": authData.provider!]
+                                DataService.ds.createFirebaseUser(authData.uid, user: user)
+                                NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
+                                
+                            } else {
+                                
+                                EZLoadingActivity.show("Logging in...", disableUI: false)
+                                
                                 if !userProfileAdded() {
                                     NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
                                 }
@@ -117,22 +140,17 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                     
                                     }.main(after: 1.0) {
                                         if !accepted {
-                                            self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
+                                            // Means user entered user agreement but terminated the app
+                                            if let terms = NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String where terms == "FALSE" {
+                                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
+                                            } else {
+                                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
+                                            }
                                         } else {
                                             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: self.OLD_ACCOUNT)
                                         }
                                 }
-                            } else {
-                                
-                                EZLoadingActivity.show("Creating account...", disableUI: false)
-                                
-                                print("User does not exist, create a new!")
-                                let user = ["provider": authData.provider!]
-                                DataService.ds.createFirebaseUser(authData.uid, user: user)
-                                NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                             }
-                            
                         })
                     }
                 })
@@ -163,7 +181,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                     print(error)
                     
                     if error.code == STATUS_ACCOUNT_FIREBASE_AUTH {
-                        print("Error code FIREBASE_AUTH")
+                        print("\(error.debugDescription)")
                     }
                     
                     if error.code == STATUS_ACCOUNT_NONEXIST {
@@ -223,7 +241,15 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         
                         }.main(after: 1.0) {
                             if !accepted {
-                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
+                                
+                                // Means user entered user agreement but terminated the app
+                                if let terms = NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String where terms == "FALSE" {
+                                    print(terms)
+                                    self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
+                                } else {
+                                    self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
+                                }
+                                
                             } else {
                                 self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: self.OLD_ACCOUNT)
                             }
@@ -254,8 +280,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 }
             }
         }
-        
-        
     }
     
     func dismisskeyboard() {

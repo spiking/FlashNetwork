@@ -19,9 +19,9 @@ class UserAgreementVC: UIViewController, UIScrollViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
         EZLoadingActivity.hide()
         navigationItem.setHidesBackButton(true, animated: true)
+        NSUserDefaults.standardUserDefaults().setValue("FALSE", forKey: "terms")
         title = "USER AGREEMENT"
     }
     
@@ -44,6 +44,7 @@ class UserAgreementVC: UIViewController, UIScrollViewDelegate {
     
     func userAcceptedTerms() {
         DataService.ds.REF_USER_CURRENT.childByAppendingPath("terms").setValue("TRUE")
+        NSUserDefaults.standardUserDefaults().setValue("TRUE", forKey: "terms")
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {

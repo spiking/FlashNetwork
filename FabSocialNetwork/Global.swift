@@ -10,10 +10,31 @@ import Foundation
 import EZLoadingActivity
 import JSSAlertView
 import MBProgressHUD
+import Async
 
 // Global functions and variables
 
+var userBanned = false
 var likeAnimation = MBProgressHUD()
+
+func isUserAuthenticated(vc: UIViewController) {
+    
+    DataService.ds.REF_USERS.observeEventType(.Value, withBlock: { snapshot in
+        
+        if snapshot.hasChild(currentUserKey()) {
+            userBanned = false
+        } else {
+            userBanned = true
+            
+            let appDomain = NSBundle.mainBundle().bundleIdentifier!
+            NSUserDefaults.standardUserDefaults().removePersistentDomainForName(appDomain)
+            
+            let loginVC: UIViewController? = vc.storyboard?.instantiateViewControllerWithIdentifier("InitalNavigationController")
+            vc.presentViewController(loginVC!, animated: true, completion: nil)
+        }
+        
+    })
+}
 
 var Timestamp: String {
     return "\(NSDate().timeIntervalSince1970 * 1)"

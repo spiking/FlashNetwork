@@ -48,10 +48,15 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         navigationItem.setRightBarButtonItems([deleteButton, viewButton], animated: true)
         
         title = "POSTS"
+        
+        loadUserPostsFromFirebase()
     }
     
     
     func loadUserPostsFromFirebase() {
+        
+        isUserAuthenticated(self)
+        
         let userKey = String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!)
         
         DataService.ds.REF_POSTS.queryOrderedByChild("user").queryEqualToValue(userKey).observeEventType(.Value, withBlock: { snapshot in

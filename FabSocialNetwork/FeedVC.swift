@@ -87,6 +87,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         title = "FAB NETWORK"
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(FeedVC.updateData(_:)), name:"update", object: nil)
+        
         if firstLogin {
             EZLoadingActivity.hide()
         }
@@ -98,7 +100,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         loadMostPopularFromFirebase()
         loadProfileData()
     
-    }    
+    }
+    
+    func updateData(notification: NSNotification){
+        loadDataFromFirebase()
+    }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
@@ -605,6 +611,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func loadProfileData() {
         
+        isUserAuthenticated(self)
+        
         if !userProfileAdded() {
             
             DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
@@ -714,7 +722,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         if !userProfileAdded() {
             JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a username and a profile image before posting. You can find the profile by clicking on the icon in the upper right corner.")
-            return;
+            return
         }
         
         if !isConnectedToNetwork() {

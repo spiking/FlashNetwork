@@ -43,9 +43,9 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="40" id="Ypf-Z8-XNy"/>
                                                 </constraints>
-                                                <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
+                                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
-                                                <textInputTraits key="textInputTraits" keyboardAppearance="alert"/>
+                                                <textInputTraits key="textInputTraits" keyboardType="emailAddress" keyboardAppearance="alert"/>
                                             </textField>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="g2X-F1-XDj">
                                                 <rect key="frame" x="0.0" y="40" width="600" height="1"/>
@@ -60,7 +60,7 @@
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="40" id="Wk9-aH-SfX"/>
                                                 </constraints>
-                                                <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
+                                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                                 <textInputTraits key="textInputTraits" keyboardAppearance="alert" enablesReturnKeyAutomatically="YES" secureTextEntry="YES"/>
                                             </textField>
@@ -515,7 +515,7 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="P0Z-MD-UUT"/>
                                 </constraints>
-                                <color key="textColor" red="1" green="1" blue="1" alpha="0.59999999999999998" colorSpace="calibratedRGB"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences" keyboardType="alphabet" keyboardAppearance="alert"/>
                             </textField>
@@ -1561,7 +1561,7 @@
                         <subviews>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oi3-fs-Dkl">
                                 <rect key="frame" x="20" y="20" width="560" height="1967"/>
-                                <mutableString key="text">Flash Network App End User License Agreement
+                                <string key="text">Flash Network App End User License Agreement
 
 This End User License Agreement is between you and Flash Network and governs use of this app made available through the Apple App Store. By installing the Flash Network App, you agree to be bound by this Agreement and understand that there is no tolerance for objectionable content. If you do not agree with the terms and conditions of this Agreement, you are not entitled to use the Flash Network App.
 
@@ -1601,7 +1601,7 @@ Flash Network, not Apple, is responsible for addressing any claims by you relati
 
 9. Third Party Intellectual Property Claims
 
-Flash Network shall not be obligated to indemnify or defend you with respect to any third party claim arising out or relating to the Flash Network App. To the extent Flash Network is required to provide indemnification by applicable law, Flash Network, not Apple, shall be solely responsible for the investigation, defense, settlement and discharge of any claim that the Flash Network App or your use of it infringes any third party intellectual property right.</mutableString>
+Flash Network shall not be obligated to indemnify or defend you with respect to any third party claim arising out or relating to the Flash Network App. To the extent Flash Network is required to provide indemnification by applicable law, Flash Network, not Apple, shall be solely responsible for the investigation, defense, settlement and discharge of any claim that the Flash Network App or your use of it infringes any third party intellectual property right.</string>
                                 <color key="textColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -1796,8 +1796,8 @@ Flash Network shall not be obligated to indemnify or defend you with respect to 
         <image name="screen" width="300" height="534"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="j4V-Gc-IOA"/>
-        <segue reference="eG1-Bd-hco"/>
+        <segue reference="MqL-nR-hMN"/>
+        <segue reference="IJg-fE-s1i"/>
         <segue reference="mTd-Ts-yzY"/>
     </inferredMetricsTieBreakers>
 </document>

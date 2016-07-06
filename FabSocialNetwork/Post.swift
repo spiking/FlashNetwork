@@ -75,6 +75,7 @@ class Post {
     }
     
     func adjustLikes(addLike: Bool) {
+        
         if addLike {
             _likes = _likes + 1
             _postRef.childByAppendingPath("likes_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
