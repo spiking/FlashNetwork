@@ -39,10 +39,10 @@ class CommentCell: UITableViewCell {
         profileImg.layer.cornerRadius = profileImg.frame.size.width / 2
         profileImg.clipsToBounds = true
     }
-
+    
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
+        
         // Configure the view for the selected state
     }
     
@@ -73,7 +73,6 @@ class CommentCell: UITableViewCell {
             } else {
                 self.profileImg.image = UIImage(named:"NoProfileImage.png")
             }
-            
             
             }, withCancelBlock: { error in
                 print(error.description)

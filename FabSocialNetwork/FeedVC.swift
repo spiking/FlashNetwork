@@ -21,15 +21,15 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     static var imageCache = NSCache() // Static since single instance (global)
     var imagePicker: UIImagePickerController!
     var imageSelected = false
+    var firstLogin = true
+    var loadingData = false
+    var alert = false
     var noConnectionAlerts = 0
     var typeOfLogin = ""
     var placeHolderText = "Anything you would like to share?"
     var refreshControl: UIRefreshControl!
     var previousOffset = CGFloat(0)
-    var firstLogin = true
-    var loadingData = false
     var postsShown = 20
-    var alert = false
     var reportPost: Post!
     
     enum FeedMode {
@@ -64,7 +64,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
-        tableView.addSubview(refreshControl) // not required when using UITableViewController
+        tableView.addSubview(refreshControl)
         
         spinner.hidesWhenStopped = true
         spinner.color = UIColor.grayColor()
@@ -92,7 +92,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
         
         if isConnectedToNetwork() {
-            print("Connected!")
             EZLoadingActivity.show("Loading...", disableUI: false)
         }
         
@@ -149,10 +148,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func scrollToTop() {
-        self.tableView.contentOffset = CGPointMake(0, 0 - self.tableView.contentInset.top);
-    }
-    
     func loadDataFromFirebase() {
         
         if !isConnectedToNetwork() {
@@ -174,73 +169,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         scrollToTop()
         postsShown = 20
     }
-    
-    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
-        
-        // Loads 20 posts each refresh
-        if posts.count % 20 != 0 {
-            spinner.stopAnimating()
-            return
-        }
-        
-        if !loadingData && indexPath.row == postsShown - 1 {
-            spinner.startAnimating()
-            startTimerForRefresh()
-        }
-    }
-    
-    func startTimerForRefresh() {
-        timer = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(FeedVC.tryToRefresh), userInfo: nil, repeats: true)
-    }
-    
-    func stopTimerForRefresh() {
-        timer?.invalidate()
-    }
-    
-    func tryToRefresh() {
-        if isConnectedToNetwork() {
-            loadingData = true
-            alert = false
-            stopTimerForRefresh()
-            refreshMore()
-        } else {
-            if !alert {
-                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and the feed will load automatically.")
-                alert = true
-            }
-        }
-    }
-    
-    func refreshMore() {
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
-            
-            // This runs on the background queue
-            
-            self.postsShown += 20
-            
-            switch self.feedMode {
-            case .Popular:
-                self.loadMostPopularFromFirebase()
-                print("Lost most popular")
-            case .Hottest:
-                self.loadHottestFromFirebase()
-                print("Load hottest")
-            case .Latest:
-                self.loadLatestFromFirebase()
-                print("Load latest")
-            }
-            
-            dispatch_async(dispatch_get_main_queue()) {
-                // this runs on the main queue
-                
-                self.tableView.reloadData()
-                self.loadingData = false
-                
-                print("Done!")
-            }
-        }
-    }
-    
     
     func loadHottestFromFirebase() {
         
@@ -285,10 +213,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("likes").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
-            
-            if let likes = snapshot.value["likes"] as? Int {
-                print("\(snapshot.key) has \(likes) likes")
-            }
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
                 for snap in snapshot {
@@ -347,6 +271,70 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             self.tableView.reloadData()
         })
         
+    }
+    
+    func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+        
+        // Loads 20 posts each refresh
+        if posts.count % 20 != 0 {
+            spinner.stopAnimating()
+            return
+        }
+        
+        if !loadingData && indexPath.row == postsShown - 1 {
+            spinner.startAnimating()
+            startTimerForRefresh()
+        }
+    }
+    
+    func startTimerForRefresh() {
+        timer = NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(FeedVC.tryToRefresh), userInfo: nil, repeats: true)
+    }
+    
+    func stopTimerForRefresh() {
+        timer?.invalidate()
+    }
+    
+    func tryToRefresh() {
+        if isConnectedToNetwork() {
+            loadingData = true
+            alert = false
+            stopTimerForRefresh()
+            refreshMore()
+        } else {
+            if !alert {
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and the feed will load automatically.")
+                alert = true
+            }
+        }
+    }
+    
+    func refreshMore() {
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
+            
+            // This runs on the background queue
+            
+            self.postsShown += 20
+            
+            switch self.feedMode {
+            case .Popular:
+                self.loadMostPopularFromFirebase()
+            case .Hottest:
+                self.loadHottestFromFirebase()
+            case .Latest:
+                self.loadLatestFromFirebase()
+            }
+            
+            dispatch_async(dispatch_get_main_queue()) {
+                
+                // This runs on the main queue
+                
+                self.tableView.reloadData()
+                self.loadingData = false
+                
+                print("Done!")
+            }
+        }
     }
     
     func isVisible(view: UIView) -> Bool {
@@ -450,7 +438,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         let post = posts[indexPath.row]
         
         if post.imageUrl == nil || post.imageUrl == "" {
-            // This shit must work
+            // Not pretty, but should work
             return 115 + heightForView(post.postDescription, width: screenWidth - 51)
         } else {
             return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 51)
@@ -506,6 +494,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         view.endEditing(true)
     }
     
+    func scrollToTop() {
+        self.tableView.contentOffset = CGPointMake(0, 0 - self.tableView.contentInset.top);
+    }
+    
     func textViewShouldBeginEditing(textView: UITextView) -> Bool {
         postTextView.textColor = UIColor.whiteColor()
         
@@ -522,10 +514,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             postTextView.text = placeHolderText
             postTextView.textColor = UIColor.lightGrayColor()
         }
-    }
-    
-    func textViewDidBeginEditing(textView: UITextView) {
-        
     }
     
     func loginMessage() {
@@ -641,19 +629,18 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func reportAlert() {
-        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this post as objectional content?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this post for containing objectionable content? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
         alertview.addAction(answeredYes)
         alertview.addCancelAction(answeredNo)
     }
     
     func answeredYes() {
-        print("Yes")
         reportUserPost()
     }
     
     func answeredNo() {
-        print("No")
+        // Do nothing
     }
     
     func reportUserPost() {
@@ -771,7 +758,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                                 if let info = response.result.value as? Dictionary<String,AnyObject> {
                                     if let links = info["links"] as? Dictionary<String,AnyObject> {
                                         if let imageLink = links["image_link"] as? String {
-                                            print("LINK: \(imageLink)")
                                             self.postToFireBase(imageLink)
                                         }
                                         

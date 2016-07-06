@@ -20,14 +20,11 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var mainImg: UIImageView!
     @IBOutlet weak var descriptionLbl: UILabel!
     @IBOutlet weak var likesLbl: UILabel!
-    @IBOutlet weak var likesLblText: UILabel!
     @IBOutlet weak var likeImage: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
-    @IBOutlet weak var commentsBtn: UIButton!
     @IBOutlet weak var timeLbl: UILabel!
     
     var timer: NSTimer?
-    
     var commentTapAction: ((UITableViewCell) -> Void)?
     var reportTapAction: ((UITableViewCell) -> Void)?
     var request: Request?
@@ -62,7 +59,6 @@ class PostCell: UITableViewCell {
         mainImg.clipsToBounds = true
     }
     
-    
     func configureCell(post: Post, img: UIImage?) {
         
         self._post = post
@@ -70,8 +66,8 @@ class PostCell: UITableViewCell {
         self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
         
-        let date = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
-        let dateDiff = NSDate().offsetFrom(date)
+        let dateCreated = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
+        let dateDiff = NSDate().offsetFrom(dateCreated)
         self.timeLbl.text = dateDiff
         
         let height = heightForView(post.postDescription, width: screenWidth - 51)
@@ -144,8 +140,8 @@ class PostCell: UITableViewCell {
         })
         
         // Like observer
+        
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            // In snaphsot nil does not exist, instead you use NSNull
             
             if (snapshot.value as? NSNull) != nil {
                 self.userLikedPost = false
@@ -165,7 +161,8 @@ class PostCell: UITableViewCell {
         
         likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
-            //If I haven't like this, then like it, otherwise un-like it
+            // If User haven't like this, then like it, otherwise un-like it
+            
             if (snapshot.value as? NSNull) != nil {
                 self.userLikedPost = true
                 self.likeRef.setValue(true)
@@ -197,8 +194,6 @@ class PostCell: UITableViewCell {
     
     func mainImgTapped(sender: UITapGestureRecognizer) {
         
-        print("Main tapped!")
-        
         if !isConnectedToNetwork() {
             return
         }
@@ -207,7 +202,6 @@ class PostCell: UITableViewCell {
             startLikeAnimation(self.mainImg)
             likeTapped(sender)
         }
-        
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
@@ -215,7 +209,6 @@ class PostCell: UITableViewCell {
     }
     
     @IBAction func reportBtnTapped(sender: AnyObject) {
-        print("tapped")
         reportTapAction?(self)
     }
     

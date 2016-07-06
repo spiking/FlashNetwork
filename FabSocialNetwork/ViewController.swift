@@ -20,6 +20,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var passwordField: UITextField!
     
     var userHasAcceptedTerms = false
+    let OLD_ACCOUNT = "OLD_ACCOUNT"
+    let NEW_ACCOUNT = "NEW_ACCOUNT"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,8 +31,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
-        
-        // If already signed up, login
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil {
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
         }
@@ -117,11 +117,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                     
                                     }.main(after: 1.0) {
                                         if !accepted {
-                                            let old = "OLD_ACCOUNT"
-                                            self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: old)
+                                            self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
                                         } else {
-                                            let old = "OLD_ACCOUNT"
-                                            self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
+                                            self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: self.OLD_ACCOUNT)
                                         }
                                 }
                             } else {
@@ -132,8 +130,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 let user = ["provider": authData.provider!]
                                 DataService.ds.createFirebaseUser(authData.uid, user: user)
                                 NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                                let new = "NEW_ACCOUNT"
-                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: new)
+                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                             }
                             
                         })
@@ -191,8 +188,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                         // Create firebase user
                                         let user = ["provider": authData.provider!, "timestamp": Timestamp]
                                         DataService.ds.createFirebaseUser(authData.uid, user: user)
-                                        let new = "NEW_ACCOUNT"
-                                        self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: new)
+                                        self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                                     }
                                 })
                             }
@@ -227,11 +223,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         
                         }.main(after: 1.0) {
                             if !accepted {
-                                let old = "OLD_ACCOUNT"
-                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: old)
+                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
                             } else {
-                                let old = "OLD_ACCOUNT"
-                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
+                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: self.OLD_ACCOUNT)
                             }
                     }
                     
@@ -249,20 +243,13 @@ class ViewController: UIViewController, UITextFieldDelegate {
             if segue.identifier == SEGUE_LOGGED_IN {
                 if let feedVC = nav.topViewController as? FeedVC {
                     if let typeOfLogin = sender as? String {
-                        print("SET..")
-                        print(typeOfLogin)
                         feedVC.typeOfLogin = typeOfLogin
                     }
                 }
             }
-        }
-        
-        
-        if segue.identifier == SEGUE_USERAGREEMENTVC {
+        } else if segue.identifier == SEGUE_USERAGREEMENTVC {
             if let useragreementVC = segue.destinationViewController as? UserAgreementVC {
                 if let typeOfLogin = sender as? String {
-                    print("SET..")
-                    print(typeOfLogin)
                     useragreementVC.typeOfLogin = typeOfLogin
                 }
             }

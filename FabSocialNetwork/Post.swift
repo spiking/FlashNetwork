@@ -14,9 +14,9 @@ class Post {
     private var _imageUrl: String?
     private var _likes: Int!
     private var _postKey: String!
-    private var _postRef: Firebase!
     private var _userKey: String!
     private var _timestamp: String!
+    private var _postRef: Firebase!
     
     var postDescription: String! {
         return _postDescription

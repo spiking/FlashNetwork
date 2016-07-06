@@ -41,8 +41,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
-        addImgBtn.alpha = 1.0
-        
         title = "PROFILE"
         
         setupSettingsButton()
@@ -55,18 +53,20 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         if let profileUrl = NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") as? String {
             if let profileImg = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
                 self.imageSelector.image = profileImg
-                self.addImgBtn.alpha = 0.05
+                addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
             } else {
                 request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.imageSelector.image = img
-                        self.addImgBtn.alpha = 0.05
+                        self.addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
                         print("Add to cache!")
                         FeedVC.imageCache.setObject(img, forKey: profileUrl)
                     }
                 })
             }
+        } else {
+            addImgBtn.imageView?.image = UIImage(named: "AddNewImage")
         }
         
         if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
@@ -90,35 +90,8 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
         imageSelector.image = image
-        addImgBtn.alpha = 0.05
+        addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
         imageSelected = true
-    }
-    
-    func changeOfUsername() -> Bool {
-        let usernameEntered = usernameField.text?.lowercaseString
-        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameField.text != ""
-    }
-    
-    func changeOfProfileImage() -> Bool {
-        if let _ = imageSelector.image where imageSelected == true {
-            return true
-        } else {
-            return false
-        }
-    }
-    
-    func usernameContainsSpaces() -> Bool {
-        let whitespace = NSCharacterSet.whitespaceCharacterSet()
-        let range = usernameField.text!.rangeOfCharacterFromSet(whitespace)
-        
-        if range != nil {
-            print("whitespace found")
-            return true
-        }
-        else {
-            print("whitespace not found")
-            return false
-        }
     }
     
     func addNewProfileImageToFirebase(imgUrl: String?) {
@@ -131,16 +104,19 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         imageSelected = false
     }
     
+    func accessCamera() {
+        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
+        imagePicker.allowsEditing = true
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
+    func accessLibrary() {
+        imagePicker.allowsEditing = true
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
     func dismisskeyboard() {
         view.endEditing(true)
-    }
-    
-    func userHasUsername() -> Bool {
-        return NSUserDefaults.standardUserDefaults().valueForKey("username") != nil
-    }
-    
-    func userHasProfileImg() -> Bool {
-        return NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") != nil
     }
     
     // Top-level utility function for delay with async requests
@@ -168,6 +144,13 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         })
     }
     
+    func usernameContainsSpaces() -> Bool {
+        let whitespace = NSCharacterSet.whitespaceCharacterSet()
+        let range = usernameField.text!.rangeOfCharacterFromSet(whitespace)
+        
+        return range != nil
+    }
+    
     func usernameIsTaken() {
         let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String
         self.usernameField.text = username?.capitalizedString
@@ -184,19 +167,31 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         EZLoadingActivity.hide(success: true, animated: true)
     }
     
-    func accessCamera() {
-        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
-        imagePicker.allowsEditing = true
-        self.presentViewController(imagePicker, animated: true, completion: nil)
+    func userHasUsername() -> Bool {
+        return NSUserDefaults.standardUserDefaults().valueForKey("username") != nil
     }
     
-    func accessLibrary() {
-        imagePicker.allowsEditing = true
-        self.presentViewController(imagePicker, animated: true, completion: nil)
+    func userHasProfileImg() -> Bool {
+        return NSUserDefaults.standardUserDefaults().valueForKey("profileUrl") != nil
+    }
+    
+    func changeOfUsername() -> Bool {
+        let usernameEntered = usernameField.text?.lowercaseString
+        
+        if NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameEntered != "" {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    func changeOfProfileImage() -> Bool {
+        return imageSelected == true
     }
     
     @IBAction func addImgBtnTapped(sender: AnyObject) {
         dismisskeyboard()
+        addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
         
         if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera) {
             
@@ -262,13 +257,11 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                                 if let info = response.result.value as? Dictionary<String,AnyObject> {
                                     if let links = info["links"] as? Dictionary<String,AnyObject> {
                                         if let imageLink = links["image_link"] as? String {
-                                            print("LINK: \(imageLink)")
                                             self.addNewProfileImageToFirebase(imageLink)
                                             
                                             // Save profile image to local cache
                                             self.request = Alamofire.request(.GET, imageLink).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                                                 if err == nil {
-                                                    print("Add profile image to cache")
                                                     let img = UIImage(data: data!)!
                                                     FeedVC.imageCache.setObject(img, forKey: imageLink)
                                                     
@@ -293,9 +286,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         if !userHasUsername() || changeOfUsername() {
-            print("Update firebase and local data for new username")
-            let newUsername = usernameField.text?.lowercaseString
-            addUsernameToFirebase(newUsername)
+            if let newUsername = usernameField.text?.lowercaseString where newUsername != "" {
+                addUsernameToFirebase(newUsername)
+            }
         }
     }
 }

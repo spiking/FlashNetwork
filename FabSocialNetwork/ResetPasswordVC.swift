@@ -22,13 +22,13 @@ class ResetPasswordVC: UIViewController {
         setupPlaceholders()
     }
     
-    func dismisskeyboard() {
-        view.endEditing(true)
-    }
-    
     func setupPlaceholders() {
         let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
         emailField.attributedPlaceholder = placeholderEmail
+    }
+    
+    func dismisskeyboard() {
+        view.endEditing(true)
     }
     
     @IBAction func resetPassword() {
@@ -41,9 +41,8 @@ class ResetPasswordVC: UIViewController {
         
         DataService.ds.REF_USERS.resetPasswordForUser(emailField.text, withCompletionBlock: { error in
             if error != nil {
-                JSSAlertView().danger(self, title: "No User Found", text: "There is no user with that email address. Please try again.")
+                JSSAlertView().danger(self, title: "No User Found", text: "There is no user with the entered email address. Please try again.")
             } else {
-                print("Success")
                 successAlertResetPasswordVC(self, title: "Email Sent", msg: "Reset instruction has been sent to the entered email address.")
             }
         })

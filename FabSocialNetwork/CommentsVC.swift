@@ -34,8 +34,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        loadCommentsFromFirebase()
-        
         tableView.delegate = self
         tableView.dataSource = self
         tableView.emptyDataSetSource = self
@@ -46,10 +44,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        self.tableView.estimatedRowHeight = 75
-        self.tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 75
+        tableView.rowHeight = UITableViewAutomaticDimension
         
-        self.edgesForExtendedLayout = UIRectEdge.None
+        edgesForExtendedLayout = UIRectEdge.None
         
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(CommentsVC.dismissKeyboard))
         view.addGestureRecognizer(tap)
@@ -62,33 +60,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         NSTimer.scheduledTimerWithTimeInterval(10, target: self, selector: #selector(CommentsVC.isConnected), userInfo: nil, repeats: true)
         
-        self.title = "COMMENTS"
+        title = "COMMENTS"
         
-    }
-    
-    
-    
-    
-    func isConnected() {
-        
-        if !isConnectedToNetwork() {
-            tableView.reloadData()
-        }
-        
-        if isConnectedToNetwork() && comments.count == 0 {
-            tableView.reloadData()
-        }
-    }
-    
-    func refresh(sender:AnyObject) {
-        
-        if isConnectedToNetwork() {
-            tableView.reloadData()
-            refreshControl.endRefreshing()
-        } else {
-            refreshControl.endRefreshing()
-            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
-        }
+        loadCommentsFromFirebase()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -121,6 +95,28 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             self.tableView.reloadData()
         })
         
+    }
+    
+    func isConnected() {
+        
+        if !isConnectedToNetwork() {
+            tableView.reloadData()
+        }
+        
+        if isConnectedToNetwork() && comments.count == 0 {
+            tableView.reloadData()
+        }
+    }
+    
+    func refresh(sender:AnyObject) {
+        
+        if isConnectedToNetwork() {
+            tableView.reloadData()
+            refreshControl.endRefreshing()
+        } else {
+            refreshControl.endRefreshing()
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
+        }
     }
     
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
@@ -318,7 +314,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     
     func reportAlert() {
-        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this user?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this user for abusive behaviour?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
         alertview.addAction(answeredYes)
         alertview.addCancelAction(answeredNo)
@@ -330,7 +326,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     
     func answeredNo() {
-        
+        // Do nothing
     }
     
     func reportUserComment() {
@@ -372,8 +368,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     
     @IBAction func commentBtnTapped(sender: AnyObject) {
-        
-        print("Post!")
         
         if !userProfileAdded() {
             JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before commenting.")

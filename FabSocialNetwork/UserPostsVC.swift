@@ -41,14 +41,38 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         tableView.addGestureRecognizer(longpress)
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
-//        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
-        
-        title = "POSTS"
         
         navigationItem.leftItemsSupplementBackButton = true
         let deleteButton = setupDeleteButton()
         let viewButton = setupViewButton()
         navigationItem.setRightBarButtonItems([deleteButton, viewButton], animated: true)
+        
+        title = "POSTS"
+    }
+    
+    
+    func loadUserPostsFromFirebase() {
+        let userKey = String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!)
+        
+        DataService.ds.REF_POSTS.queryOrderedByChild("user").queryEqualToValue(userKey).observeEventType(.Value, withBlock: { snapshot in
+            self.userPosts = []
+            
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    if let postDict = snap.value as? Dictionary<String, AnyObject> {
+                        let key = snap.key
+                        let post = Post(postKey: key, dictionary: postDict)
+                        self.userPosts.append(post)
+                    }
+                }
+            }
+            
+            if self.userPosts.count == 0 {
+                self.tableView.separatorStyle = UITableViewCellSeparatorStyle.None
+            }
+            
+            self.tableView.reloadData()
+        })
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -119,30 +143,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         }
         
         tableView.reloadData()
-    }
-    
-    func loadUserPostsFromFirebase() {
-        let userKey = String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!)
-        
-        DataService.ds.REF_POSTS.queryOrderedByChild("user").queryEqualToValue(userKey).observeEventType(.Value, withBlock: { snapshot in
-            self.userPosts = []
-            
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
-                for snap in snapshot {
-                    if let postDict = snap.value as? Dictionary<String, AnyObject> {
-                        let key = snap.key
-                        let post = Post(postKey: key, dictionary: postDict)
-                        self.userPosts.append(post)
-                    }
-                }
-            }
-            
-            if self.userPosts.count == 0 {
-                self.tableView.separatorStyle = UITableViewCellSeparatorStyle.None
-            }
-            
-            self.tableView.reloadData()
-        })
     }
     
     func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {

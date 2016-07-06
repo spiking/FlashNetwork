@@ -22,10 +22,10 @@ class SettingsVC: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = "SETTINGS"
-        
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
+        
+        title = "SETTINGS"
         
         setupPlaceholders()
     }
@@ -48,12 +48,10 @@ class SettingsVC: UIViewController {
         // Reset NSUserData
         let appDomain = NSBundle.mainBundle().bundleIdentifier!
         NSUserDefaults.standardUserDefaults().removePersistentDomainForName(appDomain)
-
         
         // Push to login view
         let loginVC: UIViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("InitalNavigationController")
         self.presentViewController(loginVC!, animated: true, completion: nil)
-        
     }
     
     func answeredNo() {
@@ -76,7 +74,7 @@ class SettingsVC: UIViewController {
         }
         
         if newPasswordField.text == currentPasswordField.text {
-            JSSAlertView().danger(self, title: "Invalid Password", text: "Your new password can't be the same as your current.")
+            JSSAlertView().danger(self, title: "Invalid Password", text: "Your new password cannot be the same as your current.")
             return
         }
         
@@ -86,10 +84,8 @@ class SettingsVC: UIViewController {
                                                               toNew: newPasswordField.text, withCompletionBlock: { error in
                                                                 
                                                                 if error != nil {
-                                                                    print(error.debugDescription)
                                                                     JSSAlertView().danger(self, title: "Invalid Credentials", text: "There is no such user, please try again.")
                                                                 } else {
-                                                                    print("Password changed!")
                                                                     self.setupPlaceholders()
                                                                     successAlertSettingsVC(self, title: "Password Changed", msg: "You have successfully changed your password.")
                                                                 }

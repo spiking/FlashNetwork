@@ -16,17 +16,15 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print(post.postDescription)
         
-        title = "POST"
-        
+        tableView.delegate = self
+        tableView.dataSource = self
         tableView.estimatedRowHeight = 550
         tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
-        
-        tableView.delegate = self
-        tableView.dataSource = self
+
+        title = "POST"
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {

@@ -202,29 +202,29 @@
                         <rect key="frame" x="0.0" y="64" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="355" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="6Rs-1W-p7d">
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" misplaced="YES" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="none" rowHeight="408" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="6Rs-1W-p7d">
                                 <rect key="frame" x="0.0" y="101" width="600" height="435"/>
                                 <color key="backgroundColor" red="0.070588235294117646" green="0.070588235294117646" blue="0.070588235294117646" alpha="1" colorSpace="calibratedRGB"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="PostCell" id="5Wv-m7-CbN" customClass="PostCell" customModule="FabSocialNetwork" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="28" width="600" height="355"/>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="none" indentationWidth="10" reuseIdentifier="PostCell" rowHeight="408" id="5Wv-m7-CbN" customClass="PostCell" customModule="FabSocialNetwork" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="28" width="600" height="408"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="5Wv-m7-CbN" id="tto-6V-Kmg">
-                                            <rect key="frame" x="0.0" y="0.0" width="600" height="355"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="600" height="408"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ItD-fe-O8W" userLabel="Container">
-                                                    <rect key="frame" x="0.0" y="8" width="600" height="339"/>
+                                                    <rect key="frame" x="0.0" y="8" width="600" height="400"/>
                                                     <subviews>
-                                                        <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="iJF-Cm-fRX">
-                                                            <rect key="frame" x="12" y="8" width="50" height="50"/>
+                                                        <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iJF-Cm-fRX">
+                                                            <rect key="frame" x="12" y="5" width="50" height="50"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="50" id="Jv4-5F-c5F"/>
                                                                 <constraint firstAttribute="width" constant="50" id="eLn-Yl-4AF"/>
                                                             </constraints>
                                                         </imageView>
-                                                        <imageView contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="T23-XC-3aP">
-                                                            <rect key="frame" x="0.0" y="126" width="600" height="213"/>
+                                                        <imageView contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" image="logo" translatesAutoresizingMaskIntoConstraints="NO" id="T23-XC-3aP">
+                                                            <rect key="frame" x="0.0" y="126" width="600" height="267"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="534" id="Wqs-Tu-l4H"/>
                                                                 <constraint firstAttribute="height" relation="lessThanOrEqual" constant="350" id="wbI-If-ocu"/>
@@ -237,7 +237,7 @@
                                                             </variation>
                                                         </imageView>
                                                         <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AS1-xR-gqn">
-                                                            <rect key="frame" x="504" y="21" width="22" height="22"/>
+                                                            <rect key="frame" x="504" y="18" width="22" height="22"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="22" id="BJh-ht-690"/>
                                                                 <constraint firstAttribute="width" constant="22" id="gqc-UO-J4W"/>
@@ -247,8 +247,8 @@
                                                                 <action selector="commentsBtnTapped:" destination="5Wv-m7-CbN" eventType="touchUpInside" id="zND-R4-fAk"/>
                                                             </connections>
                                                         </button>
-                                                        <stackView opaque="NO" contentMode="scaleToFill" distribution="fillProportionally" translatesAutoresizingMaskIntoConstraints="NO" id="s4h-M2-Xvg">
-                                                            <rect key="frame" x="533" y="15" width="55" height="35"/>
+                                                        <stackView opaque="NO" contentMode="scaleToFill" misplaced="YES" distribution="fillProportionally" translatesAutoresizingMaskIntoConstraints="NO" id="s4h-M2-Xvg">
+                                                            <rect key="frame" x="533" y="12" width="55" height="35"/>
                                                             <subviews>
                                                                 <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="heart-empty" translatesAutoresizingMaskIntoConstraints="NO" id="mHU-AI-45j">
                                                                     <rect key="frame" x="0.0" y="0.0" width="35" height="35"/>
@@ -277,7 +277,7 @@
                                                             </subviews>
                                                         </stackView>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="2 h" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.60000002384185791" translatesAutoresizingMaskIntoConstraints="NO" id="ycQ-vy-x4I">
-                                                            <rect key="frame" x="75" y="36" width="393" height="22"/>
+                                                            <rect key="frame" x="75" y="33" width="393" height="22"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="22" id="esK-1B-eah"/>
                                                             </constraints>
@@ -286,14 +286,14 @@
                                                             <nil key="highlightedColor"/>
                                                         </label>
                                                         <view contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zGg-Lu-ZRg">
-                                                            <rect key="frame" x="14" y="73" width="573" height="1"/>
+                                                            <rect key="frame" x="14" y="70" width="573" height="1"/>
                                                             <color key="backgroundColor" red="0.16078431372549018" green="0.16078431372549018" blue="0.16078431372549018" alpha="1" colorSpace="calibratedRGB"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="1" id="oAh-AF-rt1"/>
                                                             </constraints>
                                                         </view>
-                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nAa-9T-5bA">
-                                                            <rect key="frame" x="12" y="84" width="576" height="30"/>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nAa-9T-5bA">
+                                                            <rect key="frame" x="12" y="81" width="576" height="30"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="30" id="tqY-wE-JoV"/>
                                                             </constraints>
@@ -302,7 +302,7 @@
                                                             <nil key="highlightedColor"/>
                                                         </label>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Billy Gates" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.59999999999999998" translatesAutoresizingMaskIntoConstraints="NO" id="HAT-I6-5Qe">
-                                                            <rect key="frame" x="75" y="16" width="373" height="20"/>
+                                                            <rect key="frame" x="75" y="13" width="373" height="20"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="20" id="9c2-CT-d0K"/>
                                                             </constraints>
@@ -311,7 +311,7 @@
                                                             <nil key="highlightedColor"/>
                                                         </label>
                                                         <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4oM-Jc-tHK">
-                                                            <rect key="frame" x="476" y="21" width="22" height="22"/>
+                                                            <rect key="frame" x="476" y="18" width="22" height="22"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="22" id="4iY-Jd-nop"/>
                                                                 <constraint firstAttribute="width" constant="22" id="sn1-rr-2CJ"/>
@@ -363,6 +363,7 @@
                                             </subviews>
                                             <constraints>
                                                 <constraint firstAttribute="bottomMargin" secondItem="ItD-fe-O8W" secondAttribute="bottom" constant="4" id="Hou-qK-Lqa"/>
+                                                <constraint firstAttribute="bottomMargin" secondItem="ItD-fe-O8W" secondAttribute="bottom" constant="-8" id="O8s-qj-nEE"/>
                                                 <constraint firstItem="ItD-fe-O8W" firstAttribute="top" secondItem="tto-6V-Kmg" secondAttribute="topMargin" id="Pln-cM-8oC"/>
                                                 <constraint firstItem="ItD-fe-O8W" firstAttribute="trailing" secondItem="tto-6V-Kmg" secondAttribute="trailingMargin" id="Sr0-UL-SsL"/>
                                                 <constraint firstItem="ItD-fe-O8W" firstAttribute="top" secondItem="tto-6V-Kmg" secondAttribute="topMargin" id="T2d-SK-0Ay"/>
@@ -375,6 +376,7 @@
                                                     <exclude reference="Hou-qK-Lqa"/>
                                                     <exclude reference="Pln-cM-8oC"/>
                                                     <exclude reference="Sr0-UL-SsL"/>
+                                                    <exclude reference="a96-yK-Ook"/>
                                                 </mask>
                                             </variation>
                                         </tableViewCellContentView>
@@ -517,7 +519,7 @@
                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences" keyboardType="alphabet" keyboardAppearance="alert"/>
                             </textField>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="add-new-image-btn-1" translatesAutoresizingMaskIntoConstraints="NO" id="zjM-eM-VX1">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="AddNewImage" translatesAutoresizingMaskIntoConstraints="NO" id="zjM-eM-VX1">
                                 <rect key="frame" x="228" y="63" width="145" height="145"/>
                             </imageView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="6fg-s9-Q4I">
@@ -526,7 +528,7 @@
                                     <constraint firstAttribute="height" constant="145" id="pPa-Rd-Eyz"/>
                                     <constraint firstAttribute="width" constant="145" id="w1h-0S-5sM"/>
                                 </constraints>
-                                <state key="normal" image="add-new-image-btn-1"/>
+                                <state key="normal" image="ImageSelected"/>
                                 <connections>
                                     <action selector="addImgBtnTapped:" destination="3DD-qm-gT2" eventType="touchUpInside" id="MBI-ty-QaJ"/>
                                 </connections>
@@ -1557,13 +1559,13 @@
                         <rect key="frame" x="0.0" y="64" width="600" height="536"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oi3-fs-Dkl">
-                                <rect key="frame" x="20" y="20" width="560" height="451"/>
-                                <string key="text">Flash Network App End User License Agreement
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" editable="NO" textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oi3-fs-Dkl">
+                                <rect key="frame" x="20" y="20" width="560" height="1967"/>
+                                <mutableString key="text">Flash Network App End User License Agreement
 
 This End User License Agreement is between you and Flash Network and governs use of this app made available through the Apple App Store. By installing the Flash Network App, you agree to be bound by this Agreement and understand that there is no tolerance for objectionable content. If you do not agree with the terms and conditions of this Agreement, you are not entitled to use the Flash Network App.
 
-In order to ensure Flash Network provides the best experience possible for everyone, we strongly enforce a no tolerance policy for objectionable content. If you see inappropriate content, please use the Report-feature found at the top of each post  and to the right when a comment is swiped.
+In order to ensure Flash Network provides the best experience possible for everyone, we strongly enforce a no tolerance policy for objectionable content. If you see inappropriate content, please use the report features.
 
 1. Parties
 
@@ -1579,11 +1581,11 @@ Flash Network grants you a limited, non-exclusive, non-transferable, revocable l
 
 4. Age Restrictions
 
-By using the Flash Network App, you represent and warrant that (a) you are 4 years of age or older and you agree to be bound by this Agreement; (b) if you are under 4 years of age, you have obtained verifiable consent from a parent or legal guardian; and (c) your use of the Flash Network App does not violate any applicable law or regulation. Your access to the &lt;App Name&gt; App may be terminated without warning if Flash Network believes, in its sole discretion, that you are under the age of 4 years and have not obtained verifiable consent from a parent or legal guardian. If you are a parent or legal guardian and you provide your consent to your child’s use of the Flash Network App, you agree to be bound by this Agreement in respect to your child’s use of the Flash Network App.
+By using the Flash Network App, you represent and warrant that (a) you are 4 years of age or older and you agree to be bound by this Agreement; (b) if you are under 4 years of age, you have obtained verifiable consent from a parent or legal guardian; and (c) your use of the Flash Network App does not violate any applicable law or regulation. Your access to the Flash Network App may be terminated without warning if Flash Network believes, in its sole discretion, that you are under the age of 4 years and have not obtained verifiable consent from a parent or legal guardian. If you are a parent or legal guardian and you provide your consent to your child’s use of the Flash Network App, you agree to be bound by this Agreement in respect to your child’s use of the Flash Network App.
 
 5. Objectionable Content Policy
 
-Content may not be submitted to Flash Network, who will moderate all content and ultimately decide whether or not to post a submission to the extent such content includes, is in conjunction with, or alongside any, Objectionable Content. Objectionable Content includes, but is not limited to: (i) sexually explicit materials; (ii) obscene, defamatory, libelous, slanderous, violent and/or unlawful content or profanity; (iii) content that infringes upon the rights of any third party, including copyright, trademark, privacy, publicity or other personal or proprietary right, or that is deceptive or fraudulent; (iv) content that promotes the use or sale of illegal or regulated substances, tobacco products, ammunition and/or firearms; and (v) gambling, including without limitation, any online casino, sports books, bingo or poker.
+Content submitted to Flash Network, will be checked and  Flash Network ultimately decide whether or not to post a submission. Content which includes, is in conjunction with, or alongside any Objectionable content is strictly forbidden. It inclues, but is not limited to:   (i) Sexually explicit materials.  (ii) Obscene, defamatory, libelous, slanderous, violent and/or unlawful content or profanity.  (iii) Content that infringes upon the rights of any third party, including copyright, trademark, privacy, publicity or other personal or proprietary right, or that is deceptive or fraudulent.  (iv) Content that promotes the use or sale of illegal or regulated substances, tobacco products, ammunition and/or firearms.  (v) Gambling, including without limitation, any online casino, sports books, bingo or poker.
 
 6. Warranty
 
@@ -1591,7 +1593,7 @@ Flash Network disclaims all warranties about the Flash Network App to the fulles
 
 7. Maintenance and Support
 
-Flash Network does provide minimal maintenance or support for it but not to the extent that any maintenance or support is required by applicable law, &lt;App Name&gt;, not Apple, shall be obligated to furnish any such maintenance or support.
+Flash Network does provide minimal maintenance or support for it but not to the extent that any maintenance or support is required by applicable law, Flash Network, not Apple, shall be obligated to furnish any such maintenance or support.
 
 8. Product Claims
 
@@ -1599,7 +1601,7 @@ Flash Network, not Apple, is responsible for addressing any claims by you relati
 
 9. Third Party Intellectual Property Claims
 
-Flash Network shall not be obligated to indemnify or defend you with respect to any third party claim arising out or relating to the Flash Network App. To the extent Flash Network is required to provide indemnification by applicable law, Flash Network, not Apple, shall be solely responsible for the investigation, defense, settlement and discharge of any claim that the Flash Network App or your use of it infringes any third party intellectual property right.</string>
+Flash Network shall not be obligated to indemnify or defend you with respect to any third party claim arising out or relating to the Flash Network App. To the extent Flash Network is required to provide indemnification by applicable law, Flash Network, not Apple, shall be solely responsible for the investigation, defense, settlement and discharge of any claim that the Flash Network App or your use of it infringes any third party intellectual property right.</mutableString>
                                 <color key="textColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -1647,7 +1649,7 @@ Flash Network shall not be obligated to indemnify or defend you with respect to 
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="h1Z-x1-xMS" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2598" y="-226"/>
+            <point key="canvasLocation" x="3184" y="-292"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="i8l-2k-kCr">
@@ -1782,9 +1784,10 @@ Flash Network shall not be obligated to indemnify or defend you with respect to 
         </scene>
     </scenes>
     <resources>
+        <image name="AddNewImage" width="398" height="398"/>
         <image name="Arrow" width="50" height="50"/>
+        <image name="ImageSelected" width="398" height="398"/>
         <image name="Report" width="50" height="50"/>
-        <image name="add-new-image-btn-1" width="398" height="398"/>
         <image name="camera" width="50" height="50"/>
         <image name="comments" width="50" height="50"/>
         <image name="heart-empty" width="150" height="147"/>

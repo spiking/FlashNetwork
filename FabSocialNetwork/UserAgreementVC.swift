@@ -12,7 +12,6 @@ import Firebase
 
 class UserAgreementVC: UIViewController, UIScrollViewDelegate {
 
-
     @IBOutlet weak var textView: UITextView!
     @IBOutlet weak var acceptBtn: UIButton!
     
@@ -22,9 +21,8 @@ class UserAgreementVC: UIViewController, UIScrollViewDelegate {
         super.viewDidLoad()
 
         EZLoadingActivity.hide()
+        navigationItem.setHidesBackButton(true, animated: true)
         title = "USER AGREEMENT"
-        self.navigationItem.setHidesBackButton(true, animated: true)
-        
     }
     
     override func viewDidLayoutSubviews() {
@@ -54,10 +52,6 @@ class UserAgreementVC: UIViewController, UIScrollViewDelegate {
             if segue.identifier == SEGUE_LOGGED_IN {
                 if let feedVC = nav.topViewController as? FeedVC {
                     if let typeOfLogin = sender as? String {
-                        
-                        print("typeoflgoin...")
-                        print(typeOfLogin)
-                        
                         feedVC.typeOfLogin = typeOfLogin
                     }
                 }

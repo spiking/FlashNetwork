@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-// Screen sizes
+// Screen size
 let screenSize: CGRect = UIScreen.mainScreen().bounds
 let screenWidth = screenSize.width
 
