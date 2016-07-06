@@ -31,6 +31,7 @@
 		6FA4D0381D06D53D0002EB33 /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA4D0371D06D53D0002EB33 /* Post.swift */; };
 		6FAC0C2E1D192FAD003C290B /* UIScrollView+EmptyDataSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */; };
 		6FAC0C301D193C6E003C290B /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C2F1D193C6E003C290B /* NetworkReachability.swift */; };
+		6FD2B6641D2AC871002042DF /* UserAgreementVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD2B6631D2AC871002042DF /* UserAgreementVC.swift */; };
 		6FD61B2A1D22B234000327B3 /* ShowUserPostVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */; };
 		6FD61B2C1D23B0E2000327B3 /* DateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD61B2B1D23B0E2000327B3 /* DateHandler.swift */; };
 		6FF8FB3F1D0ABD3100883CF4 /* Global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8FB3E1D0ABD3100883CF4 /* Global.swift */; };
@@ -66,6 +67,7 @@
 		6FAC0C2C1D192FAD003C290B /* UIScrollView+EmptyDataSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIScrollView+EmptyDataSet.h"; sourceTree = "<group>"; };
 		6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+EmptyDataSet.m"; sourceTree = "<group>"; };
 		6FAC0C2F1D193C6E003C290B /* NetworkReachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkReachability.swift; sourceTree = "<group>"; };
+		6FD2B6631D2AC871002042DF /* UserAgreementVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserAgreementVC.swift; sourceTree = "<group>"; };
 		6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShowUserPostVC.swift; sourceTree = "<group>"; };
 		6FD61B2B1D23B0E2000327B3 /* DateHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateHandler.swift; sourceTree = "<group>"; };
 		6FF8FB3E1D0ABD3100883CF4 /* Global.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Global.swift; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				6F5593D21D1D1E4B00B36D19 /* SettingsVC.swift */,
 				6F5593D41D1D265E00B36D19 /* UserPostsVC.swift */,
 				6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */,
+				6FD2B6631D2AC871002042DF /* UserAgreementVC.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -357,6 +360,7 @@
 				6FAC0C2E1D192FAD003C290B /* UIScrollView+EmptyDataSet.m in Sources */,
 				6F8AAD851D01810B00750F11 /* Constants.swift in Sources */,
 				6F8AAD951D01813200750F11 /* DarkTextField.swift in Sources */,
+				6FD2B6641D2AC871002042DF /* UserAgreementVC.swift in Sources */,
 				6FA4D0341D06C9170002EB33 /* ProfileVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -466,6 +470,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = A8D3034A336F3E4A5435B0A7 /* Pods-FabSocialNetwork.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution: Adam Thuvesen (QPUG98H89L)";
@@ -489,6 +494,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9B0D1A0FAE0662035EBEAC35 /* Pods-FabSocialNetwork.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution: Adam Thuvesen (QPUG98H89L)";

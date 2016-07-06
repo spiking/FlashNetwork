@@ -29,8 +29,20 @@ func heightForView(text:String, width:CGFloat) -> CGFloat {
     return label.frame.height * 0.80
 }
 
+func currentUserKey() -> String {
+    if let currentUser = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as? String {
+        return currentUser
+    } else {
+        return "Unknown User"
+    }
+}
+
 func userProfileAdded() -> Bool {
     return NSUserDefaults.standardUserDefaults().objectForKey("username") != nil
+}
+
+func userAcceptedTerms() -> Bool {
+    return NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String == "TRUE"
 }
 
 func startLikeAnimation(view: UIView) {

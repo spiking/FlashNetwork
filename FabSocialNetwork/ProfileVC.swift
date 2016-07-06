@@ -159,11 +159,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         DataService.ds.REF_USERS.queryOrderedByChild("username").queryEqualToValue(newUsername).observeSingleEventOfType(.Value, withBlock: { snap in
             
             if snap.value is NSNull {
-                print("NSNull \(snap.value)")
                 self.usernameTaken = false
                 self.usernameIsNotTaken(newUsername)
             } else {
-                print("NOT NSNull \(snap.value)")
                 self.usernameTaken = true
                 self.usernameIsTaken()
             }

@@ -48,6 +48,7 @@ class SettingsVC: UIViewController {
         // Reset NSUserData
         let appDomain = NSBundle.mainBundle().bundleIdentifier!
         NSUserDefaults.standardUserDefaults().removePersistentDomainForName(appDomain)
+
         
         // Push to login view
         let loginVC: UIViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("InitalNavigationController")

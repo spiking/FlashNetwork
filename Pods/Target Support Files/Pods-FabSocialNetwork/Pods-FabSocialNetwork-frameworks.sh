@@ -85,6 +85,7 @@ strip_invalid_archs() {
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "$BUILT_PRODUCTS_DIR/Alamofire/Alamofire.framework"
+  install_framework "$BUILT_PRODUCTS_DIR/AsyncSwift/Async.framework"
   install_framework "$BUILT_PRODUCTS_DIR/BTNavigationDropdownMenu/BTNavigationDropdownMenu.framework"
   install_framework "$BUILT_PRODUCTS_DIR/EZLoadingActivity/EZLoadingActivity.framework"
   install_framework "$BUILT_PRODUCTS_DIR/Firebase/Firebase.framework"
@@ -93,6 +94,7 @@ if [[ "$CONFIGURATION" == "Debug" ]]; then
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "$BUILT_PRODUCTS_DIR/Alamofire/Alamofire.framework"
+  install_framework "$BUILT_PRODUCTS_DIR/AsyncSwift/Async.framework"
   install_framework "$BUILT_PRODUCTS_DIR/BTNavigationDropdownMenu/BTNavigationDropdownMenu.framework"
   install_framework "$BUILT_PRODUCTS_DIR/EZLoadingActivity/EZLoadingActivity.framework"
   install_framework "$BUILT_PRODUCTS_DIR/Firebase/Firebase.framework"

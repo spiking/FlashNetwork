@@ -17,6 +17,8 @@ class DataService {
     private var _REF_POSTS = Firebase(url: "\(URL_BASE)/posts")
     private var _REF_USERS = Firebase(url: "\(URL_BASE)/users")
     private var _REF_COMMENTS = Firebase(url:  "\(URL_BASE)/comments")
+    private var _REF_REPORTED_COMMENTS = Firebase(url:  "\(URL_BASE)/reported_comments")
+    private var _REF_REPORTED_POSTS = Firebase(url:  "\(URL_BASE)/reported_posts")
     
     var REF_BASE: Firebase {
         return _REF_BASE
@@ -34,10 +36,18 @@ class DataService {
         return _REF_COMMENTS
     }
     
+    var REF_REPORTED_COMMENTS: Firebase {
+        return _REF_REPORTED_COMMENTS
+    }
+    
+    var REF_REPORTED_POSTS: Firebase {
+        return _REF_REPORTED_POSTS
+    }
+    
     var REF_USER_CURRENT: Firebase {
         let uid = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String
         let user = Firebase(url: "\(URL_BASE)").childByAppendingPath("users").childByAppendingPath(uid)
-        
+
         return user!
     }
     

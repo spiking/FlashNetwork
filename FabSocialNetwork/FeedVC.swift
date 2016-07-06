@@ -13,6 +13,7 @@ import MobileCoreServices
 import EZLoadingActivity
 import JSSAlertView
 import BTNavigationDropdownMenu
+import Async
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
@@ -29,6 +30,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var loadingData = false
     var postsShown = 20
     var alert = false
+    var reportPost: Post!
     
     enum FeedMode {
         case Popular
@@ -96,8 +98,37 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         loadMostPopularFromFirebase()
         loadProfileData()
-
+    
     }
+    
+    func application(application: UIApplication!, performFetchWithCompletionHandler completionHandler: ((UIBackgroundFetchResult) -> Void)!) {
+        loadShows() {
+            completionHandler(UIBackgroundFetchResult.NewData)
+            print("Background Fetch Complete")
+        }
+    }
+    
+    func loadShows(completionHandler: (() -> Void)!) {
+        print("2")
+        
+        DataService.ds.REF_USER_CURRENT.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            
+            
+            if let terms = snapshot.value["terms"] as? String {
+                print("\(terms)")
+            }
+            
+            print("3") // Last print
+            
+        })
+        
+        print("4")
+        
+        
+        completionHandler()
+    }
+    
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
@@ -152,6 +183,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func loadDataFromFirebase() {
+        
+        if !isConnectedToNetwork() {
+            JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and the feed will load automatically.")
+        }
         
         switch feedMode {
         case .Popular:
@@ -264,7 +299,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.loginMessage()
                 self.firstLogin = false
             }
-    
+            
             // Sort hottest, most likes in the last 48 h
             self.posts.sortInPlace({ $0.likes > $1.likes })
             self.tableView.reloadData()
@@ -327,7 +362,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     }
                 }
             }
-
+            
             if count == 0 {
                 EZLoadingActivity.hide()
             }
@@ -425,6 +460,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.performSegueWithIdentifier(SEGUE_COMMENTSVC, sender: post)
             }
             
+            cell.reportTapAction = { (cell) in
+                print("Show Alert!")
+                self.reportPost = post
+                self.reportAlert()
+            }
+            
             cell.layoutIfNeeded()
             
             return cell
@@ -433,7 +474,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             return PostCell()
         }
     }
-    
     
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
         let post = posts[indexPath.row]
@@ -514,7 +554,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func textViewDidBeginEditing(textView: UITextView) {
-
+        
     }
     
     func loginMessage() {
@@ -570,7 +610,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         var post: Dictionary<String, AnyObject> = [
             "description": postTextView.text!,
             "likes": 0,
-            "user" : NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String,
+            "user" : currentUserKey(),
             "timestamp" : Timestamp
         ]
         
@@ -615,19 +655,72 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                         if snap.key == "imgUrl" {
                             let profileUrl = snap.value
                             NSUserDefaults.standardUserDefaults().setValue(profileUrl, forKey: "profileUrl")
-                            print("Added prof url \(profileUrl)")
-                        }
-                        
-                        if snap.key == "username" {
+                        } else if snap.key == "username" {
                             let username = snap.value
                             NSUserDefaults.standardUserDefaults().setValue(username, forKey: "username")
-                            print("Added username \(username)")
+                        } else if snap.key == "terms" {
+                            let terms = snap.value
+                            NSUserDefaults.standardUserDefaults().setValue(terms, forKey: "terms")
                         }
                         
                     }
                 }
             })
         }
+    }
+    
+    func reportAlert() {
+        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this post as objectional content?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(answeredYes)
+        alertview.addCancelAction(answeredNo)
+    }
+    
+    func answeredYes() {
+        print("Yes")
+        reportUserPost()
+    }
+    
+    func answeredNo() {
+        print("No")
+    }
+    
+    func reportUserPost() {
+        
+        let reportPostRef = DataService.ds.REF_REPORTED_POSTS.childByAppendingPath(self.reportPost.postKey)
+        
+        // Like observer
+        reportPostRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            // If no report exist, create one
+            if (snapshot.value as? NSNull) != nil {
+                
+                let post: Dictionary<String, AnyObject> = [
+                    "post" : self.reportPost.postKey,
+                    "report_time" : Timestamp,
+                    "report_count" : 1
+                ]
+                
+                reportPostRef.setValue(post)
+                reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+                
+            } else {
+                
+                reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+                
+                // Should be put on server side
+                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                    for snap in snapshot {
+                        if let postDict = snap.value as? Dictionary<String, AnyObject> {
+                            if postDict[currentUserKey()] == nil {
+                                let reportCount = postDict.count + 1
+                                reportPostRef.childByAppendingPath("report_count").setValue(reportCount)
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
     
     func accessCamera() {
@@ -645,18 +738,18 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
         
         if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera) {
-        
-        let alertview = JSSAlertView().show(self, title: "Access Photo Library Or Camera?", text: "", buttonText: "Library", cancelButtonText: "Camera", color: UIColorFromHex(0x25c051, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.addAction(accessLibrary)
-        alertview.addCancelAction(accessCamera)
+            
+            let alertview = JSSAlertView().show(self, title: "Access Photo Library Or Camera?", text: "", buttonText: "Library", cancelButtonText: "Camera", color: UIColorFromHex(0x25c051, alpha: 1))
+            alertview.setTextTheme(.Light)
+            alertview.addAction(accessLibrary)
+            alertview.addCancelAction(accessCamera)
             
         } else {
             imagePicker.allowsEditing = true
             self.presentViewController(imagePicker, animated: true, completion: nil)
         }
     }
-
+    
     @IBAction func makePost(sender: AnyObject) {
         
         dismisskeyboard()
@@ -674,7 +767,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         if let txt = postTextView.text where txt != "" && postTextView.text != placeHolderText {
             
             print(txt.characters.count)
-        
+            
             EZLoadingActivity.show("Uploading...", disableUI: false)
             
             if let img = imageSelector.image where imageSelected == true {

@@ -16,6 +16,7 @@ class Comment {
     private var _userKey: String!
     private var _commentKey: String!
     private var _commentRef: Firebase!
+    private var _timestamp: String!
     
     private var _postRef: Firebase!
     private var _userRef: Firebase!
@@ -36,6 +37,10 @@ class Comment {
         return _commentKey
     }
     
+    var timestamp: String? {
+        return _timestamp
+    }
+    
     init(commentKey: String, dictionary: Dictionary<String, AnyObject>) {
         self._commentKey = commentKey
         
@@ -49,6 +54,10 @@ class Comment {
         
         if let postKey = dictionary["post"] as? String {
             self._postKey = postKey
+        }
+        
+        if let timestamp = dictionary["timestamp"] as? String {
+            self._timestamp = timestamp
         }
         
         self._commentRef = DataService.ds.REF_COMMENTS.childByAppendingPath(self._commentKey)

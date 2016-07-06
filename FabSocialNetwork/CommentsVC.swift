@@ -25,6 +25,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     var noConnectionAlerts = 0
     var keyboardVisible = false
     var emojiClicked = false
+    var reportedComment: Comment!
     
     @IBOutlet weak var stackViewHeight: NSLayoutConstraint!
     @IBOutlet weak var commentTextView: UITextView!
@@ -154,6 +155,39 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
     }
     
+    func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]? {
+        let reportAction = UITableViewRowAction(style: .Normal, title: "Report") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
+            self.reportAlert()
+            self.reportedComment = self.comments[indexPath.row]
+            print("Report this post!")
+        }
+        reportAction.backgroundColor = UIColor.darkGrayColor()
+        
+        let deleteAction = UITableViewRowAction(style: .Normal, title: "Remove") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
+            
+            if !isConnectedToNetwork() {
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
+                tableView.setEditing(false, animated: true)
+                return
+            }
+            
+            let commentToRemove = self.comments[indexPath.row]
+            self.removeComment(commentToRemove)
+            self.comments.removeAtIndex(indexPath.row)
+            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+        }
+        
+        deleteAction.backgroundColor = UIColorFromHex(0xe64c3c, alpha: 1)
+        
+        let comment = comments[indexPath.row]
+        
+        if comment.userKey! == currentUserKey() {
+            return [deleteAction]
+        } else {
+            return [reportAction]
+        }
+    }
+    
     func textViewShouldBeginEditing(textView: UITextView) -> Bool {
         commentTextView.textColor = UIColor.whiteColor()
         
@@ -173,15 +207,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
     }
     
-    func textViewDidBeginEditing(textView: UITextView) {
-
-    }
-    
     func addComment(comment: String!) {
         
-        let currentUserKey = NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as! String!
         let currentPostKey = post.postKey
-        let comment : Dictionary<String, String> = ["user" : currentUserKey!, "post": currentPostKey, "comment" : comment!, "timestamp": Timestamp]
+        let comment : Dictionary<String, String> = ["user" : currentUserKey(), "post": currentPostKey, "comment" : comment!, "timestamp": Timestamp]
         
         DataService.ds.REF_COMMENTS.childByAutoId().setValue(comment)
     }
@@ -208,7 +237,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         if let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.CGRectValue() {
             self.view.frame.origin.y -= keyboardSize.height
-             keyboardVisible = true
+            keyboardVisible = true
         }
     }
     
@@ -268,38 +297,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         return UIImage(named: imgName)
     }
     
-    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
-        
-        let comment = comments[indexPath.row]
-        
-        if comment.userKey! == String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!) {
-            return true
-        }
-        return false
-    }
-    
-    func tableView(tableView: UITableView, titleForDeleteConfirmationButtonForRowAtIndexPath indexPath: NSIndexPath) -> String? {
-        return "Remove"
-    }
-    
-    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        
-        if editingStyle == UITableViewCellEditingStyle.Delete {
-            
-            if !isConnectedToNetwork() {
-                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
-                tableView.setEditing(false, animated: true)
-                return
-            }
-            
-            let commentToRemove = comments[indexPath.row]
-            removeComment(commentToRemove)
-            comments.removeAtIndex(indexPath.row)
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
-            
-        }
-    }
-    
     func removeComment(commentToRemove: Comment!) {
         
         DataService.ds.REF_COMMENTS.childByAppendingPath(commentToRemove.commentKey).removeValueWithCompletionBlock { (error, ref) in
@@ -318,6 +315,60 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             }
         }
         
+    }
+    
+    func reportAlert() {
+        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this user?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(answeredYes)
+        alertview.addCancelAction(answeredNo)
+        tableView.setEditing(false, animated: true)
+    }
+    
+    func answeredYes() {
+        reportUserComment()
+    }
+    
+    func answeredNo() {
+        
+    }
+    
+    func reportUserComment() {
+        
+        let reportCommentRef = DataService.ds.REF_REPORTED_COMMENTS.childByAppendingPath(self.reportedComment.commentKey)
+        
+        // Like observer
+        reportCommentRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            // If no report exist, create one
+            if (snapshot.value as? NSNull) != nil {
+                
+                let comment: Dictionary<String, AnyObject> = [
+                    "comment" : self.reportedComment.commentKey!,
+                    "report_time" : Timestamp,
+                    "report_count" : 1,
+                ]
+                
+                reportCommentRef.setValue(comment)
+                reportCommentRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+                
+            } else {
+                
+                reportCommentRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+                
+                // Should be put on server side
+                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                    for snap in snapshot {
+                        if let commentDict = snap.value as? Dictionary<String, AnyObject> {
+                            if commentDict[currentUserKey()] == nil {
+                                let reportCount = commentDict.count + 1
+                                reportCommentRef.childByAppendingPath("report_count").setValue(reportCount)
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
     
     @IBAction func commentBtnTapped(sender: AnyObject) {

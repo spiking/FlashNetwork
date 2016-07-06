@@ -12,11 +12,14 @@ import FBSDKLoginKit
 import Firebase
 import JSSAlertView
 import EZLoadingActivity
+import Async
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
+    
+    var userHasAcceptedTerms = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -25,6 +28,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
+        
         
         // If already signed up, login
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil {
@@ -88,29 +92,54 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         print("Logged In! \(authData)")
                         // Check if id already exist in firebase, if so -> dont re-create
                         DataService.ds.REF_USERS.observeEventType(.Value, withBlock: { snapshot in
-                          
-                            print("Check user!")
                             
                             if snapshot.hasChild(authData.uid) {
-                                print("User already exists, login!")
-                                NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                                let old = "OldAccount"
-                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
+                                if !userProfileAdded() {
+                                    NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                                }
+                                
+                                var accepted = false
+                                
+                                // Perform user term check on background thread
+                                
+                                Async.background() {
+                                    
+                                    DataService.ds.REF_USER_CURRENT.observeSingleEventOfType(.Value, withBlock: { snapshot in
+                                        
+                                        if let terms = snapshot.value["terms"] as? String {
+                                            if terms == "TRUE" {
+                                                accepted = true
+                                            }
+                                        }
+                                    })
+                                    
+                                    // Must perform segues on main thread
+                                    
+                                    }.main(after: 1.0) {
+                                        if !accepted {
+                                            let old = "OLD_ACCOUNT"
+                                            self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: old)
+                                        } else {
+                                            let old = "OLD_ACCOUNT"
+                                            self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
+                                        }
+                                }
                             } else {
+                                
+                                EZLoadingActivity.show("Creating account...", disableUI: false)
+                                
                                 print("User does not exist, create a new!")
                                 let user = ["provider": authData.provider!]
                                 DataService.ds.createFirebaseUser(authData.uid, user: user)
                                 NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                                let new = "NewAccount"
-                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: new)
+                                let new = "NEW_ACCOUNT"
+                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: new)
                             }
+                            
                         })
                     }
-                    
                 })
-                
             }
-            
         }
     }
     
@@ -163,7 +192,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                         let user = ["provider": authData.provider!, "timestamp": Timestamp]
                                         DataService.ds.createFirebaseUser(authData.uid, user: user)
                                         let new = "NEW_ACCOUNT"
-                                        self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: new)
+                                        self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: new)
                                     }
                                 })
                             }
@@ -172,18 +201,40 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         JSSAlertView().danger(self, title: "Incorrect Credentials", text: "Please check your email and password.")
                     }
                 } else {
-                    print("SHOW")
+                    
                     EZLoadingActivity.show("Logging in...", disableUI: false)
                     
-                    // If app has been reinstalled, add NSUser data to account
-                    
-                    if NSUserDefaults.standardUserDefaults().valueForKey("username") != nil {
-                        self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
-                    } else {
-                         NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
-                         let old = "OLD_ACCOUNT"
-                         self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
+                    if !userProfileAdded() {
+                        NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
                     }
+                    
+                    var accepted = false
+                    
+                    // Perform user term check on background thread
+                    
+                    Async.background() {
+                        
+                        DataService.ds.REF_USER_CURRENT.observeSingleEventOfType(.Value, withBlock: { snapshot in
+                            
+                            if let terms = snapshot.value["terms"] as? String {
+                                if terms == "TRUE" {
+                                    accepted = true
+                                }
+                            }
+                        })
+                        
+                        // Must perform segues on main thread
+                        
+                        }.main(after: 1.0) {
+                            if !accepted {
+                                let old = "OLD_ACCOUNT"
+                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: old)
+                            } else {
+                                let old = "OLD_ACCOUNT"
+                                self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: old)
+                            }
+                    }
+                    
                 }
             })
             
@@ -193,20 +244,34 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-
+        
         if let nav = segue.destinationViewController as? UINavigationController {
             if segue.identifier == SEGUE_LOGGED_IN {
                 if let feedVC = nav.topViewController as? FeedVC {
                     if let typeOfLogin = sender as? String {
+                        print("SET..")
+                        print(typeOfLogin)
                         feedVC.typeOfLogin = typeOfLogin
                     }
                 }
             }
         }
+        
+        
+        if segue.identifier == SEGUE_USERAGREEMENTVC {
+            if let useragreementVC = segue.destinationViewController as? UserAgreementVC {
+                if let typeOfLogin = sender as? String {
+                    print("SET..")
+                    print(typeOfLogin)
+                    useragreementVC.typeOfLogin = typeOfLogin
+                }
+            }
+        }
+        
+        
     }
     
     func dismisskeyboard() {
         view.endEditing(true)
     }
 }
-

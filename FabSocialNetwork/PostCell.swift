@@ -10,6 +10,7 @@ import UIKit
 import Alamofire
 import Firebase
 import MBProgressHUD
+import JSSAlertView
 
 class PostCell: UITableViewCell {
     
@@ -28,6 +29,7 @@ class PostCell: UITableViewCell {
     var timer: NSTimer?
     
     var commentTapAction: ((UITableViewCell) -> Void)?
+    var reportTapAction: ((UITableViewCell) -> Void)?
     var request: Request?
     var likeRef: Firebase!
     var userRef: Firebase!
@@ -124,7 +126,7 @@ class PostCell: UITableViewCell {
 
                 }
             } else {
-                self.profileImg.image = UIImage(named:"profile2.png")
+                self.profileImg.image = UIImage(named:"NoProfileImage.png")
             }
             
             
@@ -210,6 +212,11 @@ class PostCell: UITableViewCell {
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
         commentTapAction?(self)
+    }
+    
+    @IBAction func reportBtnTapped(sender: AnyObject) {
+        print("tapped")
+        reportTapAction?(self)
     }
     
 }
