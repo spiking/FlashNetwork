@@ -99,36 +99,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         loadMostPopularFromFirebase()
         loadProfileData()
     
-    }
-    
-    func application(application: UIApplication!, performFetchWithCompletionHandler completionHandler: ((UIBackgroundFetchResult) -> Void)!) {
-        loadShows() {
-            completionHandler(UIBackgroundFetchResult.NewData)
-            print("Background Fetch Complete")
-        }
-    }
-    
-    func loadShows(completionHandler: (() -> Void)!) {
-        print("2")
-        
-        DataService.ds.REF_USER_CURRENT.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
-            
-            
-            if let terms = snapshot.value["terms"] as? String {
-                print("\(terms)")
-            }
-            
-            print("3") // Last print
-            
-        })
-        
-        print("4")
-        
-        
-        completionHandler()
-    }
-    
+    }    
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
