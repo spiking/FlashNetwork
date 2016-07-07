@@ -60,7 +60,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
                         let img = UIImage(data: data!)!
                         self.imageSelector.image = img
                         self.addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
-                        print("Add to cache!")
                         FeedVC.imageCache.setObject(img, forKey: profileUrl)
                     }
                 })
@@ -102,6 +101,10 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             EZLoadingActivity.hide(success: true, animated: true)
         }
         imageSelected = false
+    }
+    
+    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
+        imagePicker.dismissViewControllerAnimated(true, completion: nil)
     }
     
     func accessCamera() {

@@ -29,7 +29,7 @@ class SettingsVC: UIViewController {
         
         setupPlaceholders()
 
-        isUserAuthenticated(self)
+        isUserAuthenticated(self) 
     }
     
     func setupPlaceholders() {

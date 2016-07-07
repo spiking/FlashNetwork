@@ -33,7 +33,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         
         if userBanned {
             JSSAlertView().danger(self, title: "Banned", text: "You have violated the user license agreement. Your account has been permanetly banned from Flash Network.")
-            NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: #selector(ViewController.terminateApp), userInfo: nil, repeats: false)
+            NSTimer.scheduledTimerWithTimeInterval(7, target: self, selector: #selector(ViewController.terminateApp), userInfo: nil, repeats: false)
         }
         
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil && NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String == "TRUE" {
@@ -98,11 +98,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         print("Login failed! \(error)")
                     } else {
                         print("Logged In! \(authData)")
+                        
                         // Check if id already exist in firebase, if so, dont recreate
                         DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
-                            
-                            print(snapshot)
-                            print(authData.uid)
                             
                             if !snapshot.hasChild(authData.uid) {
                                 
@@ -196,7 +194,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
                             } else {
                                 // Save account locally
                                 NSUserDefaults.standardUserDefaults().setValue(result[KEY_UID], forKey: KEY_UID)
-                                print("Save locally!")
                                 // Authorize account
                                 DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { err, authData in
                                     
@@ -244,7 +241,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 
                                 // Means user entered user agreement but terminated the app
                                 if let terms = NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String where terms == "FALSE" {
-                                    print(terms)
+                                    
                                     self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                                 } else {
                                     self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)

@@ -153,8 +153,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         let reportAction = UITableViewRowAction(style: .Normal, title: "Report") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
             self.reportAlert()
             self.reportedComment = self.comments[indexPath.row]
-            print("Report this post!")
         }
+        
         reportAction.backgroundColor = UIColor.darkGrayColor()
         
         let deleteAction = UITableViewRowAction(style: .Normal, title: "Remove") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
@@ -296,7 +296,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         DataService.ds.REF_COMMENTS.childByAppendingPath(commentToRemove.commentKey).removeValueWithCompletionBlock { (error, ref) in
             
             if error != nil {
-                print("Remove failed")
                 EZLoadingActivity.showWithDelay("Failure", disableUI: true, seconds: 1.0)
                 EZLoadingActivity.Settings.SuccessText = "Failure"
                 EZLoadingActivity.hide(success: false, animated: true)
@@ -304,8 +303,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 EZLoadingActivity.showWithDelay("Removed", disableUI: true, seconds: 1.0)
                 EZLoadingActivity.Settings.SuccessText = "Removed"
                 EZLoadingActivity.hide(success: true, animated: true)
-                print("Remove")
-                
             }
         }
         
@@ -376,6 +373,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     
     @IBAction func commentBtnTapped(sender: AnyObject) {
+        
+        dismissKeyboard()
         
         if !userProfileAdded() {
             JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before commenting.")

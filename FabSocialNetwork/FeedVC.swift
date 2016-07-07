@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Foundation
 import Firebase
 import Alamofire
 import MobileCoreServices
@@ -31,6 +32,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var previousOffset = CGFloat(0)
     var postsShown = 20
     var reportPost: Post!
+    var keyboardHeight: CGFloat = 0.0
+    var rows: CGFloat = 0.0
     
     enum FeedMode {
         case Popular
@@ -42,6 +45,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var menuView: BTNavigationDropdownMenu!
     var timer: NSTimer?
     var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
+    var previousRect = CGRectZero
     
     @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
     @IBOutlet weak var postView: UIView!
@@ -99,7 +103,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         loadMostPopularFromFirebase()
         loadProfileData()
-    
     }
     
     func updateData(notification: NSNotification){
@@ -137,7 +140,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         self.navigationItem.titleView = menuView
         
         menuView.didSelectItemAtIndexHandler = {[weak self] (indexPath: Int) -> () in
-            print("Did select item at index: \(indexPath)")
             switch indexPath {
             case 0:
                 self!.feedMode = .Popular
@@ -149,7 +151,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self!.feedMode = .Latest
                 self!.loadDataFromFirebase()
             default:
-                print("DEFAULT")
+                break
             }
         }
     }
@@ -163,13 +165,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         switch feedMode {
         case .Popular:
             loadMostPopularFromFirebase()
-            print("Lost most popular")
         case .Hottest:
             loadHottestFromFirebase()
-            print("Load hottest")
         case .Latest:
             loadLatestFromFirebase()
-            print("Load latest")
         }
         
         scrollToTop()
@@ -337,8 +336,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 
                 self.tableView.reloadData()
                 self.loadingData = false
-                
-                print("Done!")
             }
         }
     }
@@ -426,7 +423,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
             cell.reportTapAction = { (cell) in
-                print("Show Alert!")
                 self.reportPost = post
                 self.reportAlert()
             }
@@ -492,9 +488,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func imagePickerControllerDidCancel(picker: UIImagePickerController) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
-        imageSelector.image = UIImage(named: "camera")
+        imageSelector.image = UIImage(named: "Camera2")
         imageSelected = false
     }
+    
+    
     
     func dismisskeyboard() {
         view.endEditing(true)
@@ -505,6 +503,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func textViewShouldBeginEditing(textView: UITextView) -> Bool {
+        
         postTextView.textColor = UIColor.whiteColor()
         
         if postTextView.text == placeHolderText {
@@ -592,7 +591,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         postTextView.text = placeHolderText
         postTextView.textColor = UIColor.lightGrayColor()
-        imageSelector.image = UIImage(named: "camera")
+        imageSelector.image = UIImage(named: "Camera2")
         
         EZLoadingActivity.Settings.SuccessText = "Uploded"
         EZLoadingActivity.hide(success: true, animated: true)
@@ -731,8 +730,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
         
         if let txt = postTextView.text where txt != "" && postTextView.text != placeHolderText {
-            
-            print(txt.characters.count)
             
             EZLoadingActivity.show("Uploading...", disableUI: false)
             
