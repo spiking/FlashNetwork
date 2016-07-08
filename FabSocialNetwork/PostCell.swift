@@ -66,6 +66,7 @@ class PostCell: UITableViewCell {
         mainImg.clipsToBounds = true
     }
     
+    
     func configureCell(post: Post, img: UIImage?) {
         
         self._post = post
@@ -77,9 +78,6 @@ class PostCell: UITableViewCell {
         let dateDiff = NSDate().offsetFrom(dateCreated)
         self.timeLbl.text = dateDiff
         
-        let height = heightForView(post.postDescription, width: screenWidth - 51)
-        self.descLblHeight.constant = height
-        
         self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
         
         self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
@@ -88,6 +86,10 @@ class PostCell: UITableViewCell {
         
         // Main post image
         if post.imageUrl != nil {
+            
+            let height = heightForView(post.postDescription, width: screenWidth - 24) + 10
+            self.descLblHeight.constant = height
+            
             if img != nil {
                 self.mainImg.image = img
             } else {
@@ -101,6 +103,8 @@ class PostCell: UITableViewCell {
                 })
             }
         } else {
+            let height = heightForView(post.postDescription, width: screenWidth - 24)
+            self.descLblHeight.constant = height
             self.mainImg.hidden = true
         }
         

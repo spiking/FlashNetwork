@@ -452,7 +452,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             // Not pretty, but should work
             return 115 + heightForView(post.postDescription, width: screenWidth - 51)
         } else {
-            return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 51)
+            return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 24)
         }
     }
     

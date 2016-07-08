@@ -54,13 +54,15 @@ var Timestamp: String {
 }
 
 func heightForView(text:String, width:CGFloat) -> CGFloat {
+    
     let label:UILabel = UILabel(frame: CGRectMake(0, 0, width, CGFloat.max))
     label.numberOfLines = 0
     label.lineBreakMode = NSLineBreakMode.ByWordWrapping
+    label.font = UIFont(name: "Avenir", size: 14)
     label.text = text
     label.sizeToFit()
     
-    return label.frame.height * 0.80
+    return label.frame.height
 }
 
 func currentUserKey() -> String {
