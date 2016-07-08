@@ -22,7 +22,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     static var imageCache = NSCache() // Static since single instance (global)
     var imagePicker: UIImagePickerController!
     var imageSelected = false
-    var firstLogin = true
     var loadingData = false
     var alert = false
     var noConnectionAlerts = 0
@@ -34,6 +33,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var reportPost: Post!
     var keyboardHeight: CGFloat = 0.0
     var rows: CGFloat = 0.0
+    var feedMode = FeedMode.Popular
+    var menuView: BTNavigationDropdownMenu!
+    var timer: NSTimer?
+    var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
+    var previousRect = CGRectZero
+    var heightConstraint: NSLayoutConstraint?
+    
+    var cancelButton: UIButton!
     
     enum FeedMode {
         case Popular
@@ -41,17 +48,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         case Latest
     }
     
-    var feedMode = FeedMode.Popular
-    var menuView: BTNavigationDropdownMenu!
-    var timer: NSTimer?
-    var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
-    var previousRect = CGRectZero
-    
     @IBOutlet weak var postViewTopConstraint: NSLayoutConstraint!
     @IBOutlet weak var postView: UIView!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var postTextView: UITextView!
     @IBOutlet weak var imageSelector: UIImageView!
+    @IBOutlet weak var postBottomConstraint: NSLayoutConstraint!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -86,12 +88,17 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         view.addGestureRecognizer(tap)
         
         setupProfileButton()
+        setupCancelButton()
         setupSortMenu()
         
         title = "FAB NETWORK"
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(FeedVC.updateData(_:)), name:"update", object: nil)
+        
+        // Be able to push view up/down when keyboard is shown, observers
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil);
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil);
         
         if firstLogin {
             EZLoadingActivity.hide()
@@ -105,10 +112,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         loadProfileData()
     }
     
-    func updateData(notification: NSNotification){
-        loadDataFromFirebase()
-    }
-    
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
         
@@ -118,6 +121,17 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         } else {
             postTextView.textColor = UIColor.whiteColor()
         }
+    }
+    
+    func setupCancelButton() {
+        
+        cancelButton = UIButton(type: UIButtonType.Custom)
+        cancelButton.setImage(UIImage(named: "Cancel.png"), forState: UIControlState.Normal)
+        cancelButton.addTarget(self, action: #selector(FeedVC.cancelBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
+        cancelButton.frame = CGRectMake(0, 0, 53, 20)
+        let barButton = UIBarButtonItem(customView: cancelButton)
+        self.navigationItem.leftBarButtonItem = barButton
+        hideCancelButton()
     }
     
     func setupProfileButton() {
@@ -179,10 +193,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         let count = posts.count
         let lastTwoDays = Double(Timestamp)! - (86000.0 * 2)
-        let lastDayStr = String(lastTwoDays)
+        let lastTwoDaysStr = String(lastTwoDays)
         
         // Observe changes in Firebase
-        DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("timestamp").queryStartingAtValue(lastDayStr, childKey: "timestamp").observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("timestamp").queryStartingAtValue(lastTwoDaysStr, childKey: "timestamp").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
             if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
@@ -199,9 +213,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 EZLoadingActivity.hide()
             }
             
-            if self.firstLogin {
+            if firstLogin {
                 self.loginMessage()
-                self.firstLogin = false
+                firstLogin = false
             }
             
             // Sort hottest, most likes in the last 48 h
@@ -234,9 +248,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 EZLoadingActivity.hide()
             }
             
-            if self.firstLogin {
+            if firstLogin {
                 self.loginMessage()
-                self.firstLogin = false
+                firstLogin = false
             }
             
             self.posts = self.posts.reverse()
@@ -267,9 +281,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 EZLoadingActivity.hide()
             }
             
-            if self.firstLogin {
+            if firstLogin {
                 self.loginMessage()
-                self.firstLogin = false
+                firstLogin = false
             }
             
             self.posts = self.posts.reverse()
@@ -315,7 +329,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func refreshMore() {
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
+        
+        Async.background() {
             
             // This runs on the background queue
             
@@ -330,31 +345,21 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.loadLatestFromFirebase()
             }
             
-            dispatch_async(dispatch_get_main_queue()) {
-                
+            }.main() {
                 // This runs on the main queue
                 
                 self.tableView.reloadData()
                 self.loadingData = false
-            }
         }
-    }
-    
-    func isVisible(view: UIView) -> Bool {
-        func isVisible(view: UIView, inView: UIView?) -> Bool {
-            guard let inView = inView else { return true }
-            let viewFrame = inView.convertRect(view.bounds, fromView: view)
-            if CGRectIntersectsRect(viewFrame, inView.bounds) {
-                return isVisible(view, inView: inView.superview)
-            }
-            return false
-        }
-        return isVisible(view, inView: view.superview)
     }
     
     // Animate push of post view when user starts scrolling
     
     func scrollViewDidScroll(scrollView: UIScrollView) {
+        
+        if postTextView.isFirstResponder() {
+            return
+        }
         
         dismisskeyboard()
         stopLikeAnimation()
@@ -427,6 +432,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.reportAlert()
             }
             
+            cell.blockUserTapAction = { (cell) in
+                self.blockUserAlert()
+            }
+            
             cell.layoutIfNeeded()
             
             return cell
@@ -459,26 +468,64 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func profileBtnPressed() {
-        dismisskeyboard()
-        menuView.hide()
-        
-        self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: nil)
+    func updateData(notification: NSNotification){
+        loadDataFromFirebase()
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
+    func cancelBtnPressed() {
         dismisskeyboard()
+        hideCancelButton()
+        cancelAlert()
+    }
+    
+    func cancelAlert() {
         
-        if segue.identifier == SEGUE_COMMENTSVC {
-            if let commentsVC = segue.destinationViewController as? CommentsVC {
-                if let post = sender as? Post {
-                    commentsVC.post = post
-                }
-            }
+        // dismisskeyboard()
+        
+        if (postTextView.text != "" && postTextView.text != placeHolderText) || imageSelected {
+            let alertview = JSSAlertView().show(self, title: "Save Draft", text: "Do you want to save this post as a draft?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+            alertview.setTextTheme(.Light)
+            alertview.addAction(cancelAnswerYes)
+            alertview.addCancelAction(cancelAnswerNo)
         }
     }
     
+    func cancelAnswerYes() {
+        
+    }
+    
+    func cancelAnswerNo() {
+        postTextView.text = placeHolderText
+        imageSelector.image = UIImage(named: "Camera2")
+        imageSelected = false
+    }
+    
+    func showCancelButton() {
+        cancelButton.hidden = false
+    }
+    
+    func hideCancelButton() {
+        cancelButton.hidden = true
+    }
+    
+    func profileBtnPressed() {
+        
+        self.dismisskeyboard()
+        self.menuView.hide()
+        
+        // Short delay
+        func delay(delay:Double, closure:()->()) {
+            dispatch_after(
+                dispatch_time(
+                    DISPATCH_TIME_NOW,
+                    Int64(delay * Double(NSEC_PER_SEC))
+                ),
+                dispatch_get_main_queue(), closure)
+        }
+        delay(0.3) {
+            self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: nil)
+        }
+    }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
         imagePicker.dismissViewControllerAnimated(true, completion: nil)
@@ -492,7 +539,32 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imageSelected = false
     }
     
+    func keyboardWillShow(sender: NSNotification) {
+        
+        showCancelButton()
+        
+        if let constraint = heightConstraint {
+            view.removeConstraint(constraint)
+        }
+        
+        var info = sender.userInfo!
+        let keyboardFrame: CGRect = (info[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
+        
+        UIView.animateWithDuration(0.1, animations: { () -> Void in
+            self.postTextView.scrollEnabled = true
+            self.postBottomConstraint.constant = keyboardFrame.size.height
+        })
+    }
     
+    func keyboardWillHide(sender: NSNotification) {
+        hideCancelButton()
+        
+        self.postTextView.scrollEnabled = false
+        self.postBottomConstraint.constant =  0
+        
+        heightConstraint = NSLayoutConstraint(item: postTextView, attribute: NSLayoutAttribute.Height, relatedBy: NSLayoutRelation.Equal, toItem: nil, attribute: NSLayoutAttribute.NotAnAttribute, multiplier: 1, constant: 40)
+        view.addConstraint(heightConstraint!)
+    }
     
     func dismisskeyboard() {
         view.endEditing(true)
@@ -606,6 +678,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
+    
     // If app has been reinstalled or user has logged out, must fetch user data from firebase
     
     func loadProfileData() {
@@ -635,18 +708,33 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
+    func blockUserAlert() {
+        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block this user? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(blockUserAnswerYes)
+        alertview.addCancelAction(blockUserAnswerNo)
+    }
+    
+    func blockUserAnswerYes() {
+        print("YES!")
+    }
+    
+    func blockUserAnswerNo() {
+        print("NO!")
+    }
+    
     func reportAlert() {
         let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this post for containing objectionable content? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
-        alertview.addAction(answeredYes)
-        alertview.addCancelAction(answeredNo)
+        alertview.addAction(reportAnswerYes)
+        alertview.addCancelAction(reportAnswerNo)
     }
     
-    func answeredYes() {
+    func reportAnswerYes() {
         reportUserPost()
     }
     
-    func answeredNo() {
+    func reportAnswerNo() {
         // Do nothing
     }
     
@@ -698,6 +786,19 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
         imagePicker.allowsEditing = true
         self.presentViewController(imagePicker, animated: true, completion: nil)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        dismisskeyboard()
+        
+        if segue.identifier == SEGUE_COMMENTSVC {
+            if let commentsVC = segue.destinationViewController as? CommentsVC {
+                if let post = sender as? Post {
+                    commentsVC.post = post
+                }
+            }
+        }
     }
     
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
@@ -756,6 +857,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     
                     }, encodingCompletion: { encodingResult in
                         switch encodingResult {
+                            
+                            
                             
                         case .Success(let upload, _, _):
                             upload.responseJSON(completionHandler: { response in

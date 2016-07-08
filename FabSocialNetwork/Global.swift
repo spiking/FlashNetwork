@@ -14,6 +14,7 @@ import Async
 
 // Global functions and variables
 
+var firstLogin = true
 var userBanned = false
 var likeAnimation = MBProgressHUD()
 
@@ -34,6 +35,18 @@ func isUserAuthenticated(vc: UIViewController) {
         }
         
     })
+}
+
+func isVisible(view: UIView) -> Bool {
+    func isVisible(view: UIView, inView: UIView?) -> Bool {
+        guard let inView = inView else { return true }
+        let viewFrame = inView.convertRect(view.bounds, fromView: view)
+        if CGRectIntersectsRect(viewFrame, inView.bounds) {
+            return isVisible(view, inView: inView.superview)
+        }
+        return false
+    }
+    return isVisible(view, inView: view.superview)
 }
 
 var Timestamp: String {

@@ -11,12 +11,12 @@ import EZLoadingActivity
 import Firebase
 
 class UserAgreementVC: UIViewController, UIScrollViewDelegate {
-
-    @IBOutlet weak var textView: UITextView!
-    @IBOutlet weak var acceptBtn: UIButton!
     
     var typeOfLogin = ""
     
+    @IBOutlet weak var textView: UITextView!
+    @IBOutlet weak var acceptBtn: UIButton!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         EZLoadingActivity.hide()

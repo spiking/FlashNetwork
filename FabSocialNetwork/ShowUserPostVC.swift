@@ -82,6 +82,5 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         } else {
             return PostCell()
         }
-
     }
 }

@@ -301,15 +301,6 @@
                                                             <color key="textColor" red="1" green="1" blue="1" alpha="0.80000000000000004" colorSpace="calibratedRGB"/>
                                                             <nil key="highlightedColor"/>
                                                         </label>
-                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Billy Gates" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.59999999999999998" translatesAutoresizingMaskIntoConstraints="NO" id="HAT-I6-5Qe">
-                                                            <rect key="frame" x="75" y="13" width="373" height="20"/>
-                                                            <constraints>
-                                                                <constraint firstAttribute="height" constant="20" id="9c2-CT-d0K"/>
-                                                            </constraints>
-                                                            <fontDescription key="fontDescription" name="Avenir-Heavy" family="Avenir" pointSize="15"/>
-                                                            <color key="textColor" red="1" green="1" blue="1" alpha="0.90355257600000005" colorSpace="calibratedRGB"/>
-                                                            <nil key="highlightedColor"/>
-                                                        </label>
                                                         <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4oM-Jc-tHK">
                                                             <rect key="frame" x="476" y="18" width="22" height="22"/>
                                                             <constraints>
@@ -321,6 +312,15 @@
                                                                 <action selector="reportBtnTapped:" destination="5Wv-m7-CbN" eventType="touchUpInside" id="awG-1T-M66"/>
                                                             </connections>
                                                         </button>
+                                                        <label opaque="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Billy Gates" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.59999999999999998" translatesAutoresizingMaskIntoConstraints="NO" id="HAT-I6-5Qe">
+                                                            <rect key="frame" x="75" y="12" width="373" height="20"/>
+                                                            <constraints>
+                                                                <constraint firstAttribute="height" constant="20" id="9c2-CT-d0K"/>
+                                                            </constraints>
+                                                            <fontDescription key="fontDescription" name="Avenir-Heavy" family="Avenir" pointSize="15"/>
+                                                            <color key="textColor" red="1" green="1" blue="1" alpha="0.90355257600000005" colorSpace="calibratedRGB"/>
+                                                            <nil key="highlightedColor"/>
+                                                        </label>
                                                     </subviews>
                                                     <color key="backgroundColor" red="0.11372549019607843" green="0.11372549019607843" blue="0.11372549019607843" alpha="1" colorSpace="calibratedRGB"/>
                                                     <constraints>
@@ -489,6 +489,7 @@
                     <navigationItem key="navigationItem" id="UdI-fT-ANB"/>
                     <connections>
                         <outlet property="imageSelector" destination="iwB-BJ-df8" id="gIa-8j-Rzb"/>
+                        <outlet property="postBottomConstraint" destination="aOb-CY-sEp" id="2Lr-qX-wP4"/>
                         <outlet property="postTextView" destination="h2b-hV-6bp" id="zvr-JM-2go"/>
                         <outlet property="postView" destination="HEf-39-R1U" id="RTP-m2-XsQ"/>
                         <outlet property="postViewTopConstraint" destination="Tkf-Np-VbU" id="3n5-By-TtA"/>
@@ -1445,7 +1446,7 @@
                                                         <constraint firstAttribute="width" constant="50" id="h9k-bK-hiq"/>
                                                     </constraints>
                                                 </imageView>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="James Bond" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Mo8-Xn-6ec">
+                                                <label opaque="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="James Bond" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="Mo8-Xn-6ec">
                                                     <rect key="frame" x="84" y="10" width="141" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="21" id="Rsa-ic-bxO"/>
@@ -1554,6 +1555,7 @@
                         </variation>
                     </view>
                     <connections>
+                        <outlet property="bottomSpaceConstraint" destination="pnC-sJ-4x1" id="Ufu-Sc-5Cg"/>
                         <outlet property="commentTextView" destination="gbd-0z-MwA" id="0W0-o9-fpB"/>
                         <outlet property="commentView" destination="19Z-aj-UBi" id="XhY-dn-GfR"/>
                         <outlet property="tableView" destination="Xzs-LG-dao" id="eIp-Hr-gJv"/>
@@ -1618,7 +1620,7 @@ Flash Network, not Apple, is responsible for addressing any claims by you relati
 9. Third Party Intellectual Property Claims
 
 Flash Network shall not be obligated to indemnify or defend you with respect to any third party claim arising out or relating to the Flash Network App. To the extent Flash Network is required to provide indemnification by applicable law, Flash Network, not Apple, shall be solely responsible for the investigation, defense, settlement and discharge of any claim that the Flash Network App or your use of it infringes any third party intellectual property right.</string>
-                                <color key="textColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                                <color key="textColor" red="0.93725490199999995" green="0.93725490199999995" blue="0.95686274510000002" alpha="1" colorSpace="calibratedRGB"/>
                                 <fontDescription key="fontDescription" name="Avenir-Book" family="Avenir" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>

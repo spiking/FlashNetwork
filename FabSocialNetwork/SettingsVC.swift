@@ -11,13 +11,13 @@ import JSSAlertView
 
 class SettingsVC: UIViewController {
     
-    @IBOutlet weak var emailField: DarkTextField!
-    @IBOutlet weak var currentPasswordField: DarkTextField!
-    @IBOutlet weak var newPasswordField: DarkTextField!
-    
     let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
     let placeholderCurrentPassword = NSAttributedString(string: "Current Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
     let placeholderNewPassword = NSAttributedString(string: "New Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
+    
+    @IBOutlet weak var emailField: DarkTextField!
+    @IBOutlet weak var currentPasswordField: DarkTextField!
+    @IBOutlet weak var newPasswordField: DarkTextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()

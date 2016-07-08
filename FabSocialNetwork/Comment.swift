@@ -11,13 +11,13 @@ import Firebase
 
 
 class Comment {
+    
     private var _commentText: String!
     private var _postKey: String!
     private var _userKey: String!
     private var _commentKey: String!
     private var _commentRef: Firebase!
     private var _timestamp: String!
-    
     private var _postRef: Firebase!
     private var _userRef: Firebase!
     

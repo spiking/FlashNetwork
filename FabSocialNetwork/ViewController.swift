@@ -16,12 +16,12 @@ import Async
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
-    @IBOutlet weak var emailField: UITextField!
-    @IBOutlet weak var passwordField: UITextField!
-    
     var userHasAcceptedTerms = false
     let OLD_ACCOUNT = "OLD_ACCOUNT"
     let NEW_ACCOUNT = "NEW_ACCOUNT"
+    
+    @IBOutlet weak var emailField: UITextField!
+    @IBOutlet weak var passwordField: UITextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,7 +37,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
         
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil && NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String == "TRUE" {
+            firstLogin = false
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
+        } else {
+            firstLogin = true
         }
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
@@ -105,7 +108,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                             if !snapshot.hasChild(authData.uid) {
                                 
                                 EZLoadingActivity.show("Creating account...", disableUI: false)
-
+                                
                                 let user = ["provider": authData.provider!]
                                 DataService.ds.createFirebaseUser(authData.uid, user: user)
                                 NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)

@@ -12,6 +12,7 @@ import Firebase
 import MBProgressHUD
 import JSSAlertView
 
+
 class PostCell: UITableViewCell {
     
     @IBOutlet weak var descLblHeight: NSLayoutConstraint!
@@ -27,6 +28,7 @@ class PostCell: UITableViewCell {
     var timer: NSTimer?
     var commentTapAction: ((UITableViewCell) -> Void)?
     var reportTapAction: ((UITableViewCell) -> Void)?
+    var blockUserTapAction: ((UITableViewCell) -> Void)?
     var request: Request?
     var likeRef: Firebase!
     var userRef: Firebase!
@@ -46,6 +48,11 @@ class PostCell: UITableViewCell {
         tapOnLike.numberOfTapsRequired = 1
         likeImage.addGestureRecognizer(tapOnLike)
         likeImage.userInteractionEnabled = true
+        
+        let usernameTapped = UITapGestureRecognizer(target: self, action: #selector(PostCell.usernameTapped(_:)))
+        usernameTapped.numberOfTapsRequired = 1
+        usernameLbl.addGestureRecognizer(usernameTapped)
+        usernameLbl.userInteractionEnabled = true
         
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(PostCell.mainImgTapped(_:)))
         doubleTap.numberOfTapsRequired = 2
@@ -165,7 +172,7 @@ class PostCell: UITableViewCell {
                 
                 self.likeRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
                     
-                    // If User haven't like this, then like it, otherwise un-like it
+                    // If User haven't like this, then like it, otherwise unlike it
                     
                     if (snapshot.value as? NSNull) != nil {
                         self.userLikedPost = true
@@ -209,6 +216,16 @@ class PostCell: UITableViewCell {
         if !userLikedPost {
             startLikeAnimation(self.mainImg)
             likeTapped(sender)
+        }
+    }
+    
+    func usernameTapped(sender: UITapGestureRecognizer) {
+        if !isConnectedToNetwork() {
+            return
+        }
+        
+        if post?.userKey != currentUserKey() {
+            self.blockUserTapAction?(self)
         }
     }
     

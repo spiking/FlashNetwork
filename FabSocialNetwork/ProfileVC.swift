@@ -14,14 +14,14 @@ import JSSAlertView
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
-    @IBOutlet weak var addImgBtn: UIButton!
-    @IBOutlet weak var imageSelector: UIImageView!
-    @IBOutlet weak var usernameField: DarkTextField!
-    
     var imagePicker: UIImagePickerController!
     var imageSelected = false
     var request: Request?
     var usernameTaken = false
+    
+    @IBOutlet weak var addImgBtn: UIButton!
+    @IBOutlet weak var imageSelector: UIImageView!
+    @IBOutlet weak var usernameField: DarkTextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,6 +46,12 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         setupSettingsButton()
         
         loadProfileData()
+    }
+    
+    override func viewDidDisappear(animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        
     }
     
     func loadProfileData() {
@@ -180,12 +186,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     func changeOfUsername() -> Bool {
         let usernameEntered = usernameField.text?.lowercaseString
-        
-        if NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameEntered != "" {
-            return true
-        } else {
-            return false
-        }
+        return NSUserDefaults.standardUserDefaults().valueForKey("username") as? String != usernameEntered && usernameEntered != ""
     }
     
     func changeOfProfileImage() -> Bool {

@@ -14,20 +14,17 @@ import EZLoadingActivity
 
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
-    @IBOutlet weak var commentView: UIView!
-    
     var refreshControl: UIRefreshControl!
     var post: Post!
     var comments = [Comment]()
     var placeHolderText = "Leave a comment"
     var noConnectionAlerts = 0
-    var keyboardVisible = false
-    var emojiClicked = false
     var reportedComment: Comment!
     
-    @IBOutlet weak var stackViewHeight: NSLayoutConstraint!
+    @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentTextView: UITextView!
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var bottomSpaceConstraint: NSLayoutConstraint!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,9 +47,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(CommentsVC.dismissKeyboard))
         view.addGestureRecognizer(tap)
         
-        // Be able to push view up/down when keyboard is shown
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name: UIKeyboardWillShowNotification, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name: UIKeyboardWillHideNotification, object: nil)
+        // Be able to push view up/down when keyboard is shown, observers
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil);
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil);
         
         commentTextView.delegate = self
         
@@ -61,6 +58,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         title = "COMMENTS"
         
         loadCommentsFromFirebase()
+        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -142,6 +140,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             backgroundView.backgroundColor = UIColor.blackColor()
             cell.selectedBackgroundView = backgroundView
             
+            cell.blockUserTapAction = { (cell) in
+                self.blockUserAlert()
+            }
+            
             return cell
         } else {
             return CommentCell()
@@ -214,47 +216,19 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         view.endEditing(true)
     }
     
-    // Move view up
-    func keyboardWillShow(notification: NSNotification) {
+    func keyboardWillShow(sender: NSNotification) {
+        var info = sender.userInfo!
+        let keyboardFrame: CGRect = (info[UIKeyboardFrameEndUserInfoKey] as! NSValue).CGRectValue()
         
-        // Emoji keyboard different height compared to normal keyboard
-        if keyboardVisible {
-            if !emojiClicked {
-                self.view.frame.origin.y -= 40
-                emojiClicked = true
-            } else {
-                self.view.frame.origin.y += 40
-                emojiClicked = false
-            }
-            return
-        }
-        
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.CGRectValue() {
-            self.view.frame.origin.y -= keyboardSize.height
-            keyboardVisible = true
-        }
+        UIView.animateWithDuration(0.1, animations: { () -> Void in
+            self.commentTextView.scrollEnabled = true
+            self.bottomSpaceConstraint.constant = keyboardFrame.size.height
+        })
     }
     
-    // Move view down
-    func keyboardWillHide(notification: NSNotification) {
-        
-        // Emoji keyboard different height compared to normal keyboard
-        if !keyboardVisible {
-            if emojiClicked {
-                self.view.frame.origin.y += 40
-                emojiClicked = false
-            } else {
-                self.view.frame.origin.y -= 40
-                emojiClicked = true
-            }
-            return
-        }
-        
-        
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.CGRectValue() {
-            self.view.frame.origin.y += keyboardSize.height
-            keyboardVisible = false
-        }
+    func keyboardWillHide(sender: NSNotification) {
+        self.commentTextView.scrollEnabled = false
+        self.bottomSpaceConstraint.constant =  0
     }
     
     func titleForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
@@ -307,6 +281,22 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
         
     }
+    
+    func blockUserAlert() {
+        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block this user? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(blockUserAnswerYes)
+        alertview.addCancelAction(blockUserAnswerNo)
+    }
+    
+    func blockUserAnswerYes() {
+        print("YES!")
+    }
+    
+    func blockUserAnswerNo() {
+        print("NO!")
+    }
+    
     
     func reportAlert() {
         let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this user for abusive behaviour?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))

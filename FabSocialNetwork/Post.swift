@@ -10,6 +10,7 @@ import Foundation
 import Firebase
 
 class Post {
+    
     private var _postDescription: String!
     private var _imageUrl: String?
     private var _likes: Int!
