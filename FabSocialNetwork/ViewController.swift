@@ -74,6 +74,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
         exit(0)
     }
     
+    @IBAction func forgotPasswordBtnPressed(sender: AnyObject) {
+        self.performSegueWithIdentifier(SEGUE_RESETPASSWORDVC, sender: nil)
+    }
+    
     @IBAction func fbBtnPressed(sender: UIButton!) {
         
         if !isConnectedToNetwork() {
@@ -109,8 +113,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 
                                 EZLoadingActivity.show("Creating account...", disableUI: false)
                                 
-                                let user = ["provider": authData.provider!]
-                                DataService.ds.createFirebaseUser(authData.uid, user: user)
+                                let user = ["provider": authData.provider!, "timestamp": Timestamp, "score" : 0]
+                                DataService.ds.createFirebaseUser(authData.uid, user: user as! Dictionary<String, AnyObject>)
                                 NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
                                 self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                                 

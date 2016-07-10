@@ -463,7 +463,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 self.reportAlert()
             }
             
-            cell.blockUserTapAction = { (cell) in
+            cell.usernameTapAction = { (cell) in
                 self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: post.userKey)
             }
             
@@ -628,7 +628,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         switch typeOfLogin {
         case "OLD_ACCOUNT":
-            successAlertFeedVC(self, title: "Welcome back", msg: "You have successfully been logged in!")
+            successAlertFeedVC(self, title: "Welcome Back", msg: "You have successfully been logged in!")
             EZLoadingActivity.hide()
         case "NEW_ACCOUNT":
             successAlertFeedVC(self, title: "Welcome", msg: "A new account has successfully been created! Before you start posting, you should add a username and a profile image. To do so, click the profile icon in the upper right corner.")

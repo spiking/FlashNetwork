@@ -46,7 +46,7 @@ class OtherUserProfileVC: UIViewController {
     }
     
     func blockUserAlert() {
-        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block \(usernameLbl.text!)? You will not be able to see any acitivty from this user. This cannot be undone. \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block \(usernameLbl.text!)? You will not be able to see any acitivty from this user, and vice versa. This cannot be undone. \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
         alertview.addAction(blockUserAnswerYes)
         alertview.addCancelAction(blockUserAnswerNo)
@@ -62,6 +62,9 @@ class OtherUserProfileVC: UIViewController {
     
     func blockUser() {
         DataService.ds.REF_USER_CURRENT.childByAppendingPath("blocked_users").childByAppendingPath(otherUserKey).setValue("TRUE")
+        DataService.ds.REF_USERS.childByAppendingPath(otherUserKey).childByAppendingPath("blocked_users").childByAppendingPath(currentUserKey()).setValue("TRUE")
+        
+        NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
     }
     
     func loadProfileImageFromDatabase(profileUrl: String) {

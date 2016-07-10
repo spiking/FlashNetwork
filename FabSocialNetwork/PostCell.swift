@@ -28,7 +28,7 @@ class PostCell: UITableViewCell {
     var timer: NSTimer?
     var commentTapAction: ((UITableViewCell) -> Void)?
     var reportTapAction: ((UITableViewCell) -> Void)?
-    var blockUserTapAction: ((UITableViewCell) -> Void)?
+    var usernameTapAction: ((UITableViewCell) -> Void)?
     var request: Request?
     var likeRef: Firebase!
     var userRef: Firebase!
@@ -271,7 +271,7 @@ class PostCell: UITableViewCell {
         }
         
         if post?.userKey != currentUserKey() {
-            self.blockUserTapAction?(self)
+            self.usernameTapAction?(self)
         }
     }
     

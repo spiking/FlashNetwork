@@ -324,9 +324,12 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         }
     }
     
+    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return userKey == currentUserKey()
+    }
     
     func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]? {
-
+        
         let deleteAction = UITableViewRowAction(style: .Normal, title: "Remove") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
             
             if !isConnectedToNetwork() {

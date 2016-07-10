@@ -18,6 +18,7 @@ let KEY_UID = "uid"
 
 //Segues
 let SEGUE_LOGGED_IN = "feedVC"
+let SEGUE_RESETPASSWORDVC = "resetPasswordVC"
 let SEGUE_COMMENTSVC = "commentsVC"
 let SEGUE_SETTINGSVC = "settingsVC"
 let SEGUE_PROFILEVC = "profileVC"
