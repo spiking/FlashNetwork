@@ -18,6 +18,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     var confirmRemove = false
     var indexPathRemove: NSIndexPath?
     var typeOfCell = TypeOfCell.UserPostCell
+    var userKey = currentUserKey()
     var zoomBarButton : UIButton!
     
     enum TypeOfCell: String {
@@ -37,16 +38,22 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
         
-//        let longpress = UILongPressGestureRecognizer(target: self, action: #selector(UserPostsVC.longPressGestureRecognized(_:)))
-//        tableView.addGestureRecognizer(longpress)
+        tableView.estimatedRowHeight = 550
+        tableView.rowHeight = UITableViewAutomaticDimension
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
         navigationItem.leftItemsSupplementBackButton = true
-        let deleteButton = setupDeleteButton()
-        let viewButton = setupViewButton()
-        navigationItem.setRightBarButtonItems([deleteButton, viewButton], animated: true)
         
+        if userKey != currentUserKey() {
+            let viewButton = setupViewButton()
+            navigationItem.setRightBarButtonItems([viewButton], animated: true)
+        } else {
+            let deleteButton = setupDeleteButton()
+            let viewButton = setupViewButton()
+            navigationItem.setRightBarButtonItems([deleteButton, viewButton], animated: true)
+        }
+    
         title = "POSTS"
         
         loadUserPostsFromFirebase()
@@ -56,8 +63,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     func loadUserPostsFromFirebase() {
         
         isUserAuthenticated(self)
-        
-        let userKey = String(NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID)!)
         
         DataService.ds.REF_POSTS.queryOrderedByChild("user").queryEqualToValue(userKey).observeEventType(.Value, withBlock: { snapshot in
             self.userPosts = []
@@ -115,12 +120,13 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     }
     
     func setupDeleteButton() -> UIBarButtonItem {
+        
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "Trash"), forState: UIControlState.Normal)
         button.addTarget(self, action: #selector(UserPostsVC.setEditing(_:animated:)), forControlEvents: UIControlEvents.TouchUpInside)
         button.frame = CGRectMake(0, 0, 23, 23)
         let barButton = UIBarButtonItem(customView: button)
-
+        
         return barButton
     }
     
@@ -153,7 +159,11 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
         var str = ""
         if isConnectedToNetwork() {
-            str = "It looks like you have not made any posts. Go back to the main view to create one."
+            if userKey != currentUserKey() {
+                str = "It looks like the user has not made any posts."
+            } else {
+                str = "It looks like you have not made any posts. Go back to the main view to create one."
+            }
         } else {
             str = "Please connect to a network and the feed will load automatically."
         }
@@ -188,7 +198,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
             if post.imageUrl == nil || post.imageUrl == "" {
                 return 115 + heightForView(post.postDescription, width: screenWidth - 51)
             } else {
-                return 500 + heightForView(post.postDescription, width: screenWidth - 51)
+                return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 51)
             }
         } else {
             return 60
@@ -245,7 +255,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     func removeConfirmed() {
         
         let postToRemove = userPosts[indexPathRemove!.row]
-        removePost(postToRemove)
+        removePostFromFirebase(postToRemove)
         userPosts.removeAtIndex(indexPathRemove!.row)
         tableView.deleteRowsAtIndexPaths([indexPathRemove!], withRowAnimation: UITableViewRowAnimation.Automatic)
     }
@@ -275,7 +285,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         }
     }
     
-    func removePost(postToRemove: Post!) {
+    func removePostFromFirebase(postToRemove: Post!) {
         
         DataService.ds.REF_POSTS.childByAppendingPath(postToRemove.postKey).removeValueWithCompletionBlock { (error, ref) in
             
@@ -287,14 +297,37 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
                 EZLoadingActivity.showWithDelay("Removed", disableUI: true, seconds: 1.0)
                 EZLoadingActivity.Settings.SuccessText = "Removed"
                 EZLoadingActivity.hide(success: true, animated: true)
+                self.updateScores()
             }
         }
         
     }
     
-    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-        
-        if editingStyle == UITableViewCellEditingStyle.Delete {
+    func updateScores() {
+        func updateScores(hasImage: Bool) {
+            DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+                
+                if var score = snapshot.value as? Int {
+                    
+                    let diceRoll = Int(arc4random_uniform(10) + 1)
+                    
+                    score -= 5 + diceRoll
+                    
+                    if score < 0 {
+                        score = 0
+                    }
+                    
+                    DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").setValue(score)
+                }
+                
+            })
+        }
+    }
+    
+    
+    func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]? {
+
+        let deleteAction = UITableViewRowAction(style: .Normal, title: "Remove") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
             
             if !isConnectedToNetwork() {
                 JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
@@ -302,114 +335,12 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
                 return
             }
             
-            indexPathRemove = indexPath
-            confirmRemovePost()
-            
+            self.indexPathRemove = indexPath
+            self.confirmRemovePost()
         }
+        
+        deleteAction.backgroundColor = UIColorFromHex(0xe64c3c, alpha: 1)
+        
+        return [deleteAction]
     }
-    
-//    func longPressGestureRecognized(gestureRecognizer: UIGestureRecognizer) {
-//        
-//        let longPress = gestureRecognizer as! UILongPressGestureRecognizer
-//        let state = longPress.state
-//        let locationInView = longPress.locationInView(tableView)
-//        let indexPath = tableView.indexPathForRowAtPoint(locationInView)
-//        
-//        struct My {
-//            static var cellSnapshot : UIView? = nil
-//            static var cellIsAnimating : Bool = false
-//            static var cellNeedToShow : Bool = false
-//        }
-//        struct Path {
-//            static var initialIndexPath : NSIndexPath? = nil
-//        }
-//        
-//        switch state {
-//        case UIGestureRecognizerState.Began:
-//            if indexPath != nil {
-//                Path.initialIndexPath = indexPath
-//                let cell = tableView.cellForRowAtIndexPath(indexPath!) as UITableViewCell!
-//                My.cellSnapshot  = snapshotOfCell(cell)
-//                
-//                var center = cell.center
-//                My.cellSnapshot!.center = center
-//                My.cellSnapshot!.alpha = 0.0
-//                tableView.addSubview(My.cellSnapshot!)
-//                
-//                UIView.animateWithDuration(0.25, animations: { () -> Void in
-//                    center.y = locationInView.y
-//                    My.cellIsAnimating = true
-//                    My.cellSnapshot!.center = center
-//                    My.cellSnapshot!.transform = CGAffineTransformMakeScale(1.05, 1.05)
-//                    My.cellSnapshot!.alpha = 0.98
-//                    cell.alpha = 0.0
-//                    }, completion: { (finished) -> Void in
-//                        if finished {
-//                            My.cellIsAnimating = false
-//                            if My.cellNeedToShow {
-//                                My.cellNeedToShow = false
-//                                UIView.animateWithDuration(0.25, animations: { () -> Void in
-//                                    cell.alpha = 1
-//                                })
-//                            } else {
-//                                cell.hidden = true
-//                            }
-//                        }
-//                })
-//            }
-//            
-//        case UIGestureRecognizerState.Changed:
-//            if My.cellSnapshot != nil {
-//                var center = My.cellSnapshot!.center
-//                center.y = locationInView.y
-//                My.cellSnapshot!.center = center
-//                
-//                if ((indexPath != nil) && (indexPath != Path.initialIndexPath)) {
-//                    userPosts.insert(userPosts.removeAtIndex(Path.initialIndexPath!.row), atIndex: indexPath!.row)
-//                    tableView.moveRowAtIndexPath(Path.initialIndexPath!, toIndexPath: indexPath!)
-//                    Path.initialIndexPath = indexPath
-//                }
-//            }
-//        default:
-//            if Path.initialIndexPath != nil {
-//                let cell = tableView.cellForRowAtIndexPath(Path.initialIndexPath!) as UITableViewCell!
-//                if My.cellIsAnimating {
-//                    My.cellNeedToShow = true
-//                } else {
-//                    cell.hidden = false
-//                    cell.alpha = 0.0
-//                }
-//                
-//                UIView.animateWithDuration(0.25, animations: { () -> Void in
-//                    My.cellSnapshot!.center = cell.center
-//                    My.cellSnapshot!.transform = CGAffineTransformIdentity
-//                    My.cellSnapshot!.alpha = 0.0
-//                    cell.alpha = 1.0
-//                    
-//                    }, completion: { (finished) -> Void in
-//                        if finished {
-//                            Path.initialIndexPath = nil
-//                            My.cellSnapshot!.removeFromSuperview()
-//                            My.cellSnapshot = nil
-//                        }
-//                })
-//            }
-//        }
-//    }
-//    
-//    func snapshotOfCell(inputView: UIView) -> UIView {
-//        UIGraphicsBeginImageContextWithOptions(inputView.bounds.size, false, 0.0)
-//        inputView.layer.renderInContext(UIGraphicsGetCurrentContext()!)
-//        let image = UIGraphicsGetImageFromCurrentImageContext() as UIImage
-//        UIGraphicsEndImageContext()
-//        
-//        let cellSnapshot : UIView = UIImageView(image: image)
-//        cellSnapshot.layer.masksToBounds = false
-//        cellSnapshot.layer.cornerRadius = 0.0
-//        cellSnapshot.layer.shadowOffset = CGSizeMake(-5.0, 0.0)
-//        cellSnapshot.layer.shadowRadius = 5.0
-//        cellSnapshot.layer.shadowOpacity = 0.4
-//        return cellSnapshot
-//    }
-
 }

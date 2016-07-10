@@ -204,8 +204,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                         JSSAlertView().danger(self, title: "Could not authorize account", text: "Please try again or come back later.")
                                     } else {
                                         // Create firebase user
-                                        let user = ["provider": authData.provider!, "timestamp": Timestamp]
-                                        DataService.ds.createFirebaseUser(authData.uid, user: user)
+                                        let user = ["provider": authData.provider!, "timestamp": Timestamp, "score" : 0]
+                                        DataService.ds.createFirebaseUser(authData.uid, user: user as! Dictionary<String, AnyObject>)
                                         self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                                     }
                                 })

@@ -183,11 +183,13 @@ class PostCell: UITableViewCell {
                         self.likeRef.setValue(true)
                         self.likeImage.image = UIImage(named: "heart-full")
                         self.post!.adjustLikes(true)
+                        self.updateScores(true)
                     } else {
                         self.userLikedPost = false
                         self.likeRef.removeValue()
                         self.likeImage.image = UIImage(named: "heart-empty")
                         self.post!.adjustLikes(false)
+                        self.updateScores(false)
                     }
                     
                     self.likesLbl.text = "\(self.post!.likes)"
@@ -200,6 +202,46 @@ class PostCell: UITableViewCell {
         
         self.likeImage.userInteractionEnabled = false
         startLikeAllowenceTimer()
+    }
+    
+    func updateScores(liked: Bool) {
+        
+        DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if var score = snapshot.value as? Int {
+                
+                let diceRoll = Int(arc4random_uniform(2) + 1)
+                
+                if liked {
+                    score += 1 + diceRoll
+                } else {
+                    score -= 1 + diceRoll
+                }
+                
+                if score < 0 {
+                    score = 0
+                }
+                
+                DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").setValue(score)
+            }
+        
+        })
+        
+        DataService.ds.REF_USERS.childByAppendingPath(post!.userKey).childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if var score = snapshot.value as? Int {
+                
+                if liked {
+                    score += 1
+                } else {
+                    score -= 1
+                }
+                
+                DataService.ds.REF_USERS.childByAppendingPath(self.post!.userKey).childByAppendingPath("score").setValue(score)
+            }
+            
+        })
+
     }
     
     func startLikeAllowenceTimer() {

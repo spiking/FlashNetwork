@@ -22,6 +22,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     @IBOutlet weak var addImgBtn: UIButton!
     @IBOutlet weak var imageSelector: UIImageView!
     @IBOutlet weak var usernameField: DarkTextField!
+    @IBOutlet weak var scoreLbl: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,8 +51,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     override func viewDidDisappear(animated: Bool) {
         super.viewDidDisappear(animated)
-        
-        
+
     }
     
     func loadProfileData() {
@@ -77,6 +77,13 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
             usernameField.text = username.capitalizedString
         }
+        
+        DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if let score = snapshot.value as? Int {
+                self.scoreLbl.text = "\(score)"
+            }
+        })
     }
     
     func setupSettingsButton() {

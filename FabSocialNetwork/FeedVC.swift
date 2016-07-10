@@ -39,6 +39,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
     var previousRect = CGRectZero
     var heightConstraint: NSLayoutConstraint?
+    var blockedUsers = [String]()
     
     var cancelButton: UIButton!
     
@@ -108,7 +109,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             EZLoadingActivity.show("Loading...", disableUI: false)
         }
         
-        loadMostPopularFromFirebase()
+        
+        loadBlockedUsersAndInitalDataFromFirebase()
         loadProfileData()
     }
     
@@ -189,11 +191,31 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         postsShown = 20
     }
     
+    func loadBlockedUsersAndInitalDataFromFirebase() {
+        DataService.ds.REF_USER_CURRENT.childByAppendingPath("blocked_users").observeEventType(.Value, withBlock: { snapshot in
+        
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    self.blockedUsers.append(snap.key)
+                }
+            }
+            
+            switch self.feedMode {
+            case .Popular:
+                self.loadMostPopularFromFirebase()
+            case .Hottest:
+                self.loadHottestFromFirebase()
+            case .Latest:
+                self.loadLatestFromFirebase()
+            }
+        })
+    }
+    
     func loadHottestFromFirebase() {
         
         let count = posts.count
         let lastTwoDays = Double(Timestamp)! - (86000.0 * 2)
-        let lastTwoDaysStr = String(lastTwoDays)
+        let lastTwoDaysStr = "\(lastTwoDays)"
         
         // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("timestamp").queryStartingAtValue(lastTwoDaysStr, childKey: "timestamp").observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -204,7 +226,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
-                        self.posts.append(post)
+                        
+                        if !self.blockedUsers.contains(post.userKey) {
+                            self.posts.append(post)
+                        }
                     }
                 }
             }
@@ -239,7 +264,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
-                        self.posts.append(post)
+                        
+                        if !self.blockedUsers.contains(post.userKey) {
+                            self.posts.append(post)
+                        }
                     }
                 }
             }
@@ -272,7 +300,10 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
-                        self.posts.append(post)
+                        
+                        if !self.blockedUsers.contains(post.userKey) {
+                            self.posts.append(post)
+                        }
                     }
                 }
             }
@@ -433,7 +464,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
             cell.blockUserTapAction = { (cell) in
-                self.blockUserAlert()
+                self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: post.userKey)
             }
             
             cell.layoutIfNeeded()
@@ -641,6 +672,25 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         return UIImage(named: imgName)
     }
     
+    func updateScores(hasImage: Bool) {
+        DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            
+            if var score = snapshot.value as? Int {
+                
+                let diceRoll = Int(arc4random_uniform(10) + 1)
+                
+                if hasImage {
+                    score += 10 + diceRoll
+                } else {
+                    score += 5 + diceRoll
+                }
+                
+                DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").setValue(score)
+            }
+            
+        })
+    }
+    
     func postToFireBase(imgUrl: String?) {
         
         var post: Dictionary<String, AnyObject> = [
@@ -650,8 +700,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             "timestamp" : Timestamp
         ]
         
+        var image = false
+        
         if imgUrl != nil {
             post["imageUrl"] = imgUrl!
+            image = true
         } else {
             post["imageUrl"] = ""
         }
@@ -664,6 +717,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         postTextView.text = placeHolderText
         postTextView.textColor = UIColor.lightGrayColor()
         imageSelector.image = UIImage(named: "Camera2")
+        
+        updateScores(image)
         
         EZLoadingActivity.Settings.SuccessText = "Uploded"
         EZLoadingActivity.hide(success: true, animated: true)
@@ -706,21 +761,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 }
             })
         }
-    }
-    
-    func blockUserAlert() {
-        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block this user? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.addAction(blockUserAnswerYes)
-        alertview.addCancelAction(blockUserAnswerNo)
-    }
-    
-    func blockUserAnswerYes() {
-        print("YES!")
-    }
-    
-    func blockUserAnswerNo() {
-        print("NO!")
     }
     
     func reportAlert() {
@@ -796,6 +836,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             if let commentsVC = segue.destinationViewController as? CommentsVC {
                 if let post = sender as? Post {
                     commentsVC.post = post
+                }
+            }
+        } else if segue.identifier == SEGUE_OTHERUSERPROFILEVC {
+            if let commentsVC = segue.destinationViewController as? OtherUserProfileVC {
+                if let userKey = sender as? String {
+                    commentsVC.otherUserKey = userKey
                 }
             }
         }

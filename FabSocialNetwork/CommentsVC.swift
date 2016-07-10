@@ -20,6 +20,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     var placeHolderText = "Leave a comment"
     var noConnectionAlerts = 0
     var reportedComment: Comment!
+    var blockedUsers = [String]()
     
     @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentTextView: UITextView!
@@ -48,8 +49,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         view.addGestureRecognizer(tap)
         
         // Be able to push view up/down when keyboard is shown, observers
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil);
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil);
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil)
+        
+        navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
         commentTextView.delegate = self
         
@@ -57,7 +60,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         title = "COMMENTS"
         
-        loadCommentsFromFirebase()
+        loadBlockedUsersAndInitalDataFromFirebase()
         
     }
     
@@ -72,6 +75,30 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         }
     }
     
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        if segue.identifier == SEGUE_OTHERUSERPROFILEVC {
+            if let commentsVC = segue.destinationViewController as? OtherUserProfileVC {
+                if let userKey = sender as? String {
+                    commentsVC.otherUserKey = userKey
+                }
+            }
+        }
+    }
+    
+    func loadBlockedUsersAndInitalDataFromFirebase() {
+        DataService.ds.REF_USER_CURRENT.childByAppendingPath("blocked_users").observeEventType(.Value, withBlock: { snapshot in
+            
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    self.blockedUsers.append(snap.key)
+                }
+            }
+            
+            self.loadCommentsFromFirebase()
+        })
+    }
+    
     func loadCommentsFromFirebase() {
         
         DataService.ds.REF_COMMENTS.queryOrderedByChild("post").queryEqualToValue(self.post.postKey).observeEventType(.Value, withBlock: { snapshot in
@@ -82,9 +109,11 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                     if let commentDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
                         let comment = Comment(commentKey: key, dictionary: commentDict)
-                        self.comments.append(comment)
+                        
+                        if !self.blockedUsers.contains(comment.userKey) {
+                            self.comments.append(comment)
+                        }
                     }
-                    
                 }
             }
             
@@ -141,7 +170,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             cell.selectedBackgroundView = backgroundView
             
             cell.blockUserTapAction = { (cell) in
-                self.blockUserAlert()
+                self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: comment.userKey)
             }
             
             return cell
@@ -177,7 +206,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         let comment = comments[indexPath.row]
         
-        if comment.userKey! == currentUserKey() {
+        if comment.userKey == currentUserKey() {
             return [deleteAction]
         } else {
             return [reportAction]

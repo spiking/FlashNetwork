@@ -29,7 +29,7 @@ class Comment {
         return _postKey
     }
     
-    var userKey: String? {
+    var userKey: String {
         return _userKey
     }
     
