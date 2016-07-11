@@ -16,6 +16,7 @@ import Async
 
 var firstLogin = true
 var userBanned = false
+var iphoneType = ""
 var likeAnimation = MBProgressHUD()
 
 func isUserAuthenticated(vc: UIViewController) {
@@ -51,6 +52,39 @@ func isVisible(view: UIView) -> Bool {
 
 var Timestamp: String {
     return "\(NSDate().timeIntervalSince1970 * 1)"
+}
+
+func checkiPhoneType() {
+    if UIDevice().userInterfaceIdiom == .Phone {
+        switch UIScreen.mainScreen().nativeBounds.height {
+        case 480:
+            print("iPhone Classic")
+        case 960:
+            print("iPhone 4 or 4S")
+            iphoneType = "4"
+        case 1136:
+            print("iPhone 5 or 5S or 5C")
+            iphoneType = "5"
+        case 1334:
+            print("iPhone 6 or 6S")
+            iphoneType = "6"
+        case 2208:
+            print("iPhone 6+ or 6S+")
+            iphoneType = "6+"
+        default:
+            print("unknown")
+        }
+    }
+}
+
+// Short delay
+func delay(delay:Double, closure:()->()) {
+    dispatch_after(
+        dispatch_time(
+            DISPATCH_TIME_NOW,
+            Int64(delay * Double(NSEC_PER_SEC))
+        ),
+        dispatch_get_main_queue(), closure)
 }
 
 func heightForView(text:String, width:CGFloat) -> CGFloat {

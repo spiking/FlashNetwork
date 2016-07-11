@@ -38,7 +38,19 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
         
-        tableView.estimatedRowHeight = 550
+        switch iphoneType {
+        case "4":
+            tableView.estimatedRowHeight = 400
+        case "5":
+            tableView.estimatedRowHeight = 450
+        case "6":
+            tableView.estimatedRowHeight = 500
+        case "6+":
+            tableView.estimatedRowHeight = 550
+        default:
+            tableView.estimatedRowHeight = 550
+        }
+        
         tableView.rowHeight = UITableViewAutomaticDimension
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)

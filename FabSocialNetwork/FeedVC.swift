@@ -40,6 +40,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     var previousRect = CGRectZero
     var heightConstraint: NSLayoutConstraint?
     var blockedUsers = [String]()
+    var profileBtn: UIButton!
     
     var cancelButton: UIButton!
     
@@ -66,10 +67,22 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.tableFooterView = UIView()
         tableView.allowsSelection = true
         
-        tableView.estimatedRowHeight = 550
+        switch iphoneType {
+        case "4":
+            tableView.estimatedRowHeight = 400
+        case "5":
+            tableView.estimatedRowHeight = 450
+        case "6":
+            tableView.estimatedRowHeight = 500
+        case "6+":
+            tableView.estimatedRowHeight = 550
+        default:
+            tableView.estimatedRowHeight = 550
+        }
+        
         tableView.rowHeight = UITableViewAutomaticDimension
         
-        refreshControl = UIRefreshControl()
+        refreshControl = UIRefreshControl() 
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl)
         
@@ -109,13 +122,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             EZLoadingActivity.show("Loading...", disableUI: false)
         }
         
-        
         loadBlockedUsersAndInitalDataFromFirebase()
         loadProfileData()
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
+        
+        profileBtn.userInteractionEnabled = true
         
         if postTextView.text == "" || postTextView.text == placeHolderText {
             postTextView.text = placeHolderText
@@ -137,11 +151,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func setupProfileButton() {
-        let button: UIButton = UIButton(type: UIButtonType.Custom)
-        button.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
-        button.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
-        button.frame = CGRectMake(0, 0, 32, 32)
-        let barButton = UIBarButtonItem(customView: button)
+        profileBtn = UIButton(type: UIButtonType.Custom)
+        profileBtn.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
+        profileBtn.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
+        profileBtn.frame = CGRectMake(0, 0, 32, 32)
+        let barButton = UIBarButtonItem(customView: profileBtn)
         self.navigationItem.rightBarButtonItem = barButton
     }
     
@@ -540,22 +554,28 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func profileBtnPressed() {
+        profileBtn.userInteractionEnabled = false
+        startAllowenceTimer()
         
-        self.dismisskeyboard()
         self.menuView.hide()
-        
-        // Short delay
-        func delay(delay:Double, closure:()->()) {
-            dispatch_after(
-                dispatch_time(
-                    DISPATCH_TIME_NOW,
-                    Int64(delay * Double(NSEC_PER_SEC))
-                ),
-                dispatch_get_main_queue(), closure)
-        }
-        delay(0.3) {
+
+        if postTextView.isFirstResponder() {
+            dismisskeyboard()
+            delay(0.3) {
+                self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: nil)
+            }
+        } else {
             self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: nil)
         }
+    }
+    
+    func startAllowenceTimer() {
+        timer = NSTimer.scheduledTimerWithTimeInterval(0.4, target: self, selector: #selector(PostCell.stopAllowenceTimer), userInfo: nil, repeats: false)
+    }
+    
+    func stopAllowenceTimer() {
+        profileBtn.userInteractionEnabled = true
+        timer?.invalidate()
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
@@ -814,6 +834,16 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 }
             }
         })
+    }
+    
+    func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool)
+    {
+        imagePicker.navigationBar.translucent = true
+        imagePicker.navigationBar.barTintColor = .blackColor()
+        imagePicker.navigationBar.tintColor = .whiteColor()
+        imagePicker.navigationBar.titleTextAttributes = [
+            NSForegroundColorAttributeName : UIColor.whiteColor()]
+        
     }
     
     func accessCamera() {

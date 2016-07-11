@@ -36,6 +36,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
             NSTimer.scheduledTimerWithTimeInterval(7, target: self, selector: #selector(ViewController.terminateApp), userInfo: nil, repeats: false)
         }
         
+        checkiPhoneType()
+        
         if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil && NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String == "TRUE" {
             firstLogin = false
             self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)

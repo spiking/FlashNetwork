@@ -9,11 +9,12 @@
 import UIKit
 import JSSAlertView
 
-class SettingsVC: UIViewController {
+class SettingsVC: UIViewController, UITextFieldDelegate {
     
     let placeholderEmail = NSAttributedString(string: "Email Address", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
     let placeholderCurrentPassword = NSAttributedString(string: "Current Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
     let placeholderNewPassword = NSAttributedString(string: "New Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
+    var keyboardVisible = false
     
     @IBOutlet weak var emailField: DarkTextField!
     @IBOutlet weak var currentPasswordField: DarkTextField!
@@ -25,11 +26,25 @@ class SettingsVC: UIViewController {
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
+        emailField.delegate = self
+        currentPasswordField.delegate = self
+        
         title = "SETTINGS"
         
         setupPlaceholders()
+        
+        if iphoneType == "4" || iphoneType == "5" {
+            
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil)
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil)
+        }
 
-        isUserAuthenticated(self) 
+        isUserAuthenticated(self)
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.dismisskeyboard()
     }
     
     func setupPlaceholders() {
@@ -46,6 +61,30 @@ class SettingsVC: UIViewController {
         self.view.endEditing(true)
     }
     
+    func keyboardWillShow(sender: NSNotification) {
+        
+        if keyboardVisible {
+            return
+        }
+        
+        UIView.animateWithDuration(0.1, animations: { () -> Void in
+            self.view.frame.origin.y -= 0.27 * 253
+            self.keyboardVisible = true
+        })
+    }
+    
+    func keyboardWillHide(sender: NSNotification) {
+        
+        if !keyboardVisible {
+            return
+        }
+        
+        UIView.animateWithDuration(0.1, animations: { () -> Void in
+            self.view.frame.origin.y += 0.27 * 253
+            self.keyboardVisible = false
+        })
+    }
+    
     func answeredYes() {
         // Reset NSUserData
         let appDomain = NSBundle.mainBundle().bundleIdentifier!
@@ -60,6 +99,20 @@ class SettingsVC: UIViewController {
         // Do nothing
     }
     
+    func textFieldShouldReturn(textField: UITextField) -> Bool {
+        
+        switch  textField {
+        case emailField:
+            self.currentPasswordField.becomeFirstResponder()
+        case currentPasswordField:
+            self.newPasswordField.becomeFirstResponder()
+        default:
+            break
+        }
+        
+        return true
+    }
+    
     @IBAction func logoutBtnTapped(sender: AnyObject) {
         
         let alertview = JSSAlertView().show(self, title: "Logout", text: "Do you want to logout?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
@@ -70,6 +123,9 @@ class SettingsVC: UIViewController {
     }
     
     @IBAction func changePasswordBtnTapped(sender: AnyObject) {
+        
+        dismisskeyboard()
+        
         if newPasswordField.text?.characters.count < 6 {
             JSSAlertView().danger(self, title: "Invalid Password", text: "The password must have atleast 6 characters.")
             return
@@ -79,8 +135,6 @@ class SettingsVC: UIViewController {
             JSSAlertView().danger(self, title: "Invalid Password", text: "Your new password cannot be the same as your current.")
             return
         }
-        
-        dismisskeyboard()
         
         DataService.ds.REF_USER_CURRENT.changePasswordForUser(emailField.text, fromOld: currentPasswordField.text,
                                                               toNew: newPasswordField.text, withCompletionBlock: { error in

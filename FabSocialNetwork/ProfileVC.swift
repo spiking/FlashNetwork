@@ -18,6 +18,10 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     var imageSelected = false
     var request: Request?
     var usernameTaken = false
+    var keyboardVisible = false
+    var standardKeyboardHeight: CGFloat = 216
+    var timer: NSTimer?
+    var settingsButton: UIButton!
     
     @IBOutlet weak var addImgBtn: UIButton!
     @IBOutlet weak var imageSelector: UIImageView!
@@ -44,14 +48,27 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         
         title = "PROFILE"
         
+        checkiPhoneType()
+        
+        if iphoneType == "4" || iphoneType == "5" {
+            
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil)
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil)
+        }
+        
         setupSettingsButton()
         
         loadProfileData()
     }
     
-    override func viewDidDisappear(animated: Bool) {
-        super.viewDidDisappear(animated)
-
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        settingsButton.userInteractionEnabled = true
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.dismisskeyboard()
     }
     
     func loadProfileData() {
@@ -87,23 +104,70 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func setupSettingsButton() {
-        let button: UIButton = UIButton(type: UIButtonType.Custom)
-        button.setImage(UIImage(named: "Settings"), forState: UIControlState.Normal)
-        button.addTarget(self, action: #selector(ProfileVC.settingsBtnTapped), forControlEvents: UIControlEvents.TouchUpInside)
-        button.frame = CGRectMake(0, 0, 22, 22)
-        let barButton = UIBarButtonItem(customView: button)
+        settingsButton = UIButton(type: UIButtonType.Custom)
+        settingsButton.setImage(UIImage(named: "Settings"), forState: UIControlState.Normal)
+        settingsButton.addTarget(self, action: #selector(ProfileVC.settingsBtnTapped), forControlEvents: UIControlEvents.TouchUpInside)
+        settingsButton.frame = CGRectMake(0, 0, 22, 22)
+        let barButton = UIBarButtonItem(customView: settingsButton)
         self.navigationItem.rightBarButtonItem = barButton
     }
     
     func settingsBtnTapped() {
+        settingsButton.userInteractionEnabled = false
+        startAllowenceTimer()
+        
         self.performSegueWithIdentifier(SEGUE_SETTINGSVC, sender: nil)
     }
     
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
-        imagePicker.dismissViewControllerAnimated(true, completion: nil)
-        imageSelector.image = image
-        addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
-        imageSelected = true
+    func startAllowenceTimer() {
+        timer = NSTimer.scheduledTimerWithTimeInterval(0.4, target: self, selector: #selector(PostCell.stopAllowenceTimer), userInfo: nil, repeats: false)
+    }
+    
+    func stopAllowenceTimer() {
+        settingsButton.userInteractionEnabled = true
+        timer?.invalidate()
+    }
+    
+    func keyboardWillShow(sender: NSNotification) {
+        
+        if keyboardVisible {
+            return
+        }
+        
+        UIView.animateWithDuration(0.1, animations: { () -> Void in
+            
+            switch iphoneType  {
+                case "4":
+                    self.view.frame.origin.y -= 0.75 * self.standardKeyboardHeight
+                    self.keyboardVisible = true
+                case "5":
+                    self.view.frame.origin.y -= 0.35 * self.standardKeyboardHeight
+                    self.keyboardVisible = true
+            default:
+                break
+            }
+        })
+    }
+    
+    func keyboardWillHide(sender: NSNotification) {
+        
+        if !keyboardVisible {
+            return
+        }
+        
+        UIView.animateWithDuration(0.1, animations: { () -> Void in
+            
+            switch iphoneType  {
+            case "4":
+                self.view.frame.origin.y += 0.75 * self.standardKeyboardHeight
+                self.keyboardVisible = false
+            case "5":
+                self.view.frame.origin.y += 0.33 * self.standardKeyboardHeight
+                self.keyboardVisible = false
+            default:
+                break
+            }
+        })
     }
     
     func addNewProfileImageToFirebase(imgUrl: String?) {
@@ -114,6 +178,23 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             EZLoadingActivity.hide(success: true, animated: true)
         }
         imageSelected = false
+    }
+    
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
+        imagePicker.dismissViewControllerAnimated(true, completion: nil)
+        imageSelector.image = image
+        addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
+        imageSelected = true
+    }
+    
+    func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool)
+    {
+        imagePicker.navigationBar.translucent = true
+        imagePicker.navigationBar.barTintColor = .blackColor()
+        imagePicker.navigationBar.tintColor = .whiteColor()
+        imagePicker.navigationBar.titleTextAttributes = [
+            NSForegroundColorAttributeName : UIColor.whiteColor()]
+        
     }
     
     func imagePickerControllerDidCancel(picker: UIImagePickerController) {

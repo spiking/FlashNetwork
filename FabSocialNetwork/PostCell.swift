@@ -24,6 +24,8 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var likeImage: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
     @IBOutlet weak var timeLbl: UILabel!
+    @IBOutlet weak var reportBtn: UIButton!
+    @IBOutlet weak var commentBtn: UIButton!
     
     var timer: NSTimer?
     var commentTapAction: ((UITableViewCell) -> Void)?
@@ -201,7 +203,7 @@ class PostCell: UITableViewCell {
         })
         
         self.likeImage.userInteractionEnabled = false
-        startLikeAllowenceTimer()
+        startAllowenceTimer()
     }
     
     func updateScores(liked: Bool) {
@@ -244,12 +246,14 @@ class PostCell: UITableViewCell {
 
     }
     
-    func startLikeAllowenceTimer() {
-        timer = NSTimer.scheduledTimerWithTimeInterval(0.3, target: self, selector: #selector(PostCell.stopLikeAllowenceTimer), userInfo: nil, repeats: false)
+    func startAllowenceTimer() {
+        timer = NSTimer.scheduledTimerWithTimeInterval(0.3, target: self, selector: #selector(PostCell.stopAllowenceTimer), userInfo: nil, repeats: false)
     }
     
-    func stopLikeAllowenceTimer() {
+    func stopAllowenceTimer() {
         self.likeImage.userInteractionEnabled = true
+        self.reportBtn.userInteractionEnabled = true
+        self.commentBtn.userInteractionEnabled = true
         timer?.invalidate()
     }
     
@@ -276,6 +280,10 @@ class PostCell: UITableViewCell {
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
+        
+        self.commentBtn.userInteractionEnabled = false
+        startAllowenceTimer()
+        
         DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if snapshot.hasChild(self.post!.postKey) {
@@ -287,6 +295,10 @@ class PostCell: UITableViewCell {
     }
     
     @IBAction func reportBtnTapped(sender: AnyObject) {
+        
+        self.reportBtn.userInteractionEnabled = false
+        startAllowenceTimer()
+        
         DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if snapshot.hasChild(self.post!.postKey) {

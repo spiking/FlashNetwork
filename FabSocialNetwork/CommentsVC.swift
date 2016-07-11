@@ -21,6 +21,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     var noConnectionAlerts = 0
     var reportedComment: Comment!
     var blockedUsers = [String]()
+    var emojiKeyboardVisisble = false
     
     @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentTextView: UITextView!
