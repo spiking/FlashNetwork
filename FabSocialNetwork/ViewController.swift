@@ -16,9 +16,9 @@ import Async
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
-    var userHasAcceptedTerms = false
-    let OLD_ACCOUNT = "OLD_ACCOUNT"
-    let NEW_ACCOUNT = "NEW_ACCOUNT"
+    private var userHasAcceptedTerms = false
+    private let OLD_ACCOUNT = "OLD_ACCOUNT"
+    private let NEW_ACCOUNT = "NEW_ACCOUNT"
     
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!

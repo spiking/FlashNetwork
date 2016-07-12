@@ -11,18 +11,22 @@ import Alamofire
 
 class UserPostCell: UITableViewCell {
 
+    private var _post: Post?
+    private var _request: Request?
+    
+    var post: Post? {
+        return _post
+    }
+    
+    var request: Request? {
+        return _request
+    }
+    
     @IBOutlet weak var postLabel: UILabel!
     @IBOutlet weak var postImage:
     UIImageView!
     @IBOutlet weak var likesLabel: UILabel!
     @IBOutlet weak var timeLabel: UILabel!
-
-    var request: Request?
-    private var _post: Post?
-    
-    var post: Post? {
-        return _post
-    }
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -47,7 +51,7 @@ class UserPostCell: UITableViewCell {
                 self.postImage.image = img
             } else {
                 // Not in cache, download and add to cache
-                request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                _request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.postImage.image = img

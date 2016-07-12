@@ -19,7 +19,7 @@ class Post {
     private var _timestamp: String!
     private var _postRef: Firebase!
     
-    var postDescription: String! {
+    var postDescription: String {
         return _postDescription
     }
     
@@ -27,7 +27,7 @@ class Post {
         return _imageUrl
     }
     
-    var likes: Int! {
+    var likes: Int {
         return _likes
     }
     

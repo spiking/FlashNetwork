@@ -12,17 +12,12 @@ import Firebase
 
 class CommentCell: UITableViewCell {
     
-    @IBOutlet weak var profileImg: UIImageView!
-    @IBOutlet weak var usernameLbl: UILabel!
-    @IBOutlet weak var textLbl: UILabel!
-    
     var blockUserTapAction: ((UITableViewCell) -> Void)?
     
     private var _comment: Comment!
     private var _post: Post!
     private var _userRef: Firebase!
-    
-    var request: Request?
+    private var _request: Request?
     
     var post: Post {
         return _post
@@ -31,6 +26,14 @@ class CommentCell: UITableViewCell {
     var comment: Comment {
         return _comment
     }
+    
+    var request: Request? {
+        return _request
+    }
+    
+    @IBOutlet weak var profileImg: UIImageView!
+    @IBOutlet weak var usernameLbl: UILabel!
+    @IBOutlet weak var textLbl: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -54,11 +57,8 @@ class CommentCell: UITableViewCell {
     }
     
     func usernameTapped(sender: UITapGestureRecognizer) {
-        if !isConnectedToNetwork() {
-            return
-        }
-        
-        if comment.userKey != currentUserKey() {
+
+        if comment.userKey != currentUserKey() && isConnectedToNetwork() {
             self.blockUserTapAction?(self)
         }
         
@@ -85,7 +85,7 @@ class CommentCell: UITableViewCell {
                     self.profileImg.image = profImage
                 } else {
                     // Not in cache, download and add to cache
-                    self.request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                    self._request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                         if err == nil {
                             let img = UIImage(data: data!)!
                             self.profileImg.image = img

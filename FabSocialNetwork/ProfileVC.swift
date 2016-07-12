@@ -14,14 +14,14 @@ import JSSAlertView
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
-    var imagePicker: UIImagePickerController!
-    var imageSelected = false
-    var request: Request?
-    var usernameTaken = false
-    var keyboardVisible = false
-    var standardKeyboardHeight: CGFloat = 216
-    var timer: NSTimer?
-    var settingsButton: UIButton!
+    private var imagePicker: UIImagePickerController!
+    private var imageSelected = false
+    private var request: Request?
+    private var usernameTaken = false
+    private var keyboardVisible = false
+    private var standardKeyboardHeight: CGFloat = 216
+    private var timer: NSTimer?
+    private var settingsButton: UIButton!
     
     @IBOutlet weak var addImgBtn: UIButton!
     @IBOutlet weak var imageSelector: UIImageView!

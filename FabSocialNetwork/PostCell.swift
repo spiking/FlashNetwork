@@ -15,6 +15,26 @@ import JSSAlertView
 
 class PostCell: UITableViewCell {
     
+    var commentTapAction: ((UITableViewCell) -> Void)?
+    var reportTapAction: ((UITableViewCell) -> Void)?
+    var usernameTapAction: ((UITableViewCell) -> Void)?
+    
+    private var timer: NSTimer?
+    private var likeRef: Firebase!
+    private var userRef: Firebase!
+    private var userLikes: Firebase!
+    private var userLikedPost = false
+    private var _request: Request?
+    private var _post: Post?
+    
+    var post: Post? {
+        return _post
+    }
+    
+    var request: Request? {
+        return _request
+    }
+    
     @IBOutlet weak var descLblHeight: NSLayoutConstraint!
     @IBOutlet weak var likesLblWidth: NSLayoutConstraint!
     @IBOutlet weak var profileImg: UIImageView!
@@ -26,22 +46,6 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var timeLbl: UILabel!
     @IBOutlet weak var reportBtn: UIButton!
     @IBOutlet weak var commentBtn: UIButton!
-    
-    var timer: NSTimer?
-    var commentTapAction: ((UITableViewCell) -> Void)?
-    var reportTapAction: ((UITableViewCell) -> Void)?
-    var usernameTapAction: ((UITableViewCell) -> Void)?
-    var request: Request?
-    var likeRef: Firebase!
-    var userRef: Firebase!
-    var userLikes: Firebase!
-    var userLikedPost = false
-    
-    private var _post: Post?
-    
-    var post: Post? {
-        return _post
-    }
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -76,9 +80,7 @@ class PostCell: UITableViewCell {
         self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
         
-        let dateCreated = NSDate(timeIntervalSince1970: Double(post.timestamp)!)
-        let dateDiff = NSDate().offsetFrom(dateCreated)
-        self.timeLbl.text = dateDiff
+        self.timeLbl.text = dateSincePosted(post.timestamp)
         
         self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
         
@@ -89,14 +91,14 @@ class PostCell: UITableViewCell {
         // Main post image
         if post.imageUrl != nil {
             
-            let height = heightForView(post.postDescription, width: screenWidth - 24) + 10
+            let height = heightForView(post.postDescription, width: screenWidth - 48) + 5
             self.descLblHeight.constant = height
             
             if img != nil {
                 self.mainImg.image = img
             } else {
                 // Not in cache, download and add to cache
-                request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                self._request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.mainImg.image = img
@@ -105,7 +107,7 @@ class PostCell: UITableViewCell {
                 })
             }
         } else {
-            let height = heightForView(post.postDescription, width: screenWidth - 24)
+            let height = heightForView(post.postDescription, width: screenWidth - 48)
             self.descLblHeight.constant = height
             self.mainImg.hidden = true
         }
@@ -125,7 +127,7 @@ class PostCell: UITableViewCell {
                     self.profileImg.image = profImage
                 } else {
                     // Not in cache, download and add to cache
-                    self.request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                    self._request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                         if err == nil {
                             let img = UIImage(data: data!)!
                             self.profileImg.image = img
@@ -259,22 +261,15 @@ class PostCell: UITableViewCell {
     
     func mainImgTapped(sender: UITapGestureRecognizer) {
         
-        if !isConnectedToNetwork() {
-            return
-        }
-        
-        if !userLikedPost {
+        if !userLikedPost && isConnectedToNetwork() {
             startLikeAnimation(self.mainImg)
             likeTapped(sender)
         }
     }
     
     func usernameTapped(sender: UITapGestureRecognizer) {
-        if !isConnectedToNetwork() {
-            return
-        }
         
-        if post?.userKey != currentUserKey() {
+        if post?.userKey != currentUserKey() && isConnectedToNetwork() {
             self.usernameTapAction?(self)
         }
     }

@@ -33,11 +33,11 @@ class Comment {
         return _userKey
     }
     
-    var commentKey: String? {
+    var commentKey: String {
         return _commentKey
     }
     
-    var timestamp: String? {
+    var timestamp: String {
         return _timestamp
     }
     

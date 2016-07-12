@@ -1,23 +1,59 @@
 //
-//  Alerts.swift
+//  GlobalFunctions.swift
 //  FabSocialNetwork
 //
-//  Created by Adam Thuvesen on 2016-06-10.
+//  Created by Adam Thuvesen on 2016-07-11.
 //  Copyright © 2016 Adam Thuvesen. All rights reserved.
 //
 
 import Foundation
-import EZLoadingActivity
-import JSSAlertView
 import MBProgressHUD
-import Async
+import Firebase
 
-// Global functions and variables
+func dateSincePosted(timestamp: String) -> String {
+    let dateCreated = NSDate(timeIntervalSince1970: Double(timestamp)!)
+    let dateDiff = NSDate().offsetFrom(dateCreated)
+    
+    return dateDiff
+}
 
-var firstLogin = true
-var userBanned = false
-var iphoneType = ""
-var likeAnimation = MBProgressHUD()
+func reportUserPost(postKey: String) {
+    
+    let reportPostRef = DataService.ds.REF_REPORTED_POSTS.childByAppendingPath(postKey)
+    
+    // Like observer
+    reportPostRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
+        
+        // If no report exist, create one
+        if (snapshot.value as? NSNull) != nil {
+            
+            let post: Dictionary<String, AnyObject> = [
+                "post" : postKey,
+                "report_time" : Timestamp,
+                "report_count" : 1
+            ]
+            
+            reportPostRef.setValue(post)
+            reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+            
+        } else {
+            
+            reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+            
+            // Should be put on server side
+            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                for snap in snapshot {
+                    if let postDict = snap.value as? Dictionary<String, AnyObject> {
+                        if postDict[currentUserKey()] == nil {
+                            let reportCount = postDict.count + 1
+                            reportPostRef.childByAppendingPath("report_count").setValue(reportCount)
+                        }
+                    }
+                }
+            }
+        }
+    })
+}
 
 func isUserAuthenticated(vc: UIViewController) {
     
@@ -39,19 +75,19 @@ func isUserAuthenticated(vc: UIViewController) {
 }
 
 func isVisible(view: UIView) -> Bool {
+    
     func isVisible(view: UIView, inView: UIView?) -> Bool {
+        
         guard let inView = inView else { return true }
         let viewFrame = inView.convertRect(view.bounds, fromView: view)
+        
         if CGRectIntersectsRect(viewFrame, inView.bounds) {
             return isVisible(view, inView: inView.superview)
         }
+        
         return false
     }
     return isVisible(view, inView: view.superview)
-}
-
-var Timestamp: String {
-    return "\(NSDate().timeIntervalSince1970 * 1)"
 }
 
 func checkiPhoneType() {
@@ -77,7 +113,6 @@ func checkiPhoneType() {
     }
 }
 
-// Short delay
 func delay(delay:Double, closure:()->()) {
     dispatch_after(
         dispatch_time(
@@ -92,7 +127,7 @@ func heightForView(text:String, width:CGFloat) -> CGFloat {
     let label:UILabel = UILabel(frame: CGRectMake(0, 0, width, CGFloat.max))
     label.numberOfLines = 0
     label.lineBreakMode = NSLineBreakMode.ByWordWrapping
-    label.font = UIFont(name: "Avenir", size: 14)
+    label.font = UIFont(name: "Avenir-Book", size: 14)
     label.text = text
     label.sizeToFit()
     
@@ -126,36 +161,4 @@ func startLikeAnimation(view: UIView) {
 
 func stopLikeAnimation() {
     likeAnimation.hide(false)
-}
-
-func alertViewSetup() {
-    EZLoadingActivity.Settings.BackgroundColor = UIColor.blackColor()
-    EZLoadingActivity.Settings.TextColor = UIColor.whiteColor()
-    EZLoadingActivity.Settings.FontName = "Avenir"
-    EZLoadingActivity.Settings.ActivityColor = UIColor.whiteColor()
-    EZLoadingActivity.Settings.SuccessColor = UIColor(red: 37/255, green: 193/255, blue: 81/255, alpha: 0.88)
-}
-
-func successAlertFeedVC(vc: FeedVC, title: String, msg: String) {
-    let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-    alertview.setTextTheme(.Light)
-    alertview.setTitleFont("Avenir-Heavy")
-    alertview.setTextFont("Avenir-Medium")
-    alertview.setButtonFont("Avenir-Heavy")
-}
-
-func successAlertSettingsVC(vc: SettingsVC, title: String, msg: String) {
-    let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-    alertview.setTextTheme(.Light)
-    alertview.setTitleFont("Avenir-Heavy")
-    alertview.setTextFont("Avenir-Medium")
-    alertview.setButtonFont("Avenir-Heavy")
-}
-
-func successAlertResetPasswordVC(vc: ResetPasswordVC, title: String, msg: String) {
-    let alertview = JSSAlertView().show(vc, title: title, text: msg, buttonText: "Ok", color: UIColorFromHex(0x25c151, alpha: 1))
-    alertview.setTextTheme(.Light)
-    alertview.setTitleFont("Avenir-Heavy")
-    alertview.setTextFont("Avenir-Medium")
-    alertview.setButtonFont("Avenir-Heavy")
 }

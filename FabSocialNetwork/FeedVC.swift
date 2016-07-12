@@ -18,31 +18,30 @@ import Async
 
 class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
-    var posts = [Post]()
     static var imageCache = NSCache() // Static since single instance (global)
-    var imagePicker: UIImagePickerController!
-    var imageSelected = false
-    var loadingData = false
-    var alert = false
-    var noConnectionAlerts = 0
-    var typeOfLogin = ""
-    var placeHolderText = "Anything you would like to share?"
-    var refreshControl: UIRefreshControl!
-    var previousOffset = CGFloat(0)
-    var postsShown = 20
-    var reportPost: Post!
-    var keyboardHeight: CGFloat = 0.0
-    var rows: CGFloat = 0.0
-    var feedMode = FeedMode.Popular
-    var menuView: BTNavigationDropdownMenu!
-    var timer: NSTimer?
-    var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
-    var previousRect = CGRectZero
-    var heightConstraint: NSLayoutConstraint?
-    var blockedUsers = [String]()
-    var profileBtn: UIButton!
+    private var posts = [Post]()
+    private var imagePicker: UIImagePickerController!
+    private var imageSelected = false
+    private var loadingData = false
+    private var alert = false
+    private var placeHolderText = "Anything you would like to share?"
+    private var refreshControl: UIRefreshControl!
+    private var previousOffset = CGFloat(0)
+    private var postsShown = 20
+    private var reportPost: Post!
+    private var keyboardHeight: CGFloat = 0.0
+    private var rows: CGFloat = 0.0
+    private var feedMode = FeedMode.Popular
+    private var menuView: BTNavigationDropdownMenu!
+    private var timer: NSTimer?
+    private var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
+    private var previousRect = CGRectZero
+    private var heightConstraint: NSLayoutConstraint?
+    private var blockedUsers = [String]()
+    private var profileBtn: UIButton!
+    private var cancelButton: UIButton!
     
-    var cancelButton: UIButton!
+    var typeOfLogin = ""
     
     enum FeedMode {
         case Popular
@@ -67,19 +66,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         tableView.tableFooterView = UIView()
         tableView.allowsSelection = true
         
-        switch iphoneType {
-        case "4":
-            tableView.estimatedRowHeight = 400
-        case "5":
-            tableView.estimatedRowHeight = 450
-        case "6":
-            tableView.estimatedRowHeight = 500
-        case "6+":
-            tableView.estimatedRowHeight = 550
-        default:
-            tableView.estimatedRowHeight = 550
-        }
-        
+        loadIphoneTypeForRowHeight()
         tableView.rowHeight = UITableViewAutomaticDimension
         
         refreshControl = UIRefreshControl() 
@@ -105,7 +92,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         setupCancelButton()
         setupSortMenu()
         
-        title = "FAB NETWORK"
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(FeedVC.updateData(_:)), name:"update", object: nil)
@@ -183,6 +169,21 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             default:
                 break
             }
+        }
+    }
+    
+    func loadIphoneTypeForRowHeight() {
+        switch iphoneType {
+        case "4":
+            tableView.estimatedRowHeight = 400
+        case "5":
+            tableView.estimatedRowHeight = 450
+        case "6":
+            tableView.estimatedRowHeight = 500
+        case "6+":
+            tableView.estimatedRowHeight = 550
+        default:
+            tableView.estimatedRowHeight = 550
         }
     }
     
@@ -495,7 +496,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         if post.imageUrl == nil || post.imageUrl == "" {
             // Not pretty, but should work
-            return 115 + heightForView(post.postDescription, width: screenWidth - 51)
+            return 110 + heightForView(post.postDescription, width: screenWidth - 24)
         } else {
             return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 24)
         }
@@ -791,49 +792,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func reportAnswerYes() {
-        reportUserPost()
+        reportUserPost(self.reportPost.postKey)
     }
     
     func reportAnswerNo() {
         // Do nothing
-    }
-    
-    func reportUserPost() {
-        
-        let reportPostRef = DataService.ds.REF_REPORTED_POSTS.childByAppendingPath(self.reportPost.postKey)
-        
-        // Like observer
-        reportPostRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
-            // If no report exist, create one
-            if (snapshot.value as? NSNull) != nil {
-                
-                let post: Dictionary<String, AnyObject> = [
-                    "post" : self.reportPost.postKey,
-                    "report_time" : Timestamp,
-                    "report_count" : 1
-                ]
-                
-                reportPostRef.setValue(post)
-                reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
-                
-            } else {
-                
-                reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
-                
-                // Should be put on server side
-                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
-                    for snap in snapshot {
-                        if let postDict = snap.value as? Dictionary<String, AnyObject> {
-                            if postDict[currentUserKey()] == nil {
-                                let reportCount = postDict.count + 1
-                                reportPostRef.childByAppendingPath("report_count").setValue(reportCount)
-                            }
-                        }
-                    }
-                }
-            }
-        })
     }
     
     func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool)

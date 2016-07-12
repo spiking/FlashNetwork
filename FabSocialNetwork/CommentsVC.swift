@@ -14,14 +14,13 @@ import EZLoadingActivity
 
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
-    var refreshControl: UIRefreshControl!
+    private var refreshControl: UIRefreshControl!
+    private var comments = [Comment]()
+    private var placeHolderText = "Leave a comment"
+    private var reportedComment: Comment!
+    private var blockedUsers = [String]()
+    
     var post: Post!
-    var comments = [Comment]()
-    var placeHolderText = "Leave a comment"
-    var noConnectionAlerts = 0
-    var reportedComment: Comment!
-    var blockedUsers = [String]()
-    var emojiKeyboardVisisble = false
     
     @IBOutlet weak var commentView: UIView!
     @IBOutlet weak var commentTextView: UITextView!
@@ -355,7 +354,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             if (snapshot.value as? NSNull) != nil {
                 
                 let comment: Dictionary<String, AnyObject> = [
-                    "comment" : self.reportedComment.commentKey!,
+                    "comment" : self.reportedComment.commentKey,
                     "report_time" : Timestamp,
                     "report_count" : 1,
                 ]

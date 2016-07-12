@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import JSSAlertView
 
 class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
@@ -21,18 +22,7 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.dataSource = self
         tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
         
-        switch iphoneType {
-        case "4":
-            tableView.estimatedRowHeight = 425
-        case "5":
-            tableView.estimatedRowHeight = 450
-        case "6":
-            tableView.estimatedRowHeight = 500
-        case "6+":
-            tableView.estimatedRowHeight = 550
-        default:
-            tableView.estimatedRowHeight = 550
-        }
+        loadiPhoneTypeRowHeight()
         
         tableView.rowHeight = UITableViewAutomaticDimension
         
@@ -52,6 +42,21 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         }
     }
     
+    func loadiPhoneTypeRowHeight() {
+        switch iphoneType {
+        case "4":
+            tableView.estimatedRowHeight = 400
+        case "5":
+            tableView.estimatedRowHeight = 450
+        case "6":
+            tableView.estimatedRowHeight = 500
+        case "6+":
+            tableView.estimatedRowHeight = 550
+        default:
+            tableView.estimatedRowHeight = 550
+        }
+    }
+    
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         return 1
     }
@@ -63,10 +68,10 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
     func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
 
         if post.imageUrl == nil || post.imageUrl == "" {
-            return 115 + heightForView(post.postDescription, width: screenWidth - 51)
+            return 110 + heightForView(post.postDescription, width: screenWidth - 24)
             
         } else {
-            return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 51)
+            return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 24)
         }
     }
     
@@ -89,6 +94,10 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self.performSegueWithIdentifier(SEGUE_COMMENTSVC, sender: self.post)
             }
             
+            cell.reportTapAction = { (cell) in
+                self.reportAlert()
+            }
+            
             cell.layoutIfNeeded()
             
             return cell
@@ -96,5 +105,20 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         } else {
             return PostCell()
         }
+    }
+    
+    func reportAlert() {
+        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this post for containing objectionable content? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(reportAnswerYes)
+        alertview.addCancelAction(reportAnswerNo)
+    }
+    
+    func reportAnswerYes() {
+        reportUserPost(self.post.postKey)
+    }
+    
+    func reportAnswerNo() {
+        // Do nothing
     }
 }

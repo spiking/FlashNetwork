@@ -14,7 +14,11 @@ import JSSAlertView
 class OtherUserProfileVC: UIViewController {
 
     var otherUserKey: String!
-    var request: Request?
+    private var _request: Request?
+    
+    var request: Request? {
+        return _request
+    }
     
     @IBOutlet weak var usernameLbl: UILabel!
     @IBOutlet weak var scoreLbl: UILabel!
@@ -68,7 +72,7 @@ class OtherUserProfileVC: UIViewController {
     }
     
     func loadProfileImageFromDatabase(profileUrl: String) {
-        request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+        _request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
             if err == nil {
                 let img = UIImage(data: data!)!
                 self.profileImg.image = img

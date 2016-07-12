@@ -14,12 +14,14 @@ import JSSAlertView
 
 class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
-    var userPosts = [Post]()
-    var confirmRemove = false
-    var indexPathRemove: NSIndexPath?
-    var typeOfCell = TypeOfCell.UserPostCell
+    private var userPosts = [Post]()
+    private var confirmRemove = false
+    private var indexPathRemove: NSIndexPath?
+    private var typeOfCell = TypeOfCell.UserPostCell
+    private var zoomBarButton : UIButton!
+    private var reportPost: Post!
+    
     var userKey = currentUserKey()
-    var zoomBarButton : UIButton!
     
     enum TypeOfCell: String {
         case UserPostCell = "UserPostCell"
@@ -38,19 +40,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         tableView.emptyDataSetSource = self
         tableView.emptyDataSetDelegate = self
         
-        switch iphoneType {
-        case "4":
-            tableView.estimatedRowHeight = 400
-        case "5":
-            tableView.estimatedRowHeight = 450
-        case "6":
-            tableView.estimatedRowHeight = 500
-        case "6+":
-            tableView.estimatedRowHeight = 550
-        default:
-            tableView.estimatedRowHeight = 550
-        }
-        
+        loadIphoneTypeForRowHeight()
         tableView.rowHeight = UITableViewAutomaticDimension
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
@@ -131,6 +121,21 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         }
     }
     
+    func loadIphoneTypeForRowHeight() {
+        switch iphoneType {
+        case "4":
+            tableView.estimatedRowHeight = 400
+        case "5":
+            tableView.estimatedRowHeight = 450
+        case "6":
+            tableView.estimatedRowHeight = 500
+        case "6+":
+            tableView.estimatedRowHeight = 550
+        default:
+            tableView.estimatedRowHeight = 550
+        }
+    }
+    
     func setupDeleteButton() -> UIBarButtonItem {
         
         let button: UIButton = UIButton(type: UIButtonType.Custom)
@@ -208,9 +213,9 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         
         if typeOfCell == TypeOfCell.PostCell {
             if post.imageUrl == nil || post.imageUrl == "" {
-                return 115 + heightForView(post.postDescription, width: screenWidth - 51)
+                return 110 + heightForView(post.postDescription, width: screenWidth - 24)
             } else {
-                return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 51)
+                return tableView.estimatedRowHeight + heightForView(post.postDescription, width: screenWidth - 24)
             }
         } else {
             return 60
@@ -252,12 +257,32 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
                 self.performSegueWithIdentifier(SEGUE_COMMENTSVC, sender: post)
             }
             
+            cell.reportTapAction = { (cell) in
+                self.reportPost = post
+                self.reportAlert()
+            }
+            
             cell.layoutIfNeeded()
             
             return cell
         } else {
             return UITableViewCell()
         }
+    }
+    
+    func reportAlert() {
+        let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this post for containing objectionable content? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(reportAnswerYes)
+        alertview.addCancelAction(reportAnswerNo)
+    }
+    
+    func reportAnswerYes() {
+        reportUserPost(self.reportPost.postKey)
+    }
+    
+    func reportAnswerNo() {
+        // Do nothing
     }
     
     func scrollViewDidScroll(scrollView: UIScrollView) {
