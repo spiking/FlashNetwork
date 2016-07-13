@@ -34,6 +34,7 @@
 		6FAC0C2E1D192FAD003C290B /* UIScrollView+EmptyDataSet.m in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */; };
 		6FAC0C301D193C6E003C290B /* NetworkReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FAC0C2F1D193C6E003C290B /* NetworkReachability.swift */; };
 		6FB08D2D1D2FBE1C00104527 /* Assets 12-54-49-784.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6FB08D2C1D2FBE1C00104527 /* Assets 12-54-49-784.xcassets */; };
+		6FC6D68C1D3571FF0081E58C /* ChatVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC6D68B1D3571FF0081E58C /* ChatVC.swift */; };
 		6FD2B6641D2AC871002042DF /* UserAgreementVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD2B6631D2AC871002042DF /* UserAgreementVC.swift */; };
 		6FD61B2A1D22B234000327B3 /* ShowUserPostVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */; };
 		6FD61B2C1D23B0E2000327B3 /* DateHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD61B2B1D23B0E2000327B3 /* DateHandler.swift */; };
@@ -73,6 +74,7 @@
 		6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIScrollView+EmptyDataSet.m"; sourceTree = "<group>"; };
 		6FAC0C2F1D193C6E003C290B /* NetworkReachability.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NetworkReachability.swift; sourceTree = "<group>"; };
 		6FB08D2C1D2FBE1C00104527 /* Assets 12-54-49-784.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Assets 12-54-49-784.xcassets"; sourceTree = "<group>"; };
+		6FC6D68B1D3571FF0081E58C /* ChatVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatVC.swift; sourceTree = "<group>"; };
 		6FD2B6631D2AC871002042DF /* UserAgreementVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserAgreementVC.swift; sourceTree = "<group>"; };
 		6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShowUserPostVC.swift; sourceTree = "<group>"; };
 		6FD61B2B1D23B0E2000327B3 /* DateHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DateHandler.swift; sourceTree = "<group>"; };
@@ -146,10 +148,10 @@
 			children = (
 				6FAC0C2C1D192FAD003C290B /* UIScrollView+EmptyDataSet.h */,
 				6FAC0C2D1D192FAD003C290B /* UIScrollView+EmptyDataSet.m */,
+				6FAC0C2B1D192FAC003C290B /* FabSocialNetwork-Bridging-Header.h */,
 				6F8AAD7D1D0180FD00750F11 /* Bolts.framework */,
 				6F8AAD7E1D0180FD00750F11 /* FBSDKCoreKit.framework */,
 				6F8AAD7F1D0180FD00750F11 /* FBSDKLoginKit.framework */,
-				6FAC0C2B1D192FAC003C290B /* FabSocialNetwork-Bridging-Header.h */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -191,6 +193,7 @@
 				6FD61B291D22B234000327B3 /* ShowUserPostVC.swift */,
 				6FD2B6631D2AC871002042DF /* UserAgreementVC.swift */,
 				6FF6EF811D3157B500A5CD1C /* OtherUserProfileVC.swift */,
+				6FC6D68B1D3571FF0081E58C /* ChatVC.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -373,6 +376,7 @@
 				6F8AAD951D01813200750F11 /* DarkTextField.swift in Sources */,
 				6FF6EF821D3157B500A5CD1C /* OtherUserProfileVC.swift in Sources */,
 				6FD2B6641D2AC871002042DF /* UserAgreementVC.swift in Sources */,
+				6FC6D68C1D3571FF0081E58C /* ChatVC.swift in Sources */,
 				6FA4D0341D06C9170002EB33 /* ProfileVC.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

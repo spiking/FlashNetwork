@@ -623,7 +623,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func scrollToTop() {
-        self.tableView.contentOffset = CGPointMake(0, 0 - self.tableView.contentInset.top);
+        self.tableView.contentOffset = CGPointMake(0, 0 - self.tableView.contentInset.top)
     }
     
     func textViewShouldBeginEditing(textView: UITextView) -> Bool {

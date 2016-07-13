@@ -11,6 +11,8 @@ target 'FabSocialNetwork' do
   pod 'JSSAlertView'
   pod 'BTNavigationDropdownMenu'
   pod 'AsyncSwift'
+  pod 'SlackTextViewController'
+  pod 'JSQMessagesViewController'
 end
 
 post_install do |installer|

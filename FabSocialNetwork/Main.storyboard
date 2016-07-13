@@ -614,6 +614,7 @@
                         <outlet property="scoreLbl" destination="DWI-iy-tZi" id="Yky-Ld-OFU"/>
                         <outlet property="usernameLbl" destination="xN9-WL-ROk" id="7Yr-BO-1J6"/>
                         <segue destination="zoa-33-SBf" kind="show" identifier="showUserPostVC" id="zaW-wh-v8m"/>
+                        <segue destination="Zau-ME-zvh" kind="show" identifier="chatVC" id="df6-HR-jMj"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Hi5-eT-elT" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -788,6 +789,24 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="DhD-Vs-Hw4" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="4121" y="560"/>
+        </scene>
+        <!--ChatVC-->
+        <scene sceneID="4G6-YY-z5i">
+            <objects>
+                <viewController id="Zau-ME-zvh" customClass="ChatVC" customModule="FabSocialNetwork" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="2GP-Gs-XxZ"/>
+                        <viewControllerLayoutGuide type="bottom" id="Poo-D3-HSp"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Ye9-wC-GW9">
+                        <rect key="frame" x="0.0" y="64" width="600" height="536"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" red="0.070588235289999995" green="0.070588235289999995" blue="0.070588235289999995" alpha="1" colorSpace="calibratedRGB"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="0e6-OT-GB4" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="4943" y="-166"/>
         </scene>
         <!--SettingsVC-->
         <scene sceneID="vZV-w5-Z9a">
@@ -1918,9 +1937,9 @@ Flash Network shall not be obligated to indemnify or defend you with respect to 
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="MqL-nR-hMN"/>
-        <segue reference="mTd-Ts-yzY"/>
         <segue reference="eG1-Bd-hco"/>
+        <segue reference="mTd-Ts-yzY"/>
         <segue reference="SHI-v2-1Yy"/>
-        <segue reference="327-h2-7mf"/>
+        <segue reference="zaW-wh-v8m"/>
     </inferredMetricsTieBreakers>
 </document>

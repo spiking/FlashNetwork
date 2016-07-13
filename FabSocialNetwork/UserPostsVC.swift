@@ -44,7 +44,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         tableView.rowHeight = UITableViewAutomaticDimension
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
-        
         navigationItem.leftItemsSupplementBackButton = true
         
         if userKey != currentUserKey() {

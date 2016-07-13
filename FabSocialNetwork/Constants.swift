@@ -25,6 +25,7 @@ let SEGUE_PROFILEVC = "profileVC"
 let SEGUE_SHOWUSERPOSTVC = "showUserPostVC"
 let SEGUE_USERAGREEMENTVC = "useragreementVC"
 let SEGUE_OTHERUSERPROFILEVC = "otherUserProfileVC"
+let SEGUE_CHATVC = "chatVC"
 
 // Status Codes
 let STATUS_ACCOUNT_NONEXIST = -8

@@ -14,6 +14,7 @@ import JSSAlertView
 class OtherUserProfileVC: UIViewController {
 
     var otherUserKey: String!
+    var profileUrl: String!
     private var _request: Request?
     
     var request: Request? {
@@ -35,18 +36,35 @@ class OtherUserProfileVC: UIViewController {
         
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
+        navigationItem.leftItemsSupplementBackButton = true
+        
+        var deleteButton = seutpBlockButton()
+        var chatButton = setupChatButton()
+        navigationItem.setRightBarButtonItems([deleteButton, chatButton], animated: true)
+        
+        NSNotificationCenter.defaultCenter().postNotificationName("load", object: nil)
+        
         seutpBlockButton()
         
         loadUserFromFirebase()
     }
     
-    func seutpBlockButton() {
+    func seutpBlockButton() -> UIBarButtonItem {
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "Report.png"), forState: UIControlState.Normal)
         button.addTarget(self, action: #selector(OtherUserProfileVC.blockUserAlert), forControlEvents: UIControlEvents.TouchUpInside)
         button.frame = CGRectMake(0, 0, 25, 25)
         let barButton = UIBarButtonItem(customView: button)
-        self.navigationItem.rightBarButtonItem = barButton
+        return barButton
+    }
+    
+    func setupChatButton() -> UIBarButtonItem {
+        let button: UIButton = UIButton(type: UIButtonType.Custom)
+        button.setImage(UIImage(named: "comments"), forState: UIControlState.Normal)
+        button.addTarget(self, action: #selector(OtherUserProfileVC.startChat), forControlEvents: UIControlEvents.TouchUpInside)
+        button.frame = CGRectMake(0, 0, 25, 25)
+        let barButton = UIBarButtonItem(customView: button)
+        return barButton
     }
     
     func blockUserAlert() {
@@ -69,6 +87,10 @@ class OtherUserProfileVC: UIViewController {
         DataService.ds.REF_USERS.childByAppendingPath(otherUserKey).childByAppendingPath("blocked_users").childByAppendingPath(currentUserKey()).setValue("TRUE")
         
         NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
+    }
+    
+    func startChat() {
+        self.performSegueWithIdentifier(SEGUE_CHATVC, sender: otherUserKey)
     }
     
     func loadProfileImageFromDatabase(profileUrl: String) {
@@ -94,13 +116,13 @@ class OtherUserProfileVC: UIViewController {
                     for snap in snapshot {
                         
                         if snap.key == "imgUrl" {
-                            let profileUrl = snap.value as! String
+                            self.profileUrl = snap.value as! String
                             
-                            if let profileImg = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
+                            if let profileImg = FeedVC.imageCache.objectForKey(self.profileUrl!) as? UIImage {
                                 self.profileImg.image = profileImg
                                 self.profileImgButton.imageView?.image = UIImage(named: "ImageSelected")
                             } else {
-                                self.loadProfileImageFromDatabase(profileUrl)
+                                self.loadProfileImageFromDatabase(self.profileUrl)
                             }
                             
                         } else if snap.key == "username" {
@@ -124,6 +146,16 @@ class OtherUserProfileVC: UIViewController {
             if let userPostVC = segue.destinationViewController as? UserPostsVC {
                 if let otherUserKey = sender as? String {
                     userPostVC.userKey = otherUserKey
+                }
+            }
+        } else if segue.identifier == SEGUE_CHATVC {
+            if let chatVC = segue.destinationViewController as? ChatVC {
+                if let otherUserKey = sender as? String {
+                    chatVC.otherUserKey = otherUserKey
+                    chatVC.otherUsername = usernameLbl.text!
+                    chatVC.senderId = currentUserKey()
+                    chatVC.senderDisplayName = ""
+                    
                 }
             }
         }

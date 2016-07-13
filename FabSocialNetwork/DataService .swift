@@ -19,6 +19,7 @@ class DataService {
     private var _REF_COMMENTS = Firebase(url:  "\(URL_BASE)/comments")
     private var _REF_REPORTED_COMMENTS = Firebase(url:  "\(URL_BASE)/reported_comments")
     private var _REF_REPORTED_POSTS = Firebase(url:  "\(URL_BASE)/reported_posts")
+    private var _REF_MESSAGES = Firebase(url: "\(URL_BASE)/messages")
     
     var REF_BASE: Firebase {
         return _REF_BASE
@@ -42,6 +43,10 @@ class DataService {
     
     var REF_REPORTED_POSTS: Firebase {
         return _REF_REPORTED_POSTS
+    }
+    
+    var REF_MESSAGES: Firebase {
+        return _REF_MESSAGES
     }
     
     var REF_USER_CURRENT: Firebase {
