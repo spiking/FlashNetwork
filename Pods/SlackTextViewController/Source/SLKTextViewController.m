@@ -1325,13 +1325,12 @@ CGFloat const SLKAutoCompletionViewDefaultHeight = 140.0;
     }
     
     UIResponder *currentResponder = [UIResponder slk_currentFirstResponder];
-    // Skips this it's not the expected textView and shouldn't force adjustment of the text input bar.
+    
+    // Skips if it's not the expected textView and shouldn't force adjustment of the text input bar.
     // This will also dismiss the text input bar if it's visible, and exit auto-completion mode if enabled.
-    if (currentResponder && ![currentResponder isEqual:self.textView]) {
-        // Detect the current first responder. If there is no first responder, we should just ignore these notifications.
-        if (![self forceTextInputbarAdjustmentForResponder:currentResponder]) {
-            return [self slk_dismissTextInputbarIfNeeded];
-        }
+    if (![currentResponder isEqual:self.textView] && ![self forceTextInputbarAdjustmentForResponder:currentResponder]) {
+        [self slk_dismissTextInputbarIfNeeded];
+        return;
     }
     
     SLKKeyboardStatus status = [self slk_keyboardStatusForNotification:notification];
@@ -1569,21 +1568,24 @@ CGFloat const SLKAutoCompletionViewDefaultHeight = 140.0;
 
 #pragma mark - Auto-Completion Text Processing
 
-- (void)registerPrefixesForAutoCompletion:(NSArray *)prefixes
+- (void)registerPrefixesForAutoCompletion:(NSArray <NSString *> *)prefixes
 {
     if (prefixes.count == 0) {
         return;
     }
     
     NSMutableSet *set = [NSMutableSet setWithSet:self.registeredPrefixes];
-    [set addObjectsFromArray:prefixes];
+    [set addObjectsFromArray:[prefixes copy]];
     
     _registeredPrefixes = [NSSet setWithSet:set];
 }
 
 - (BOOL)shouldProcessTextForAutoCompletion:(NSString *)text
 {
-    // Always return YES by default.
+    if (!_registeredPrefixes || _registeredPrefixes.count == 0) {
+        return NO;
+    }
+    
     return YES;
 }
 
@@ -1862,11 +1864,6 @@ CGFloat const SLKAutoCompletionViewDefaultHeight = 140.0;
     }
     
     BOOL newWordInserted = ([text rangeOfCharacterFromSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].location != NSNotFound);
-    
-    // It should not change if auto-completion is active and trying to replace with an auto-correction suggested text.
-    if (self.isAutoCompleting && text.length > 1) {
-        return NO;
-    }
     
     // Records text for undo for every new word
     if (newWordInserted) {

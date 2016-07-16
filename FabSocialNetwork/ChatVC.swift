@@ -11,19 +11,17 @@ import UIKit
 import Firebase
 import JSQMessagesViewController
 import Alamofire
-import Async
 
 class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
     var otherUsername = ""
     var otherUserKey = ""
     
-    // MARK: Properties
-    var messages = [JSQMessage]()
-    var userIsTypingRef: Firebase!
-    var usersTypingQuery: FQuery!
+    private var messages = [JSQMessage]()
+    private var userIsTypingRef: FIRDatabaseReference!
+    private var usersTypingQuery: FIRDatabaseQuery!
     private var localTyping = false
-    private var shownMessages = 25
+    private var shownMessages = 100
     
     var isTyping: Bool {
         get {
@@ -56,30 +54,34 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         let rightBarbuttonHighlightedColor = UIColor(red: CGFloat(37/255.0), green: CGFloat(193/255.0), blue: CGFloat(81/255.0), alpha: CGFloat(0.88))
         self.inputToolbar.contentView.rightBarButtonItem.setTitleColor(rightBarbuttonHighlightedColor, forState: .Highlighted)
         self.inputToolbar.contentView.leftBarButtonItem = nil
+        self.inputToolbar.contentView.textView.font = UIFont(name: "Avenir-Medium", size: 16)!
         
         self.collectionView.loadEarlierMessagesHeaderTextColor = UIColor.lightTextColor()
-        self.automaticallyScrollsToMostRecentMessage = false
         
         // No avatars
         collectionView!.collectionViewLayout.incomingAvatarViewSize = CGSizeZero
         collectionView!.collectionViewLayout.outgoingAvatarViewSize = CGSizeZero
-
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        observeMessages()
+        observeTyping()
+        
+        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+        }
     }
     
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
-        observeMessages()
-        observeTyping()
-        
-        self.showLoadEarlierMessagesHeader = true
-        
-//        Async.main(after: 1.0) {
-//            if self.messages.count == 0 {
-//                self.showLoadEarlierMessagesHeader = false
-//            } else {
-//                self.showLoadEarlierMessagesHeader = true
-//            }
-//        }
+        self.showLoadEarlierMessagesHeader = false
+    }
+    
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeTyping()
     }
     
     override func collectionView(collectionView: JSQMessagesCollectionView!, messageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageData! {
@@ -106,47 +108,44 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         
         if (cell.textView?.textColor) != nil {
             cell.textView.textColor = UIColor(red: CGFloat(15/255.0), green: CGFloat(15/255.0), blue: CGFloat(15/255.0), alpha: CGFloat(1.0))
+//            cell.textView.font = UIFont(name: "Avenir-Medium", size: 16)!
         }
         
         return cell
     }
     
-    override func collectionView(collectionView: JSQMessagesCollectionView!, avatarImageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageAvatarImageDataSource! {
-        return nil
-    }
-    
-    
-    private func observeMessages() {
-
+    func observeMessages() {
+        
         let messagesQuery = DataService.ds.REF_MESSAGES.queryLimitedToLast(UInt(shownMessages))
         
-        messagesQuery.observeEventType(.ChildAdded) { (snapshot: FDataSnapshot!) in
+        messagesQuery.observeEventType(.ChildAdded) { (snapshot: FIRDataSnapshot!) in
             
-            let senderId = snapshot.value["senderId"] as! String
-            let receiverId = snapshot.value["receiverId"] as! String
-            var text = ""
-            
-            if let txt = snapshot.value["text"] as? String {
-                text = txt
-            }
+            let senderId = snapshot.value!["senderId"] as! String
+            let receiverId = snapshot.value!["receiverId"] as! String
+            let text = snapshot.value!["text"] as! String
             
             if (self.otherUserKey == senderId && currentUserKey() == receiverId) || (self.otherUserKey == receiverId && currentUserKey() == senderId) {
-                
                 self.addTextMessage(senderId, text: text)
                 self.finishReceivingMessage()
             }
         }
     }
     
-    private func observeTyping() {
-        let typingIndicatorRef = DataService.ds.REF_BASE.childByAppendingPath("typingIndicator")
-        userIsTypingRef = typingIndicatorRef.childByAppendingPath(senderId)
+    func removeTyping() {
+        let typingIndicatorRef = DataService.ds.REF_BASE.child("typingIndicator")
+        userIsTypingRef = typingIndicatorRef.child(senderId)
+        userIsTypingRef.removeValue()
+    }
+    
+    func observeTyping() {
+        let typingIndicatorRef = DataService.ds.REF_BASE.child("typingIndicator")
+        userIsTypingRef = typingIndicatorRef.child(senderId)
         userIsTypingRef.onDisconnectRemoveValue()
         usersTypingQuery = typingIndicatorRef.queryOrderedByValue().queryEqualToValue(true)
         
-        usersTypingQuery.observeEventType(.Value) { (data: FDataSnapshot!) in
+        usersTypingQuery.observeEventType(.Value) { (data: FIRDataSnapshot!) in
             
-            // You're the only typing, don't show the indicator
+            // You are the only typing, dont show the indicator
             if data.childrenCount == 1 && self.isTyping {
                 return
             }
@@ -159,8 +158,7 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
     }
     
     func addTextMessage(id: String, text: String) {
-
-        let message = JSQMessage(senderId: id, senderDisplayName: "Janne", date: NSDate(), text: text)
+        let message = JSQMessage(senderId: id, senderDisplayName: "", date: NSDate(), text: text)
         messages.append(message)
     }
     
@@ -168,18 +166,6 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         super.textViewDidChange(textView)
         // If the text is not empty, the user is typing
         isTyping = textView.text != ""
-    }
-    
-    override func collectionView(collectionView: JSQMessagesCollectionView!, header headerView: JSQMessagesLoadEarlierHeaderView!, didTapLoadEarlierMessagesButton sender: UIButton!) {
-        
-        messages = [JSQMessage]()
-        shownMessages += 25
-        observeMessages()
-    }
-    
-    
-    func scrollToTop() {
-        self.collectionView.contentOffset = CGPointMake(0, 0 - self.collectionView.contentOffset.y)
     }
     
     override func didPressSendButton(button: UIButton!, withMessageText text: String!, senderId receiverId: String!, senderDisplayName: String!, date: NSDate!) {
@@ -191,6 +177,7 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
             "receiverId": otherUserKey,
             "date": "\(date)"
         ]
+        
         itemRef.setValue(messageItem)
         
         JSQSystemSoundPlayer.jsq_playMessageSentSound()
@@ -198,9 +185,21 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         finishSendingMessage()
         isTyping = false
         
+        sendPushNotificationToUser()
     }
     
-    private func setupBubbles() {
+    func sendPushNotificationToUser() {
+        DataService.ds.REF_USERS.child(self.otherUserKey).observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
+            if let userPushId = snapshot.childSnapshotForPath("userPushId").value as? String {
+                if self.otherUserKey != currentUserKey() {
+                    print("\(getCurrentUsername().capitalizedString) sent you a message.")
+                    oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) sent you a message."], "include_player_ids": [userPushId]])
+                }
+            }
+        }
+    }
+    
+    func setupBubbles() {
         let bubbleImageFactory = JSQMessagesBubbleImageFactory()
         outgoingBubbleImageView = bubbleImageFactory.outgoingMessagesBubbleImageWithColor(UIColor.jsq_messageBubbleGreenColor())
         incomingBubbleImageView = bubbleImageFactory.incomingMessagesBubbleImageWithColor(UIColor.jsq_messageBubbleLightGrayColor())

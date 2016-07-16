@@ -17,6 +17,7 @@
 		6F5593D31D1D1E4B00B36D19 /* SettingsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F5593D21D1D1E4B00B36D19 /* SettingsVC.swift */; };
 		6F5593D51D1D265E00B36D19 /* UserPostsVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F5593D41D1D265E00B36D19 /* UserPostsVC.swift */; };
 		6F5593D71D1D448E00B36D19 /* UserPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F5593D61D1D448E00B36D19 /* UserPostCell.swift */; };
+		6F6358041D3659A90023C1F1 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6F6358031D3659A90023C1F1 /* GoogleService-Info.plist */; };
 		6F8AAD661D01805400750F11 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F8AAD651D01805400750F11 /* AppDelegate.swift */; };
 		6F8AAD681D01805400750F11 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F8AAD671D01805400750F11 /* ViewController.swift */; };
 		6F8AAD701D01805400750F11 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6F8AAD6E1D01805400750F11 /* LaunchScreen.storyboard */; };
@@ -53,6 +54,7 @@
 		6F5593D21D1D1E4B00B36D19 /* SettingsVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsVC.swift; sourceTree = "<group>"; };
 		6F5593D41D1D265E00B36D19 /* UserPostsVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserPostsVC.swift; sourceTree = "<group>"; };
 		6F5593D61D1D448E00B36D19 /* UserPostCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserPostCell.swift; sourceTree = "<group>"; };
+		6F6358031D3659A90023C1F1 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6F8AAD621D01805400750F11 /* FabSocialNetwork.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FabSocialNetwork.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F8AAD651D01805400750F11 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6F8AAD671D01805400750F11 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 		6F8AAD591D01805400750F11 = {
 			isa = PBXGroup;
 			children = (
+				6F6358031D3659A90023C1F1 /* GoogleService-Info.plist */,
 				6F8AAD641D01805400750F11 /* FabSocialNetwork */,
 				6F8AAD631D01805400750F11 /* Products */,
 				734F1535320015019AF4E4FF /* Pods */,
@@ -261,8 +264,11 @@
 						CreatedOnToolsVersion = 7.3.1;
 						DevelopmentTeam = QPUG98H89L;
 						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 1;
+							};
 							com.apple.Push = {
-								enabled = 0;
+								enabled = 1;
 							};
 						};
 					};
@@ -294,6 +300,7 @@
 				6F8AAD701D01805400750F11 /* LaunchScreen.storyboard in Resources */,
 				6F8AAD971D01817700750F11 /* Main.storyboard in Resources */,
 				6FB08D2D1D2FBE1C00104527 /* Assets 12-54-49-784.xcassets in Resources */,
+				6F6358041D3659A90023C1F1 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

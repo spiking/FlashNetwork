@@ -16,7 +16,6 @@ import Async
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
-    private var userHasAcceptedTerms = false
     private let OLD_ACCOUNT = "OLD_ACCOUNT"
     private let NEW_ACCOUNT = "NEW_ACCOUNT"
     
@@ -25,35 +24,19 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        alertViewSetup()
-    }
-    
-    override func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(animated)
         
         if userBanned {
             JSSAlertView().danger(self, title: "Banned", text: "You have violated the user license agreement. Your account has been permanetly banned from Flash Network.")
             NSTimer.scheduledTimerWithTimeInterval(7, target: self, selector: #selector(ViewController.terminateApp), userInfo: nil, repeats: false)
         }
         
-        checkiPhoneType()
-        
-        if NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) != nil && NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String == "TRUE" {
-            firstLogin = false
-            self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: nil)
-        } else {
-            firstLogin = true
-        }
-        
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
-        setupPlaceholders()
-        
-        emailField.delegate = self
-        
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
+        setupPlaceholders()
+        emailField.delegate = self
     }
     
     func setupPlaceholders() {
@@ -68,12 +51,42 @@ class ViewController: UIViewController, UITextFieldDelegate {
         if textField == emailField {
             self.passwordField.becomeFirstResponder()
         }
-        
         return true
     }
     
     func terminateApp() {
         exit(0)
+    }
+    
+    func dismisskeyboard() {
+        view.endEditing(true)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        switch segue.identifier {
+            
+        case SEGUE_LOGGED_IN?:
+            if let nav = segue.destinationViewController as? UINavigationController {
+                if segue.identifier == SEGUE_LOGGED_IN {
+                    if let feedVC = nav.topViewController as? FeedVC {
+                        if let typeOfLogin = sender as? String {
+                            feedVC.typeOfLogin = typeOfLogin
+                        }
+                    }
+                }
+            }
+        case SEGUE_USERAGREEMENTVC?:
+            if segue.identifier == SEGUE_USERAGREEMENTVC {
+                if let useragreementVC = segue.destinationViewController as? UserAgreementVC {
+                    if let typeOfLogin = sender as? String {
+                        useragreementVC.typeOfLogin = typeOfLogin
+                    }
+                }
+            }
+        default:
+            break
+        }
     }
     
     @IBAction func forgotPasswordBtnPressed(sender: AnyObject) {
@@ -88,7 +101,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         }
         
         let facebookLogin = FBSDKLoginManager()
-        
+    
         facebookLogin.logInWithReadPermissions(["email"]) { (facebookResult: FBSDKLoginManagerLoginResult!, facebookError: NSError!) -> Void in
             
             if facebookError != nil {
@@ -101,31 +114,41 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 print("Successfully logged in with facebook. \(accessToken)")
                 
                 // Authenticate facebook login with firebase
-                DataService.ds.REF_BASE.authWithOAuthProvider("facebook", token: accessToken, withCompletionBlock: { error, authData  in
+                //                DataService.ds.REF_BASE.authWithOAuthProvider("facebook", token: accessToken, withCompletionBlock: { error, authData  in
+                let credential = FIRFacebookAuthProvider.credentialWithAccessToken(FBSDKAccessToken.currentAccessToken().tokenString)
+                
+                FIRAuth.auth()?.signInWithCredential(credential, completion: { (user, error) in
                     
                     if error != nil {
                         print("Login failed! \(error)")
                     } else {
-                        print("Logged In! \(authData)")
+                        print("Logged In! \(user)")
+                        
+                        setUserPushId()
                         
                         // Check if id already exist in firebase, if so, dont recreate
                         DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
                             
-                            if !snapshot.hasChild(authData.uid) {
+                            if !snapshot.hasChild(user!.uid) {
                                 
                                 EZLoadingActivity.show("Creating account...", disableUI: false)
                                 
-                                let user = ["provider": authData.provider!, "timestamp": Timestamp, "score" : 0]
-                                DataService.ds.createFirebaseUser(authData.uid, user: user as! Dictionary<String, AnyObject>)
-                                NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                                setUserPushId()
+                                
+                                let userPushId = getUserPushId()
+                                let userData = ["provider": credential.provider, "timestamp": Timestamp, "score" : 0, "userPushId" : userPushId]
+                                DataService.ds.createFirebaseUser(user!.uid, user: userData as! Dictionary<String, AnyObject>)
+                                NSUserDefaults.standardUserDefaults().setValue(user!.uid, forKey: KEY_UID)
                                 self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                                 
                             } else {
                                 
                                 EZLoadingActivity.show("Logging in...", disableUI: false)
                                 
+                                setUserPushId()
+                                
                                 if !userProfileAdded() {
-                                    NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                                    NSUserDefaults.standardUserDefaults().setValue(user!.uid, forKey: KEY_UID)
                                 }
                                 
                                 var accepted = false
@@ -136,7 +159,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                     
                                     DataService.ds.REF_USER_CURRENT.observeSingleEventOfType(.Value, withBlock: { snapshot in
                                         
-                                        if let terms = snapshot.value["terms"] as? String {
+                                        if let terms = snapshot.value!["terms"] as? String {
                                             if terms == "TRUE" {
                                                 accepted = true
                                             }
@@ -145,7 +168,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                     
                                     // Must perform segues on main thread
                                     
-                                    }.main(after: 1.0) {
+                                    }.main(after: 3.0) {
                                         if !accepted {
                                             // Means user entered user agreement but terminated the app
                                             if let terms = NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String where terms == "FALSE" {
@@ -181,40 +204,36 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 return
             }
             
-            DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { (error, authData) in
+            FIRAuth.auth()?.signInWithEmail(email, password: pwd, completion: { (user, error) in
                 
                 // Check if account exist
                 if error != nil {
                     print(error)
                     
-                    if error.code == STATUS_ACCOUNT_FIREBASE_AUTH {
+                    if error!.code == STATUS_ACCOUNT_FIREBASE_AUTH {
                         print("\(error.debugDescription)")
                     }
                     
-                    if error.code == STATUS_ACCOUNT_NONEXIST {
-                        // User does not exist, try to create an account
-                        DataService.ds.REF_BASE.createUser(email, password: pwd, withValueCompletionBlock: { (error, result) in
-                            
-                            EZLoadingActivity.show("Creating account...", disableUI: false)
+                    if error!.code == STATUS_ACCOUNT_NONEXIST {
+                        
+                        EZLoadingActivity.show("Creating account...", disableUI: false)
+                        
+                        setUserPushId()
+                        
+                        FIRAuth.auth()?.createUserWithEmail(email, password: pwd, completion: { (user, error) in
                             
                             // Try to creat account
                             if error != nil {
                                 JSSAlertView().danger(self, title: "Could not create account", text: "Problem occured when creating an account. Please try again or come back later.")
                             } else {
                                 // Save account locally
-                                NSUserDefaults.standardUserDefaults().setValue(result[KEY_UID], forKey: KEY_UID)
-                                // Authorize account
-                                DataService.ds.REF_BASE.authUser(email, password: pwd, withCompletionBlock: { err, authData in
-                                    
-                                    if err != nil {
-                                        JSSAlertView().danger(self, title: "Could not authorize account", text: "Please try again or come back later.")
-                                    } else {
-                                        // Create firebase user
-                                        let user = ["provider": authData.provider!, "timestamp": Timestamp, "score" : 0]
-                                        DataService.ds.createFirebaseUser(authData.uid, user: user as! Dictionary<String, AnyObject>)
-                                        self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
-                                    }
-                                })
+                                NSUserDefaults.standardUserDefaults().setValue(user!.uid, forKey: KEY_UID)
+                                let userPushId = getUserPushId()
+                                let userData = ["provider": "email", "timestamp": Timestamp, "score" : 0, "userPushId" : userPushId]
+                                DataService.ds.createFirebaseUser(user!.uid, user: userData as! Dictionary<String, AnyObject>)
+                                self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
+                                
+                                
                             }
                         })
                     } else {
@@ -224,8 +243,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
                     
                     EZLoadingActivity.show("Logging in...", disableUI: false)
                     
+                    setUserPushId()
+                    
                     if !userProfileAdded() {
-                        NSUserDefaults.standardUserDefaults().setValue(authData.uid, forKey: KEY_UID)
+                        NSUserDefaults.standardUserDefaults().setValue(user!.uid, forKey: KEY_UID)
                     }
                     
                     var accepted = false
@@ -236,7 +257,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         
                         DataService.ds.REF_USER_CURRENT.observeSingleEventOfType(.Value, withBlock: { snapshot in
                             
-                            if let terms = snapshot.value["terms"] as? String {
+                            if let terms = snapshot.value!["terms"] as? String {
                                 if terms == "TRUE" {
                                     accepted = true
                                 }
@@ -245,12 +266,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         
                         // Must perform segues on main thread
                         
-                        }.main(after: 1.0) {
+                        }.main(after: 3.0) {
                             if !accepted {
                                 
                                 // Means user entered user agreement but terminated the app
                                 if let terms = NSUserDefaults.standardUserDefaults().valueForKey("terms") as? String where terms == "FALSE" {
-                                    
                                     self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.NEW_ACCOUNT)
                                 } else {
                                     self.performSegueWithIdentifier(SEGUE_USERAGREEMENTVC, sender: self.OLD_ACCOUNT)
@@ -267,28 +287,5 @@ class ViewController: UIViewController, UITextFieldDelegate {
         } else {
             JSSAlertView().danger(self, title: "Invalid Input", text: "You must enter a valid email and a password.")
         }
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
-        if let nav = segue.destinationViewController as? UINavigationController {
-            if segue.identifier == SEGUE_LOGGED_IN {
-                if let feedVC = nav.topViewController as? FeedVC {
-                    if let typeOfLogin = sender as? String {
-                        feedVC.typeOfLogin = typeOfLogin
-                    }
-                }
-            }
-        } else if segue.identifier == SEGUE_USERAGREEMENTVC {
-            if let useragreementVC = segue.destinationViewController as? UserAgreementVC {
-                if let typeOfLogin = sender as? String {
-                    useragreementVC.typeOfLogin = typeOfLogin
-                }
-            }
-        }
-    }
-    
-    func dismisskeyboard() {
-        view.endEditing(true)
     }
 }

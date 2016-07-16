@@ -23,7 +23,6 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
         
         loadiPhoneTypeRowHeight()
-        
         tableView.rowHeight = UITableViewAutomaticDimension
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
@@ -32,7 +31,6 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-                
         if segue.identifier == SEGUE_COMMENTSVC {
             if let commentsVC = segue.destinationViewController as? CommentsVC {
                 if let post = sender as? Post {

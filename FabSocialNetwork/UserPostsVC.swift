@@ -33,8 +33,6 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        loadUserPostsFromFirebase()
-        
         tableView.delegate = self
         tableView.dataSource = self
         tableView.emptyDataSetSource = self
@@ -52,7 +50,9 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         } else {
             let deleteButton = setupDeleteButton()
             let viewButton = setupViewButton()
-            navigationItem.setRightBarButtonItems([deleteButton, viewButton], animated: true)
+            let fixed: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FixedSpace, target: nil, action: nil)
+            fixed.width = 12
+            navigationItem.setRightBarButtonItems([deleteButton, fixed, viewButton], animated: true)
         }
     
         title = "POSTS"
@@ -60,15 +60,19 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         loadUserPostsFromFirebase()
     }
     
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+        }
+    }
     
     func loadUserPostsFromFirebase() {
-        
-        isUserAuthenticated(self)
         
         DataService.ds.REF_POSTS.queryOrderedByChild("user").queryEqualToValue(userKey).observeEventType(.Value, withBlock: { snapshot in
             self.userPosts = []
             
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
@@ -88,20 +92,22 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
-        if segue.identifier == SEGUE_COMMENTSVC {
+        switch segue.identifier {
+            
+        case SEGUE_COMMENTSVC?:
             if let commentsVC = segue.destinationViewController as? CommentsVC {
                 if let post = sender as? Post {
                     commentsVC.post = post
                 }
             }
-        }
-        
-        if segue.identifier == SEGUE_SHOWUSERPOSTVC {
+        case SEGUE_SHOWUSERPOSTVC?:
             if let userPostVC = segue.destinationViewController as? ShowUserPostVC {
                 if let post = sender as? Post {
                     userPostVC.post = post
                 }
             }
+        default:
+            break
         }
     }
     
@@ -181,7 +187,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
                 str = "It looks like you have not made any posts. Go back to the main view to create one."
             }
         } else {
-            str = "Please connect to a network and the feed will load automatically."
+            str = "Please connect to a network and the posts will load automatically."
         }
         let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
         return NSAttributedString(string: str, attributes: attrs)
@@ -323,7 +329,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     
     func removePostFromFirebase(postToRemove: Post!) {
         
-        DataService.ds.REF_POSTS.childByAppendingPath(postToRemove.postKey).removeValueWithCompletionBlock { (error, ref) in
+        DataService.ds.REF_POSTS.child(postToRemove.postKey).removeValueWithCompletionBlock { (error, ref) in
             
             if error != nil {
                 EZLoadingActivity.showWithDelay("Failure", disableUI: true, seconds: 1.0)
@@ -341,7 +347,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     
     func updateScores() {
         func updateScores(hasImage: Bool) {
-            DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+            DataService.ds.REF_USER_CURRENT.child("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
                 
                 if var score = snapshot.value as? Int {
                     
@@ -353,7 +359,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
                         score = 0
                     }
                     
-                    DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").setValue(score)
+                    DataService.ds.REF_USER_CURRENT.child("score").setValue(score)
                 }
                 
             })

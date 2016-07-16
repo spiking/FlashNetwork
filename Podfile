@@ -4,7 +4,9 @@
 target 'FabSocialNetwork' do
   # Comment this line if you're not using Swift and don't want to use dynamic frameworks
   use_frameworks!
-  pod 'Firebase', '>= 2.3.3'
+  pod 'Firebase/Core'
+  pod 'Firebase/Database'
+  pod 'Firebase/Auth'
   pod 'Alamofire', '~> 3.3'
   pod 'EZLoadingActivity'
   pod 'MBProgressHUD', '~> 0.9.2'
@@ -13,6 +15,7 @@ target 'FabSocialNetwork' do
   pod 'AsyncSwift'
   pod 'SlackTextViewController'
   pod 'JSQMessagesViewController'
+  pod 'OneSignal'
 end
 
 post_install do |installer|

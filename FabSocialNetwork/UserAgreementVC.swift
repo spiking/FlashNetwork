@@ -41,14 +41,12 @@ class UserAgreementVC: UIViewController, UIScrollViewDelegate {
         }
     }
     
-    
     func userAcceptedTerms() {
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("terms").setValue("TRUE")
+        DataService.ds.REF_USER_CURRENT.child("terms").setValue("TRUE")
         NSUserDefaults.standardUserDefaults().setValue("TRUE", forKey: "terms")
     }
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
         if let nav = segue.destinationViewController as? UINavigationController {
             if segue.identifier == SEGUE_LOGGED_IN {
                 if let feedVC = nav.topViewController as? FeedVC {

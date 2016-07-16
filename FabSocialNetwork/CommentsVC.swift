@@ -11,6 +11,7 @@ import Firebase
 
 import JSSAlertView
 import EZLoadingActivity
+import Async
 
 class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
@@ -61,11 +62,14 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         title = "COMMENTS"
         
         loadBlockedUsersAndInitalDataFromFirebase()
-        
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
+        
+        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+        }
         
         if commentTextView.text == "" {
             commentTextView.text = placeHolderText
@@ -87,9 +91,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     }
     
     func loadBlockedUsersAndInitalDataFromFirebase() {
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("blocked_users").observeEventType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_USER_CURRENT.child("blocked_users").observeEventType(.Value, withBlock: { snapshot in
             
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     self.blockedUsers.append(snap.key)
                 }
@@ -104,7 +108,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         DataService.ds.REF_COMMENTS.queryOrderedByChild("post").queryEqualToValue(self.post.postKey).observeEventType(.Value, withBlock: { snapshot in
             self.comments = []
             
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     if let commentDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
@@ -119,7 +123,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             self.tableView.reloadData()
         })
-        
     }
     
     func isConnected() {
@@ -277,7 +280,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         if isConnectedToNetwork() {
             str = "It looks like there are no comments on this post. If you like, add one below."
         } else {
-            str = "Please connect to a network and the comments will load automatically."
+            str = "Please connect to a network. The comments will load automatically."
         }
         let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
         return NSAttributedString(string: str, attributes: attrs)
@@ -296,7 +299,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     func removeComment(commentToRemove: Comment!) {
         
-        DataService.ds.REF_COMMENTS.childByAppendingPath(commentToRemove.commentKey).removeValueWithCompletionBlock { (error, ref) in
+        DataService.ds.REF_COMMENTS.child(commentToRemove.commentKey).removeValueWithCompletionBlock { (error, ref) in
             
             if error != nil {
                 EZLoadingActivity.showWithDelay("Failure", disableUI: true, seconds: 1.0)
@@ -345,7 +348,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     func reportUserComment() {
         
-        let reportCommentRef = DataService.ds.REF_REPORTED_COMMENTS.childByAppendingPath(self.reportedComment.commentKey)
+        let reportCommentRef = DataService.ds.REF_REPORTED_COMMENTS.child(self.reportedComment.commentKey)
         
         // Like observer
         reportCommentRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -360,19 +363,19 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 ]
                 
                 reportCommentRef.setValue(comment)
-                reportCommentRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+                reportCommentRef.child("reports_from_users").child(currentUserKey()).setValue(Timestamp)
                 
             } else {
                 
-                reportCommentRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+                reportCommentRef.child("reports_from_users").child(currentUserKey()).setValue(Timestamp)
                 
                 // Should be put on server side
-                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                     for snap in snapshot {
                         if let commentDict = snap.value as? Dictionary<String, AnyObject> {
                             if commentDict[currentUserKey()] == nil {
                                 let reportCount = commentDict.count + 1
-                                reportCommentRef.childByAppendingPath("report_count").setValue(reportCount)
+                                reportCommentRef.child("report_count").setValue(reportCount)
                             }
                         }
                     }
@@ -387,7 +390,19 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             addComment(commentTextView.text)
             commentTextView.text = placeHolderText
             commentTextView.textColor = UIColor.lightGrayColor()
+            self.sendPushNotificationToUser()
             tableView.reloadData()
+        }
+    }
+    
+    func sendPushNotificationToUser() {
+        DataService.ds.REF_USERS.child(self.post!.userKey).observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
+            if let userPushId = snapshot.childSnapshotForPath("userPushId").value as? String {
+                if self.post!.userKey != currentUserKey() {
+                    let postTime = dateSincePosted(self.post.timestamp)
+                    oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) commented on your post from \(postTime) ago."], "include_player_ids": [userPushId]])
+                }
+            }
         }
     }
     

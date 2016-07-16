@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>1003321757004-dcsrlrt0kjnslnb257jf22t6vdb7a4ct.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1003321757004-dcsrlrt0kjnslnb257jf22t6vdb7a4ct</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAIXN97qebim9bevwokGKErsPEyfIpByoo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1003321757004</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.spiking.FabSocialNetwork</string>
+	<key>PROJECT_ID</key>
+	<string>firebase-fabsocialnetwork</string>
+	<key>STORAGE_BUCKET</key>
+	<string>firebase-fabsocialnetwork.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true/>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false/>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true/>
+	<key>IS_GCM_ENABLED</key>
+	<true/>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true/>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1003321757004:ios:3ee604436f282ace</string>
+	<key>DATABASE_URL</key>
+	<string>https://fabsocialnetwork.firebaseio.com</string>
+</dict>
+</plist>

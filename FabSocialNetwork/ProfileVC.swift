@@ -11,6 +11,7 @@ import Alamofire
 import Firebase
 import EZLoadingActivity
 import JSSAlertView
+import Async
 
 class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
     
@@ -20,7 +21,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     private var usernameTaken = false
     private var keyboardVisible = false
     private var standardKeyboardHeight: CGFloat = 216
-    private var timer: NSTimer?
     private var settingsButton: UIButton!
     
     @IBOutlet weak var addImgBtn: UIButton!
@@ -63,7 +63,9 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
-        settingsButton.userInteractionEnabled = true
+        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+        }
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -95,7 +97,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             usernameField.text = username.capitalizedString
         }
         
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_USER_CURRENT.child("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if let score = snapshot.value as? Int {
                 self.scoreLbl.text = "\(score)"
@@ -113,19 +115,13 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func settingsBtnTapped() {
-        settingsButton.userInteractionEnabled = false
-        startAllowenceTimer()
-        
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
         self.performSegueWithIdentifier(SEGUE_SETTINGSVC, sender: nil)
-    }
-    
-    func startAllowenceTimer() {
-        timer = NSTimer.scheduledTimerWithTimeInterval(0.4, target: self, selector: #selector(PostCell.stopAllowenceTimer), userInfo: nil, repeats: false)
-    }
-    
-    func stopAllowenceTimer() {
-        settingsButton.userInteractionEnabled = true
-        timer?.invalidate()
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
     }
     
     func keyboardWillShow(sender: NSNotification) {
@@ -172,7 +168,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     func addNewProfileImageToFirebase(imgUrl: String?) {
         if imgUrl != nil {
-            DataService.ds.REF_USER_CURRENT.childByAppendingPath("imgUrl").setValue(imgUrl)
+            DataService.ds.REF_USER_CURRENT.child("imgUrl").setValue(imgUrl)
             NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
             EZLoadingActivity.Settings.SuccessText = "Updated"
             EZLoadingActivity.hide(success: true, animated: true)
@@ -202,12 +198,13 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func accessCamera() {
-        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
-        imagePicker.allowsEditing = true
+        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
+        imagePicker.allowsEditing = false
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
     
     func accessLibrary() {
+        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
         imagePicker.allowsEditing = true
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }
@@ -257,7 +254,7 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     }
     
     func usernameIsNotTaken(newUsername: String!) {
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("username").setValue(newUsername)
+        DataService.ds.REF_USER_CURRENT.child("username").setValue(newUsername)
         NSUserDefaults.standardUserDefaults().setValue(newUsername.lowercaseString, forKey: "username")
         self.usernameTaken = false
         EZLoadingActivity.Settings.SuccessText = "Updated"

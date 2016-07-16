@@ -17,9 +17,28 @@ func dateSincePosted(timestamp: String) -> String {
     return dateDiff
 }
 
+func getUserPushId() -> String {
+    if let userPushId = NSUserDefaults.standardUserDefaults().valueForKey("userPushId") as? String {
+        return userPushId
+    } else {
+        return ""
+    }
+}
+
+func setUserPushId() {
+    oneSignal.IdsAvailable({ (userId, pushToken) in
+        NSLog("UserId:%@", userId)
+        NSUserDefaults.standardUserDefaults().setValue(userId, forKey: "userPushId")
+        
+        if (pushToken != nil) {
+            print(pushToken)
+        }
+    })
+}
+
 func reportUserPost(postKey: String) {
     
-    let reportPostRef = DataService.ds.REF_REPORTED_POSTS.childByAppendingPath(postKey)
+    let reportPostRef = DataService.ds.REF_REPORTED_POSTS.child(postKey)
     
     // Like observer
     reportPostRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -34,19 +53,19 @@ func reportUserPost(postKey: String) {
             ]
             
             reportPostRef.setValue(post)
-            reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+            reportPostRef.child("reports_from_users").child(currentUserKey()).setValue(Timestamp)
             
         } else {
             
-            reportPostRef.childByAppendingPath("reports_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+            reportPostRef.child("reports_from_users").child(currentUserKey()).setValue(Timestamp)
             
             // Should be put on server side
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         if postDict[currentUserKey()] == nil {
                             let reportCount = postDict.count + 1
-                            reportPostRef.childByAppendingPath("report_count").setValue(reportCount)
+                            reportPostRef.child("report_count").setValue(reportCount)
                         }
                     }
                 }
@@ -139,6 +158,14 @@ func currentUserKey() -> String {
         return currentUser
     } else {
         return "Unknown User"
+    }
+}
+
+func getCurrentUsername() -> String {
+    if let username = NSUserDefaults.standardUserDefaults().valueForKey("username") as? String {
+        return username
+    } else {
+        return "Someone"
     }
 }
 

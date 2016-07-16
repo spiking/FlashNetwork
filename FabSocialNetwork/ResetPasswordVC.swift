@@ -8,6 +8,7 @@
 
 import UIKit
 import JSSAlertView
+import Firebase
 
 class ResetPasswordVC: UIViewController {
     
@@ -39,12 +40,16 @@ class ResetPasswordVC: UIViewController {
         
         dismisskeyboard()
         
-        DataService.ds.REF_USERS.resetPasswordForUser(emailField.text, withCompletionBlock: { error in
-            if error != nil {
-                JSSAlertView().danger(self, title: "No User Found", text: "There is no user with the entered email address. Please try again.")
-            } else {
-                successAlertResetPasswordVC(self, title: "Email Sent", msg: "Reset instruction has been sent to the entered email address.")
-            }
-        })
+        if emailField.text != "" {
+            FIRAuth.auth()?.sendPasswordResetWithEmail(emailField.text!, completion: { (error) in
+                if error != nil {
+                    print(error)
+                    JSSAlertView().danger(self, title: "No User Found", text: "There is no user with the entered email address. Please try again.")
+                } else {
+                    successAlertResetPasswordVC(self, title: "Email Sent", msg: "Reset instruction has been sent to the entered email address.")
+                }
+                
+            })
+        }
     }
 }

@@ -9,6 +9,7 @@
 import Foundation
 import MBProgressHUD
 
+var oneSignal: OneSignal!
 var firstLogin = true
 var userBanned = false
 var iphoneType = ""

@@ -17,7 +17,7 @@ class Post {
     private var _postKey: String!
     private var _userKey: String!
     private var _timestamp: String!
-    private var _postRef: Firebase!
+    private var _postRef: FIRDatabaseReference!
     
     var postDescription: String {
         return _postDescription
@@ -72,19 +72,19 @@ class Post {
             self._timestamp = timestamp
         }
         
-        self._postRef = DataService.ds.REF_POSTS.childByAppendingPath(self._postKey)
+        self._postRef = DataService.ds.REF_POSTS.child(self._postKey)
     }
     
     func adjustLikes(addLike: Bool) {
         
         if addLike {
             _likes = _likes + 1
-            _postRef.childByAppendingPath("likes_from_users").childByAppendingPath(currentUserKey()).setValue(Timestamp)
+            _postRef.child("likes_from_users").child(currentUserKey()).setValue(Timestamp)
         } else {
             _likes = _likes - 1
-            _postRef.childByAppendingPath("likes_from_users").childByAppendingPath(currentUserKey()).removeValue()
+            _postRef.child("likes_from_users").child(currentUserKey()).removeValue()
             
         }
-        _postRef.childByAppendingPath("likes").setValue(_likes)
+        _postRef.child("likes").setValue(_likes)
     }
 }

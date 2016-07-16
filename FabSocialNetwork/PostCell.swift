@@ -11,6 +11,7 @@ import Alamofire
 import Firebase
 import MBProgressHUD
 import JSSAlertView
+import Async
 
 
 class PostCell: UITableViewCell {
@@ -19,10 +20,9 @@ class PostCell: UITableViewCell {
     var reportTapAction: ((UITableViewCell) -> Void)?
     var usernameTapAction: ((UITableViewCell) -> Void)?
     
-    private var timer: NSTimer?
-    private var likeRef: Firebase!
-    private var userRef: Firebase!
-    private var userLikes: Firebase!
+    private var likeRef: FIRDatabaseReference!
+    private var userRef: FIRDatabaseReference!
+    private var userLikes: FIRDatabaseReference!
     private var userLikedPost = false
     private var _request: Request?
     private var _post: Post?
@@ -84,14 +84,14 @@ class PostCell: UITableViewCell {
         
         self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
         
-        self.userRef = DataService.ds.REF_USERS.childByAppendingPath(post.userKey)
-        self.likeRef = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes").childByAppendingPath(post.postKey)
-        self.userLikes = DataService.ds.REF_USER_CURRENT.childByAppendingPath("likes")
+        self.userRef = DataService.ds.REF_USERS.child(post.userKey)
+        self.likeRef = DataService.ds.REF_USER_CURRENT.child("likes").child(post.postKey)
+        self.userLikes = DataService.ds.REF_USER_CURRENT.child("likes")
         
         // Main post image
         if post.imageUrl != nil {
             
-            let height = heightForView(post.postDescription, width: screenWidth - 48) + 5
+            let height = heightForView(post.postDescription, width: screenWidth - 48)
             self.descLblHeight.constant = height
             
             if img != nil {
@@ -107,6 +107,7 @@ class PostCell: UITableViewCell {
                 })
             }
         } else {
+        
             let height = heightForView(post.postDescription, width: screenWidth - 48)
             self.descLblHeight.constant = height
             self.mainImg.hidden = true
@@ -115,13 +116,13 @@ class PostCell: UITableViewCell {
         // Profile image
         userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
-            if let username = snapshot.value["username"] as? String {
+            if let username = snapshot.value!["username"] as? String {
                 self.usernameLbl.text = username.capitalizedString
             } else {
                 self.usernameLbl.text = "Default Username"
             }
             
-            if let profileUrl = snapshot.value["imgUrl"] as? String {
+            if let profileUrl = snapshot.value!["imgUrl"] as? String {
                 
                 if let profImage = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
                     self.profileImg.image = profImage
@@ -174,6 +175,8 @@ class PostCell: UITableViewCell {
             return
         }
         
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        
         DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if snapshot.hasChild(self.post!.postKey) {
@@ -188,6 +191,7 @@ class PostCell: UITableViewCell {
                         self.likeImage.image = UIImage(named: "heart-full")
                         self.post!.adjustLikes(true)
                         self.updateScores(true)
+                        self.sendPushNotificationToUser()
                     } else {
                         self.userLikedPost = false
                         self.likeRef.removeValue()
@@ -204,13 +208,27 @@ class PostCell: UITableViewCell {
             }
         })
         
-        self.likeImage.userInteractionEnabled = false
-        startAllowenceTimer()
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
+    }
+    
+    func sendPushNotificationToUser() {
+        DataService.ds.REF_USERS.child(self.post!.userKey).observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
+            if let userPushId = snapshot.childSnapshotForPath("userPushId").value as? String {
+                if self.post!.userKey != currentUserKey() {
+                    let postTime = dateSincePosted(self.post!.timestamp)
+                    oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) liked your post from \(postTime) ago."], "include_player_ids": [userPushId]])
+                }
+            }
+        }
     }
     
     func updateScores(liked: Bool) {
         
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_USER_CURRENT.child("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if var score = snapshot.value as? Int {
                 
@@ -226,12 +244,12 @@ class PostCell: UITableViewCell {
                     score = 0
                 }
                 
-                DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").setValue(score)
+                DataService.ds.REF_USER_CURRENT.child("score").setValue(score)
             }
         
         })
         
-        DataService.ds.REF_USERS.childByAppendingPath(post!.userKey).childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_USERS.child(post!.userKey).child("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if var score = snapshot.value as? Int {
                 
@@ -241,22 +259,11 @@ class PostCell: UITableViewCell {
                     score -= 1
                 }
                 
-                DataService.ds.REF_USERS.childByAppendingPath(self.post!.userKey).childByAppendingPath("score").setValue(score)
+                DataService.ds.REF_USERS.child(self.post!.userKey).child("score").setValue(score)
             }
             
         })
 
-    }
-    
-    func startAllowenceTimer() {
-        timer = NSTimer.scheduledTimerWithTimeInterval(0.3, target: self, selector: #selector(PostCell.stopAllowenceTimer), userInfo: nil, repeats: false)
-    }
-    
-    func stopAllowenceTimer() {
-        self.likeImage.userInteractionEnabled = true
-        self.reportBtn.userInteractionEnabled = true
-        self.commentBtn.userInteractionEnabled = true
-        timer?.invalidate()
     }
     
     func mainImgTapped(sender: UITapGestureRecognizer) {
@@ -269,16 +276,39 @@ class PostCell: UITableViewCell {
     
     func usernameTapped(sender: UITapGestureRecognizer) {
         
+        if !isConnectedToNetwork() {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+            return
+        }
+        
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        
         if post?.userKey != currentUserKey() && isConnectedToNetwork() {
             self.usernameTapAction?(self)
+        }
+        
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
         }
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
         
-        self.commentBtn.userInteractionEnabled = false
-        startAllowenceTimer()
+        if !isConnectedToNetwork() {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                    UIApplication.sharedApplication().endIgnoringInteractionEvents()
+                }
+            }
+            return
+        }
         
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+    
         DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if snapshot.hasChild(self.post!.postKey) {
@@ -287,12 +317,25 @@ class PostCell: UITableViewCell {
                 NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
             }
         })
+        
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
     }
     
     @IBAction func reportBtnTapped(sender: AnyObject) {
         
-        self.reportBtn.userInteractionEnabled = false
-        startAllowenceTimer()
+        if !isConnectedToNetwork() {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+                print("Offline")
+            }
+            return
+        }
+        
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
         
         DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
@@ -302,6 +345,11 @@ class PostCell: UITableViewCell {
                 NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
             }
         })
+        
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
     }
-    
 }

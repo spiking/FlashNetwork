@@ -24,22 +24,12 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>Firebase.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
 		<key>JSQMessagesViewController.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
 		</dict>
 		<key>JSQSystemSoundPlayer.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>JSSAlertView-JSSAlertView.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -67,7 +57,17 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>02CC21C3CA0D994F86FF5A4653FB6C77</key>
+		<key>1ED4DFAAD25E1999D0244868457A351E</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>59CDDB315DD2B098E0CD9ED56B026F4B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>72D57DED5129BDCAEB112D61B15B08A2</key>
 		<dict>
 			<key>primary</key>
 			<true/>
@@ -82,22 +82,7 @@
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>95DB89A8BFC5FF0BF98458651D0163CD</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>A98290C9726079B4A0099256F5413907</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>AD323711AE430DFCADA96049B1EF6AD0</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>B7AC9326D819482593FE118E915409D7</key>
+		<key>9D4B3EF08A49997C1D9CAE080869F313</key>
 		<dict>
 			<key>primary</key>
 			<true/>
@@ -107,22 +92,17 @@
 			<key>primary</key>
 			<true/>
 		</dict>
+		<key>E46618BBCCE58BFDA170608B97FA31CE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>E61CE3B6DFA1FE6B3E296965C76C0E10</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>EDA125ADA52355B7CA6DF7BA96918357</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
 		<key>FD23F1DA220A44C7E84F356B64871271</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>FE7B09D7AABB33662D3B092926DCFF8E</key>
 		<dict>
 			<key>primary</key>
 			<true/>

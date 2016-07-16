@@ -16,7 +16,7 @@ class CommentCell: UITableViewCell {
     
     private var _comment: Comment!
     private var _post: Post!
-    private var _userRef: Firebase!
+    private var _userRef: FIRDatabaseReference!
     private var _request: Request?
     
     var post: Post {
@@ -52,34 +52,30 @@ class CommentCell: UITableViewCell {
     
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        
-        // Configure the view for the selected state
     }
     
     func usernameTapped(sender: UITapGestureRecognizer) {
-
         if comment.userKey != currentUserKey() && isConnectedToNetwork() {
             self.blockUserTapAction?(self)
         }
-        
     }
     
     func configureCell(comment: Comment) {
         
         self._comment = comment
-        self._userRef = DataService.ds.REF_USERS.childByAppendingPath(comment.userKey)
+        self._userRef = DataService.ds.REF_USERS.child(comment.userKey)
         self.textLbl.text = comment.commentText
         
         
         _userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
-            if let username = snapshot.value["username"] as? String {
+            if let username = snapshot.value!["username"] as? String {
                 self.usernameLbl.text = username.capitalizedString
             } else {
                 self.usernameLbl.text = "Default Username"
             }
             
-            if let profileUrl = snapshot.value["imgUrl"] as? String {
+            if let profileUrl = snapshot.value!["imgUrl"] as? String {
                 
                 if let profImage = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
                     self.profileImg.image = profImage

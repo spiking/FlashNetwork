@@ -8,6 +8,8 @@
 
 import UIKit
 import JSSAlertView
+import Firebase
+import EZLoadingActivity
 
 class SettingsVC: UIViewController, UITextFieldDelegate {
     
@@ -16,8 +18,6 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
     private let placeholderNewPassword = NSAttributedString(string: "New Password", attributes: [NSForegroundColorAttributeName:UIColor.lightTextColor()])
     private var keyboardVisible = false
     
-    @IBOutlet weak var emailField: DarkTextField!
-    @IBOutlet weak var currentPasswordField: DarkTextField!
     @IBOutlet weak var newPasswordField: DarkTextField!
     
     override func viewDidLoad() {
@@ -25,9 +25,6 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(SettingsVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
-        
-        emailField.delegate = self
-        currentPasswordField.delegate = self
         
         title = "SETTINGS"
         
@@ -38,8 +35,13 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
             NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillShow(_:)), name:UIKeyboardWillShowNotification, object: nil)
             NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil)
         }
-
-        isUserAuthenticated(self)
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+        }
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -48,12 +50,7 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
     }
     
     func setupPlaceholders() {
-        emailField.text = ""
-        currentPasswordField.text = ""
         newPasswordField.text = ""
-        
-        emailField.attributedPlaceholder = placeholderEmail
-        currentPasswordField.attributedPlaceholder = placeholderCurrentPassword
         newPasswordField.attributedPlaceholder = placeholderNewPassword
     }
     
@@ -68,7 +65,7 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
         }
         
         UIView.animateWithDuration(0.1, animations: { () -> Void in
-            self.view.frame.origin.y -= 0.27 * 253
+            self.view.frame.origin.y -= 0.26 * 253
             self.keyboardVisible = true
         })
     }
@@ -80,15 +77,18 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
         }
         
         UIView.animateWithDuration(0.1, animations: { () -> Void in
-            self.view.frame.origin.y += 0.27 * 253
+            self.view.frame.origin.y += 0.26 * 253
             self.keyboardVisible = false
         })
     }
     
     func answeredYes() {
+        
         // Reset NSUserData
         let appDomain = NSBundle.mainBundle().bundleIdentifier!
         NSUserDefaults.standardUserDefaults().removePersistentDomainForName(appDomain)
+        
+        EZLoadingActivity.hide()
         
         // Push to login view
         let loginVC: UIViewController? = self.storyboard?.instantiateViewControllerWithIdentifier("InitalNavigationController")
@@ -99,27 +99,11 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
         // Do nothing
     }
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        
-        switch  textField {
-        case emailField:
-            self.currentPasswordField.becomeFirstResponder()
-        case currentPasswordField:
-            self.newPasswordField.becomeFirstResponder()
-        default:
-            break
-        }
-        
-        return true
-    }
-    
     @IBAction func logoutBtnTapped(sender: AnyObject) {
-        
         let alertview = JSSAlertView().show(self, title: "Logout", text: "Do you want to logout?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
         alertview.addAction(answeredYes)
         alertview.addCancelAction(answeredNo)
-        
     }
     
     @IBAction func changePasswordBtnTapped(sender: AnyObject) {
@@ -127,25 +111,21 @@ class SettingsVC: UIViewController, UITextFieldDelegate {
         dismisskeyboard()
         
         if newPasswordField.text?.characters.count < 6 {
-            JSSAlertView().danger(self, title: "Invalid Password", text: "The password must have atleast 6 characters.")
+            JSSAlertView().danger(self, title: "Could Not Update", text: "The password must have atleast 6 characters.")
             return
         }
         
-        if newPasswordField.text == currentPasswordField.text {
-            JSSAlertView().danger(self, title: "Invalid Password", text: "Your new password cannot be the same as your current.")
-            return
-        }
-        
-        DataService.ds.REF_USER_CURRENT.changePasswordForUser(emailField.text, fromOld: currentPasswordField.text,
-                                                              toNew: newPasswordField.text, withCompletionBlock: { error in
-                                                                
-                                                                if error != nil {
-                                                                    JSSAlertView().danger(self, title: "Invalid Credentials", text: "There is no such user, please try again.")
-                                                                } else {
-                                                                    self.setupPlaceholders()
-                                                                    successAlertSettingsVC(self, title: "Password Changed", msg: "You have successfully changed your password.")
-                                                                }
+        FIRAuth.auth()?.currentUser?.updatePassword(newPasswordField.text!, completion: { (error) in
+            if error != nil  {
+                if error!.code == STATUS_SENSITIVE_DATA_CHANGE {
+                    JSSAlertView().danger(self, title: "Could Not Update", text: "Updating a user’s password is a security sensitive operation that requires a recent login from the user. Login again to update your password.")
+                } else if error!.code == STATUS_WEAK_PASSWORD {
+                    JSSAlertView().danger(self, title: "Could Not Update", text: "The entered password it too weak. Please use a password with atlesat 6 characters.")
+                }
+            } else {
+                successAlertSettingsVC(self, title: "Password Updated", msg: "You have successfully changed your password.")
+            }
+            self.setupPlaceholders()
         })
-        
     }
 }

@@ -40,6 +40,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     private var blockedUsers = [String]()
     private var profileBtn: UIButton!
     private var cancelButton: UIButton!
+    private var numberOfLaunches: Int = 0
     
     var typeOfLogin = ""
     
@@ -69,7 +70,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         loadIphoneTypeForRowHeight()
         tableView.rowHeight = UITableViewAutomaticDimension
         
-        refreshControl = UIRefreshControl() 
+        refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl)
         
@@ -87,6 +88,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
+        
+        numberOfLaunches = NSUserDefaults.standardUserDefaults().integerForKey("numberOfLaunches") + 1
+        NSUserDefaults.standardUserDefaults().setInteger(numberOfLaunches, forKey: "numberOfLaunches")
         
         setupProfileButton()
         setupCancelButton()
@@ -110,10 +114,15 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         loadBlockedUsersAndInitalDataFromFirebase()
         loadProfileData()
+        rateMe()
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
+        
+        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+        }
         
         profileBtn.userInteractionEnabled = true
         
@@ -125,8 +134,36 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func setupCancelButton() {
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
         
+        if (NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as? String) != nil {
+            updatePushUserIdInFirebase()
+        }
+        
+//        oneSignal.postNotification(["contents": ["en": "Test Message"], "include_player_ids": [getUserPushId()]], onSuccess: { (success) in
+//            print(success)
+//            }) { (error) in
+//                print(error)
+//        }
+    
+    }
+    
+    func updatePushUserIdInFirebase() {
+        
+        DataService.ds.REF_USER_CURRENT.child("userPushId").observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
+
+            if (snapshot.value as? NSNull) == nil {
+                if getUserPushId() != snapshot.value as! String {
+                    DataService.ds.REF_USER_CURRENT.child("userPushId").setValue(getUserPushId())
+                }
+            } else {
+                DataService.ds.REF_USER_CURRENT.child("userPushId").setValue(getUserPushId())
+            }
+        }
+    }
+    
+    func setupCancelButton() {
         cancelButton = UIButton(type: UIButtonType.Custom)
         cancelButton.setImage(UIImage(named: "Cancel.png"), forState: UIControlState.Normal)
         cancelButton.addTarget(self, action: #selector(FeedVC.cancelBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
@@ -140,18 +177,20 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         profileBtn = UIButton(type: UIButtonType.Custom)
         profileBtn.setImage(UIImage(named: "profile2.png"), forState: UIControlState.Normal)
         profileBtn.addTarget(self, action: #selector(FeedVC.profileBtnPressed), forControlEvents: UIControlEvents.TouchUpInside)
-        profileBtn.frame = CGRectMake(0, 0, 32, 32)
+        profileBtn.frame = CGRectMake(0, 0, 30, 30)
         let barButton = UIBarButtonItem(customView: profileBtn)
         self.navigationItem.rightBarButtonItem = barButton
     }
     
     func setupSortMenu() {
+        
         let items = ["MOST POPULAR", "HOTTEST", "LATEST"]
         menuView = BTNavigationDropdownMenu(navigationController: self.navigationController, title: items.first!, items: items)
         menuView.cellTextLabelColor = UIColor.lightTextColor()
         menuView.cellTextLabelFont = UIFont(name: "Avenir", size: 14)
         menuView.menuTitleColor = UIColor.whiteColor()
         menuView.cellSelectionColor = UIColor.darkGrayColor()
+        menuView.cellSeparatorColor = UIColor(red: CGFloat(40/255.0), green: CGFloat(40/255.0), blue: CGFloat(40/255.0), alpha: CGFloat(1.0))
         
         self.navigationItem.titleView = menuView
         
@@ -207,9 +246,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func loadBlockedUsersAndInitalDataFromFirebase() {
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("blocked_users").observeEventType(.Value, withBlock: { snapshot in
-        
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+        DataService.ds.REF_USER_CURRENT.child("blocked_users").observeEventType(.Value, withBlock: { snapshot in
+            
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     self.blockedUsers.append(snap.key)
                 }
@@ -236,7 +275,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("timestamp").queryStartingAtValue(lastTwoDaysStr, childKey: "timestamp").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
@@ -273,7 +312,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("likes").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
@@ -310,7 +349,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
             
-            if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+            if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
                     if let postDict = snap.value as? Dictionary<String, AnyObject> {
                         let key = snap.key
@@ -555,11 +594,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func profileBtnPressed() {
-        profileBtn.userInteractionEnabled = false
-        startAllowenceTimer()
         
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
         self.menuView.hide()
-
+        EZLoadingActivity.hide()
+        
         if postTextView.isFirstResponder() {
             dismisskeyboard()
             delay(0.3) {
@@ -568,15 +607,12 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         } else {
             self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: nil)
         }
-    }
-    
-    func startAllowenceTimer() {
-        timer = NSTimer.scheduledTimerWithTimeInterval(0.4, target: self, selector: #selector(PostCell.stopAllowenceTimer), userInfo: nil, repeats: false)
-    }
-    
-    func stopAllowenceTimer() {
-        profileBtn.userInteractionEnabled = true
-        timer?.invalidate()
+        
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
@@ -676,7 +712,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         if isConnectedToNetwork() {
             str = "It looks like there are no posts. If you like, add one above."
         } else {
-            str = "Please connect to a network and the feed will load automatically."
+            str = "Please connect to a network. The feed will load automatically."
         }
         let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
         return NSAttributedString(string: str, attributes: attrs)
@@ -694,7 +730,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func updateScores(hasImage: Bool) {
-        DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
+        DataService.ds.REF_USER_CURRENT.child("score").observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if var score = snapshot.value as? Int {
                 
@@ -706,7 +742,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     score += 5 + diceRoll
                 }
                 
-                DataService.ds.REF_USER_CURRENT.childByAppendingPath("score").setValue(score)
+                DataService.ds.REF_USER_CURRENT.child("score").setValue(score)
             }
             
         })
@@ -715,13 +751,18 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     func postToFireBase(imgUrl: String?) {
         
         var post: Dictionary<String, AnyObject> = [
-            "description": postTextView.text!,
             "likes": 0,
             "user" : currentUserKey(),
             "timestamp" : Timestamp
         ]
         
         var image = false
+        
+        if let text = postTextView.text where text != "" && postTextView.text != placeHolderText {
+            post["description"] = text
+        } else {
+            post["description"] = ""
+        }
         
         if imgUrl != nil {
             post["imageUrl"] = imgUrl!
@@ -765,7 +806,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             
             DataService.ds.REF_USER_CURRENT.observeEventType(.Value, withBlock: { snapshot in
                 
-                if let snapshot = snapshot.children.allObjects as? [FDataSnapshot] {
+                if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                     for snap in snapshot {
                         if snap.key == "imgUrl" {
                             let profileUrl = snap.value
@@ -801,6 +842,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool)
     {
+        super.viewDidLoad()
         imagePicker.navigationBar.translucent = true
         imagePicker.navigationBar.barTintColor = .blackColor()
         imagePicker.navigationBar.tintColor = .whiteColor()
@@ -825,19 +867,45 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         dismisskeyboard()
         
-        if segue.identifier == SEGUE_COMMENTSVC {
+        switch segue.identifier {
+            
+        case SEGUE_COMMENTSVC?:
             if let commentsVC = segue.destinationViewController as? CommentsVC {
                 if let post = sender as? Post {
                     commentsVC.post = post
                 }
             }
-        } else if segue.identifier == SEGUE_OTHERUSERPROFILEVC {
+        case SEGUE_OTHERUSERPROFILEVC?:
             if let commentsVC = segue.destinationViewController as? OtherUserProfileVC {
                 if let userKey = sender as? String {
                     commentsVC.otherUserKey = userKey
                 }
             }
+        default:
+            break
         }
+    }
+    
+    func rateMe() {
+        let neverRate = NSUserDefaults.standardUserDefaults().boolForKey("neverRate")
+        if (!neverRate && (numberOfLaunches == 10 || numberOfLaunches == 20)) {
+            showRateAlert()
+        }
+    }
+    
+    func showRateAlert() {
+        let alertview = JSSAlertView().show(self, title: "Rate Us", text: "Thanks for using Flash Network. Would you like to rate us on app store?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0x25c151, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(rateAlertAnswerYes)
+        alertview.addCancelAction(rateAlertAnswerNo)
+    }
+    
+    func rateAlertAnswerYes() {
+        UIApplication.sharedApplication().openURL(NSURL(string: "https://itunes.apple.com/app/id1129853861")!)
+    }
+    
+    func rateAlertAnswerNo() {
+        NSUserDefaults.standardUserDefaults().setBool(true, forKey: "neverRate")
     }
     
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
@@ -869,63 +937,61 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             return
         }
         
-        if let txt = postTextView.text where txt != "" && postTextView.text != placeHolderText {
+        if (postTextView.text == "" || postTextView.text == placeHolderText) && !imageSelected {
+            return
+        }
+        
+        EZLoadingActivity.show("Uploading...", disableUI: false)
+        
+        if let img = imageSelector.image where imageSelected == true {
             
-            EZLoadingActivity.show("Uploading...", disableUI: false)
+            // Both image and description
             
-            if let img = imageSelector.image where imageSelected == true {
+            let urlStr = "https://post.imageshack.us/upload_api.php"
+            let url = NSURL(string: urlStr)!
+            
+            // Convert to JPG & compress 70 %
+            let imgData = UIImageJPEGRepresentation(img, 0.3)!
+            
+            // Convert Imageshack API key to data format
+            let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
+            
+            // Convert JSON to data format
+            let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
+            
+            // Upload post image with ImageShack
+            Alamofire.upload(.POST, url, multipartFormData: { MultipartFormData in
                 
-                let urlStr = "https://post.imageshack.us/upload_api.php"
-                let url = NSURL(string: urlStr)!
+                MultipartFormData.appendBodyPart(data: keyData, name: "key")
+                MultipartFormData.appendBodyPart(data: imgData, name: "fileupload", fileName: "image", mimeType: "image/jpg")
+                MultipartFormData.appendBodyPart(data: keyJson, name: "format")
                 
-                // Convert to JPG & compress 70 %
-                let imgData = UIImageJPEGRepresentation(img, 0.3)!
-                
-                // Convert Imageshack API key to data format
-                let keyData = "12DJKPSU5fc3afbd01b1630cc718cae3043220f3".dataUsingEncoding(NSUTF8StringEncoding)!
-                
-                // Convert JSON to data format
-                let keyJson = "json".dataUsingEncoding(NSUTF8StringEncoding)!
-                
-                // Upload post image with ImageShack
-                Alamofire.upload(.POST, url, multipartFormData: { MultipartFormData in
-                    
-                    MultipartFormData.appendBodyPart(data: keyData, name: "key")
-                    MultipartFormData.appendBodyPart(data: imgData, name: "fileupload", fileName: "image", mimeType: "image/jpg")
-                    MultipartFormData.appendBodyPart(data: keyJson, name: "format")
-                    
-                    }, encodingCompletion: { encodingResult in
-                        switch encodingResult {
+                }, encodingCompletion: { encodingResult in
+                    switch encodingResult {
+                        
+                    case .Success(let upload, _, _):
+                        upload.responseJSON(completionHandler: { response in
                             
-                            
-                            
-                        case .Success(let upload, _, _):
-                            upload.responseJSON(completionHandler: { response in
-                                
-                                if let info = response.result.value as? Dictionary<String,AnyObject> {
-                                    if let links = info["links"] as? Dictionary<String,AnyObject> {
-                                        if let imageLink = links["image_link"] as? String {
-                                            self.postToFireBase(imageLink)
-                                        }
-                                        
+                            if let info = response.result.value as? Dictionary<String,AnyObject> {
+                                if let links = info["links"] as? Dictionary<String,AnyObject> {
+                                    if let imageLink = links["image_link"] as? String {
+                                        self.postToFireBase(imageLink)
                                     }
                                     
                                 }
                                 
-                            })
+                            }
                             
-                        case.Failure(let error):
-                            print(error)
-                        }
+                        })
                         
-                })
-                
-            } else {
-                self.postToFireBase(nil)
-            }
+                    case.Failure(let error):
+                        print(error)
+                    }
+                    
+            })
             
         } else {
-            JSSAlertView().danger(self, title: "No Description", text: "Please add a description before posting.")
+            self.postToFireBase(nil)
         }
     }
 }

@@ -16,10 +16,10 @@ class Comment {
     private var _postKey: String!
     private var _userKey: String!
     private var _commentKey: String!
-    private var _commentRef: Firebase!
+    private var _commentRef: FIRDatabaseReference!
     private var _timestamp: String!
-    private var _postRef: Firebase!
-    private var _userRef: Firebase!
+    private var _postRef: FIRDatabaseReference!
+    private var _userRef: FIRDatabaseReference!
     
     var commentText: String! {
         return _commentText
@@ -60,7 +60,7 @@ class Comment {
             self._timestamp = timestamp
         }
         
-        self._commentRef = DataService.ds.REF_COMMENTS.childByAppendingPath(self._commentKey)
+        self._commentRef = DataService.ds.REF_COMMENTS.child(self._commentKey)
     }
 }
 
