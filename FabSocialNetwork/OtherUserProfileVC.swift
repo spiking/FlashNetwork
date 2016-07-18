@@ -164,10 +164,10 @@ class OtherUserProfileVC: UIViewController {
         
         switch segue.identifier {
             
-        case SEGUE_SHOWUSERPOSTVC?:
-            if let userPostVC = segue.destinationViewController as? UserPostsVC {
+        case SEGUE_ALLUSERPOSTSVC?:
+            if let userPostsVC = segue.destinationViewController as? AllUserPosts {
                 if let otherUserKey = sender as? String {
-                    userPostVC.userKey = otherUserKey
+                    userPostsVC.userKey = otherUserKey
                 }
             }
         case SEGUE_CHATVC?:
@@ -186,6 +186,14 @@ class OtherUserProfileVC: UIViewController {
     }
     
     @IBAction func postsBtnTapped(sender: AnyObject) {
-        self.performSegueWithIdentifier(SEGUE_SHOWUSERPOSTVC, sender: otherUserKey)
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+
+        self.performSegueWithIdentifier(SEGUE_ALLUSERPOSTSVC, sender: otherUserKey)
+
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@ import Firebase
 let URL_BASE = FIRDatabase.database().reference()
 
 class DataService {
+    
     static let ds =  DataService()
     
     private var _REF_BASE = URL_BASE

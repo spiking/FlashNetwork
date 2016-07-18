@@ -66,7 +66,6 @@ class CommentCell: UITableViewCell {
         self._userRef = DataService.ds.REF_USERS.child(comment.userKey)
         self.textLbl.text = comment.commentText
         
-        
         _userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if let username = snapshot.value!["username"] as? String {
@@ -76,11 +75,9 @@ class CommentCell: UITableViewCell {
             }
             
             if let profileUrl = snapshot.value!["imgUrl"] as? String {
-                
                 if let profImage = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
                     self.profileImg.image = profImage
                 } else {
-                    // Not in cache, download and add to cache
                     self._request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                         if err == nil {
                             let img = UIImage(data: data!)!

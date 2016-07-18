@@ -112,9 +112,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
             } else {
                 let accessToken = FBSDKAccessToken.currentAccessToken().tokenString
                 print("Successfully logged in with facebook. \(accessToken)")
-                
-                // Authenticate facebook login with firebase
-                //                DataService.ds.REF_BASE.authWithOAuthProvider("facebook", token: accessToken, withCompletionBlock: { error, authData  in
+
                 let credential = FIRFacebookAuthProvider.credentialWithAccessToken(FBSDKAccessToken.currentAccessToken().tokenString)
                 
                 FIRAuth.auth()?.signInWithCredential(credential, completion: { (user, error) in
@@ -126,10 +124,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         
                         setUserPushId()
                         
-                        // Check if id already exist in firebase, if so, dont recreate
+                        
                         DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
                             
-                            if !snapshot.hasChild(user!.uid) {
+                            if snapshot.hasChild(user!.uid) {
                                 
                                 EZLoadingActivity.show("Creating account...", disableUI: false)
                                 
@@ -144,6 +142,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
                             } else {
                                 
                                 EZLoadingActivity.show("Logging in...", disableUI: false)
+                                
+                                firstLogin = true
                                 
                                 setUserPushId()
                                 
@@ -242,6 +242,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 } else {
                     
                     EZLoadingActivity.show("Logging in...", disableUI: false)
+                    
+                    firstLogin = true
                     
                     setUserPushId()
                     

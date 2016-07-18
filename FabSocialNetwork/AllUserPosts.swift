@@ -1,37 +1,47 @@
 //
-//  UserPostsVC.swift
+//  AllUserPosts.swift
 //  FabSocialNetwork
 //
-//  Created by Adam Thuvesen on 2016-06-24.
+//  Created by Adam Thuvesen on 2016-07-18.
 //  Copyright © 2016 Adam Thuvesen. All rights reserved.
 //
 
 import UIKit
 import Firebase
-import Alamofire
 import EZLoadingActivity
 import JSSAlertView
+import Async
+import Alamofire
 
-class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
+
+class AllUserPosts: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UITableViewDelegate, UITableViewDataSource, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
-    private var userPosts = [Post]()
+    @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var tableView: UITableView!
+    
     private var confirmRemove = false
     private var indexPathRemove: NSIndexPath?
-    private var typeOfCell = TypeOfCell.UserPostCell
+    private var typeOfCell = TypeOfCell.PostCollectionCell
     private var zoomBarButton : UIButton!
     private var reportPost: Post!
+    private var request: Request?
     
+    var userPosts = [Post]()
     var userKey = currentUserKey()
     
     enum TypeOfCell: String {
+        case PostCollectionCell = "PostCollectionCell"
         case UserPostCell = "UserPostCell"
         case PostCell = "PostCell"
     }
     
-    @IBOutlet weak var tableView: UITableView!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        collectionView.delegate = self
+        collectionView.dataSource = self
+        collectionView.emptyDataSetDelegate = self
+        collectionView.emptyDataSetSource = self
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -44,6 +54,8 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         navigationItem.leftItemsSupplementBackButton = true
         
+        title = "POSTS"
+        
         if userKey != currentUserKey() {
             let viewButton = setupViewButton()
             navigationItem.setRightBarButtonItems([viewButton], animated: true)
@@ -54,16 +66,41 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
             fixed.width = 12
             navigationItem.setRightBarButtonItems([deleteButton, fixed, viewButton], animated: true)
         }
-    
-        title = "POSTS"
+        
+        if isConnectedToNetwork() {
+            EZLoadingActivity.show("Loading...", disableUI: false)
+        }
         
         loadUserPostsFromFirebase()
     }
     
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(animated)
-        if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-            UIApplication.sharedApplication().endIgnoringInteractionEvents()
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        EZLoadingActivity.hide()
+    }
+    
+    func saveImagesToCache() {
+        
+        var count = 0
+        
+        for post in userPosts {
+            let imgUrl = post.imageUrl!
+            request = Alamofire.request(.GET, imgUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                if err == nil {
+                    if (FeedVC.imageCache.objectForKey(imgUrl) as? UIImage) == nil {
+                        let img = UIImage(data: data!)!
+                        FeedVC.imageCache.setObject(img, forKey: imgUrl)
+                    }
+                }
+
+                count += 1
+                
+                if count == self.userPosts.count {
+                    EZLoadingActivity.hide()
+                    self.collectionView.reloadData()
+                }
+            })
+            
         }
     }
     
@@ -83,39 +120,33 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
             }
             
             if self.userPosts.count == 0 {
-                self.tableView.separatorStyle = UITableViewCellSeparatorStyle.None
+                EZLoadingActivity.hide()
             }
             
-            self.tableView.reloadData()
+            // Save to cache once
+            if firstView  {
+                self.saveImagesToCache()
+                firstView = false
+            } else {
+                EZLoadingActivity.hide()
+                self.collectionView.reloadData()
+            }
+            
         })
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
-        switch segue.identifier {
-            
-        case SEGUE_COMMENTSVC?:
-            if let commentsVC = segue.destinationViewController as? CommentsVC {
-                if let post = sender as? Post {
-                    commentsVC.post = post
-                }
-            }
-        case SEGUE_SHOWUSERPOSTVC?:
-            if let userPostVC = segue.destinationViewController as? ShowUserPostVC {
-                if let post = sender as? Post {
-                    userPostVC.post = post
-                }
-            }
-        default:
-            break
-        }
     }
     
     override func setEditing(editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
-        if typeOfCell == TypeOfCell.PostCell {
+        if typeOfCell == TypeOfCell.PostCollectionCell || typeOfCell == TypeOfCell.PostCell {
+            
             typeOfCell = .UserPostCell
+            
+            if tableView.hidden {
+                tableView.hidden = false
+                collectionView.hidden = true
+            }
+            
             tableView.reloadData()
         }
         
@@ -131,9 +162,9 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         case "4":
             tableView.estimatedRowHeight = 400
         case "5":
-            tableView.estimatedRowHeight = 450
+            tableView.estimatedRowHeight = 425
         case "6":
-            tableView.estimatedRowHeight = 500
+            tableView.estimatedRowHeight = 450
         case "6+":
             tableView.estimatedRowHeight = 550
         default:
@@ -145,7 +176,7 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         
         let button: UIButton = UIButton(type: UIButtonType.Custom)
         button.setImage(UIImage(named: "Trash"), forState: UIControlState.Normal)
-        button.addTarget(self, action: #selector(UserPostsVC.setEditing(_:animated:)), forControlEvents: UIControlEvents.TouchUpInside)
+        button.addTarget(self, action: #selector(AllUserPosts.setEditing(_:animated:)), forControlEvents: UIControlEvents.TouchUpInside)
         button.frame = CGRectMake(0, 0, 23, 23)
         let barButton = UIBarButtonItem(customView: button)
         
@@ -154,55 +185,61 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
     
     func setupViewButton() -> UIBarButtonItem {
         zoomBarButton = UIButton(type: UIButtonType.Custom)
-        zoomBarButton.setImage(UIImage(named: "ZoomIn"), forState: UIControlState.Normal)
-        zoomBarButton.addTarget(self, action: #selector(UserPostsVC.changeTypeOfCell), forControlEvents: UIControlEvents.TouchUpInside)
+        zoomBarButton.setImage(UIImage(named: "List"), forState: UIControlState.Normal)
+        zoomBarButton.addTarget(self, action: #selector(AllUserPosts.changeTypeOfCell), forControlEvents: UIControlEvents.TouchUpInside)
         zoomBarButton.frame = CGRectMake(0, 0, 23, 23)
         let barButton = UIBarButtonItem(customView: zoomBarButton)
         return barButton
     }
     
     func changeTypeOfCell() {
-        if typeOfCell == TypeOfCell.UserPostCell {
+        
+        if typeOfCell == TypeOfCell.PostCollectionCell {
+            typeOfCell = .UserPostCell
+            tableView.contentInset = UIEdgeInsetsMake(0, 0, 0, 0);
+            zoomBarButton.setImage(UIImage(named: "ZoomIn"), forState: UIControlState.Normal)
+            
+            if tableView.editing {
+                tableView.setEditing(false, animated: true)
+            }
+        } else if typeOfCell == TypeOfCell.UserPostCell {
             typeOfCell = .PostCell
-            zoomBarButton.setImage(UIImage(named: "ZoomOut"), forState: UIControlState.Normal)
+            tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
+            zoomBarButton.setImage(UIImage(named: "Grid"), forState: UIControlState.Normal)
             
             if tableView.editing {
                 tableView.setEditing(false, animated: true)
             }
             
         } else {
-            typeOfCell = .UserPostCell
-            zoomBarButton.setImage(UIImage(named: "ZoomIn"), forState: UIControlState.Normal)
+            typeOfCell = .PostCollectionCell
+            zoomBarButton.setImage(UIImage(named: "List"), forState: UIControlState.Normal)
         }
         
-        tableView.reloadData()
+        if typeOfCell == TypeOfCell.PostCollectionCell {
+            tableView.hidden = true
+            collectionView.hidden = false
+            collectionView.reloadData()
+        } else {
+            tableView.hidden = false
+            collectionView.hidden = true
+            tableView.reloadData()
+        }
     }
     
-    func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
-        var str = ""
-        if isConnectedToNetwork() {
-            if userKey != currentUserKey() {
-                str = "It looks like the user has not made any posts."
-            } else {
-                str = "It looks like you have not made any posts. Go back to the main view to create one."
-            }
-        } else {
-            str = "Please connect to a network and the posts will load automatically."
-        }
-        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
-        return NSAttributedString(string: str, attributes: attrs)
-    }
-    
-    func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
-        var imgName = ""
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
-        if isConnectedToNetwork() {
-            imgName = "Write"
+        if let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PostCollectionCell", forIndexPath: indexPath) as? PostCollectionCell {
+            
+            let post = userPosts[indexPath.row]
+            
+            cell.configureCell(post)
+            
+            return cell
+            
         } else {
-            imgName = "Wifi"
+            return UICollectionViewCell()
         }
-        
-        return UIImage(named: imgName)
     }
     
     func numberOfSectionsInTableView(tableView: UITableView) -> Int {
@@ -226,6 +263,8 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
             return 60
         }
     }
+    
+    
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
@@ -387,5 +426,104 @@ class UserPostsVC: UIViewController, UITableViewDelegate, UITableViewDataSource,
         deleteAction.backgroundColor = UIColorFromHex(0xe64c3c, alpha: 1)
         
         return [deleteAction]
+    }
+    
+    func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            if userKey != currentUserKey() {
+                str = "It looks like the user has not made any posts."
+            } else {
+                str = "It looks like you have not made any posts. Go back to the main view to create one."
+            }
+        } else {
+            str = "Please connect to a network."
+        }
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func titleForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
+        var str = ""
+        if isConnectedToNetwork() {
+            str = "No Posts"
+        } else {
+            str = "No Internet Connection"
+        }
+        
+        let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleHeadline)]
+        return NSAttributedString(string: str, attributes: attrs)
+    }
+    
+    func imageForEmptyDataSet(scrollView: UIScrollView!) -> UIImage! {
+        var imgName = ""
+        
+        if isConnectedToNetwork() {
+            imgName = "Write"
+        } else {
+            imgName = "Wifi"
+        }
+        
+        return UIImage(named: imgName)
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAtIndex section: Int) -> CGFloat {
+        return 2.0
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAtIndex section: Int) -> CGFloat {
+        return 2.0
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAtIndex section: Int) -> UIEdgeInsets {
+        return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+    }
+    
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        
+        if typeOfCell == TypeOfCell.PostCollectionCell {
+            
+            let post = userPosts[indexPath.row]
+            performSegueWithIdentifier(SEGUE_SHOWUSERPOSTVC, sender: post)
+        }
+        
+    }
+    
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return userPosts.count
+    }
+    
+    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    func collectionView(collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+        
+        let numberOfColumns: CGFloat = 3
+        let itemWidth = (CGRectGetWidth(self.collectionView!.frame) - 2 - (numberOfColumns - 1)) / numberOfColumns
+        
+        return CGSizeMake(itemWidth, itemWidth)
+    }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        
+        switch segue.identifier {
+            
+        case SEGUE_COMMENTSVC?:
+            if let commentsVC = segue.destinationViewController as? CommentsVC {
+                if let post = sender as? Post {
+                    commentsVC.post = post
+                }
+            }
+        case SEGUE_SHOWUSERPOSTVC?:
+            if let userPostVC = segue.destinationViewController as? ShowUserPostVC {
+                if let post = sender as? Post {
+                    userPostVC.post = post
+                }
+            }
+        default:
+            break
+        }
     }
 }

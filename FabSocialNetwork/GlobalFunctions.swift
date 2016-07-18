@@ -40,10 +40,8 @@ func reportUserPost(postKey: String) {
     
     let reportPostRef = DataService.ds.REF_REPORTED_POSTS.child(postKey)
     
-    // Like observer
     reportPostRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
-        
-        // If no report exist, create one
+        // No report, create on
         if (snapshot.value as? NSNull) != nil {
             
             let post: Dictionary<String, AnyObject> = [
@@ -58,7 +56,7 @@ func reportUserPost(postKey: String) {
         } else {
             
             reportPostRef.child("reports_from_users").child(currentUserKey()).setValue(Timestamp)
-            
+
             // Should be put on server side
             if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {

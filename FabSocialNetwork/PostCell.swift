@@ -13,12 +13,12 @@ import MBProgressHUD
 import JSSAlertView
 import Async
 
-
 class PostCell: UITableViewCell {
     
     var commentTapAction: ((UITableViewCell) -> Void)?
     var reportTapAction: ((UITableViewCell) -> Void)?
     var usernameTapAction: ((UITableViewCell) -> Void)?
+    var profileImgTapAction: ((UITableViewCell) -> Void)?
     
     private var likeRef: FIRDatabaseReference!
     private var userRef: FIRDatabaseReference!
@@ -60,6 +60,11 @@ class PostCell: UITableViewCell {
         usernameLbl.addGestureRecognizer(usernameTapped)
         usernameLbl.userInteractionEnabled = true
         
+        let profileImgTapped = UITapGestureRecognizer(target: self, action: #selector(PostCell.profileImgTapped(_:)))
+        profileImgTapped.numberOfTapsRequired = 1
+        profileImg.addGestureRecognizer(profileImgTapped)
+        profileImg.userInteractionEnabled = true
+        
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(PostCell.mainImgTapped(_:)))
         doubleTap.numberOfTapsRequired = 2
         mainImg.addGestureRecognizer(doubleTap)
@@ -97,7 +102,6 @@ class PostCell: UITableViewCell {
             if img != nil {
                 self.mainImg.image = img
             } else {
-                // Not in cache, download and add to cache
                 self._request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                     if err == nil {
                         let img = UIImage(data: data!)!
@@ -107,13 +111,12 @@ class PostCell: UITableViewCell {
                 })
             }
         } else {
-        
             let height = heightForView(post.postDescription, width: screenWidth - 48)
             self.descLblHeight.constant = height
             self.mainImg.hidden = true
         }
         
-        // Profile image
+        // Profile image and username
         userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
             if let username = snapshot.value!["username"] as? String {
@@ -123,11 +126,9 @@ class PostCell: UITableViewCell {
             }
             
             if let profileUrl = snapshot.value!["imgUrl"] as? String {
-                
                 if let profImage = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
                     self.profileImg.image = profImage
                 } else {
-                    // Not in cache, download and add to cache
                     self._request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                         if err == nil {
                             let img = UIImage(data: data!)!
@@ -172,10 +173,14 @@ class PostCell: UITableViewCell {
     func likeTapped(sender: UITapGestureRecognizer) {
         
         if !isConnectedToNetwork() {
+            self.likeImage.image = UIImage(named: "heart-full")
+            Async.main(after: 0.3) {
+                self.likeImage.image = UIImage(named: "heart-empty")
+            }
             return
         }
         
-        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        self.likeImage.userInteractionEnabled = false
         
         DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
@@ -200,22 +205,22 @@ class PostCell: UITableViewCell {
                         self.updateScores(false)
                     }
                     
-                    self.likesLbl.text = "\(self.post!.likes)"
-                    
+                    if self.post!.likes >= 0 {
+                        self.likesLbl.text = "\(self.post!.likes)"
+                    }
                 })
             } else {
                 NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
             }
         })
         
-        Async.background(after: 0.5) {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                UIApplication.sharedApplication().endIgnoringInteractionEvents()
-            }
+        Async.main(after: 0.5) {
+            self.likeImage.userInteractionEnabled = true
         }
     }
     
     func sendPushNotificationToUser() {
+        
         DataService.ds.REF_USERS.child(self.post!.userKey).observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
             if let userPushId = snapshot.childSnapshotForPath("userPushId").value as? String {
                 if self.post!.userKey != currentUserKey() {
@@ -276,80 +281,41 @@ class PostCell: UITableViewCell {
     
     func usernameTapped(sender: UITapGestureRecognizer) {
         
-        if !isConnectedToNetwork() {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                UIApplication.sharedApplication().endIgnoringInteractionEvents()
-            }
-            return
+        self.usernameLbl.userInteractionEnabled = false
+        self.usernameTapAction?(self)
+        
+        Async.background(after: 0.3) {
+            self.usernameLbl.userInteractionEnabled = true
         }
+    }
+    
+    func profileImgTapped(sender: UITapGestureRecognizer) {
         
-        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        self.profileImg.userInteractionEnabled = false
+        self.profileImgTapAction?(self)
         
-        if post?.userKey != currentUserKey() && isConnectedToNetwork() {
-            self.usernameTapAction?(self)
-        }
-        
-        Async.background(after: 0.5) {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                UIApplication.sharedApplication().endIgnoringInteractionEvents()
-            }
+        Async.background(after: 0.3) {
+            self.profileImg.userInteractionEnabled = true
         }
     }
     
     @IBAction func commentsBtnTapped(sender: AnyObject) {
         
-        if !isConnectedToNetwork() {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                    UIApplication.sharedApplication().endIgnoringInteractionEvents()
-                }
-            }
-            return
-        }
-        
-        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
-    
-        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
-            if snapshot.hasChild(self.post!.postKey) {
-                self.commentTapAction?(self)
-            } else {
-                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
-            }
-        })
-        
-        Async.background(after: 0.5) {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                UIApplication.sharedApplication().endIgnoringInteractionEvents()
-            }
+        self.commentBtn.userInteractionEnabled = false
+        self.commentTapAction?(self)
+
+        Async.background(after: 0.3) {
+            self.commentBtn.userInteractionEnabled = true
         }
     }
     
     @IBAction func reportBtnTapped(sender: AnyObject) {
         
-        if !isConnectedToNetwork() {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                UIApplication.sharedApplication().endIgnoringInteractionEvents()
-                print("Offline")
-            }
-            return
-        }
+        self.reportBtn.userInteractionEnabled = false
+        self.reportTapAction?(self)
         
-        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
-        
-        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
-            if snapshot.hasChild(self.post!.postKey) {
-                self.reportTapAction?(self)
-            } else {
-                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
-            }
-        })
-        
-        Async.background(after: 0.5) {
-            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
-                UIApplication.sharedApplication().endIgnoringInteractionEvents()
-            }
+        Async.background(after: 0.3) {
+            self.reportBtn.userInteractionEnabled = true
         }
     }
 }

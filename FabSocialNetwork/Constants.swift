@@ -9,14 +9,14 @@
 import Foundation
 import UIKit
 
-// Screen size
+// SCREEN SIZES
 let screenSize: CGRect = UIScreen.mainScreen().bounds
 let screenWidth = screenSize.width
 
-// Keys
+// KEYS
 let KEY_UID = "uid"
 
-//Segues
+// SEGUES
 let SEGUE_LOGGED_IN = "feedVC"
 let SEGUE_RESETPASSWORDVC = "resetPasswordVC"
 let SEGUE_COMMENTSVC = "commentsVC"
@@ -26,8 +26,9 @@ let SEGUE_SHOWUSERPOSTVC = "showUserPostVC"
 let SEGUE_USERAGREEMENTVC = "useragreementVC"
 let SEGUE_OTHERUSERPROFILEVC = "otherUserProfileVC"
 let SEGUE_CHATVC = "chatVC"
+let SEGUE_ALLUSERPOSTSVC = "allUserPostsVC"
 
-// Status Codes
+// STATUS CODES
 let STATUS_ACCOUNT_NONEXIST = 17011
 let STATUS_SENSITIVE_DATA_CHANGE = 17014
 let STATUS_WEAK_PASSWORD = 17026

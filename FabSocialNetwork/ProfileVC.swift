@@ -12,16 +12,18 @@ import Firebase
 import EZLoadingActivity
 import JSSAlertView
 import Async
+import Fusuma
 
-class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate  {
+class ProfileVC: UIViewController, FusumaDelegate {
     
-    private var imagePicker: UIImagePickerController!
     private var imageSelected = false
     private var request: Request?
     private var usernameTaken = false
     private var keyboardVisible = false
     private var standardKeyboardHeight: CGFloat = 216
     private var settingsButton: UIButton!
+    private var currentProfileImage: UIImage?
+    private var fusuma = FusumaViewController()
     
     @IBOutlet weak var addImgBtn: UIButton!
     @IBOutlet weak var imageSelector: UIImageView!
@@ -30,10 +32,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        imagePicker = UIImagePickerController()
-        imagePicker.delegate = self
-        imagePicker.navigationBar.tintColor = UIColor.blackColor()
         
         imageSelector.layer.cornerRadius = imageSelector.frame.width / 2
         imageSelector.clipsToBounds = true
@@ -57,20 +55,32 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         }
         
         setupSettingsButton()
+        setupFusuma()
         
         loadProfileData()
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
+        
         if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
             UIApplication.sharedApplication().endIgnoringInteractionEvents()
         }
+        
+        UIApplication.sharedApplication().statusBarStyle = .LightContent
+        UIApplication.sharedApplication().statusBarHidden = false
     }
     
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         self.dismisskeyboard()
+    }
+    
+    func setupFusuma() {
+        fusumaCropImage = true
+        fusumaTintColor = UIColorFromHex(0x25c051, alpha: 1)
+        fusumaBackgroundColor = UIColor(red: CGFloat(18/255.0), green: CGFloat(18/255.0), blue: CGFloat(18/255.0), alpha: CGFloat(1.0))
+        fusuma.delegate = self
     }
     
     func loadProfileData() {
@@ -79,12 +89,14 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
             if let profileImg = FeedVC.imageCache.objectForKey(profileUrl) as? UIImage {
                 self.imageSelector.image = profileImg
                 addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
+                currentProfileImage = profileImg
             } else {
                 request = Alamofire.request(.GET, profileUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.imageSelector.image = img
                         self.addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
+                        self.currentProfileImage = img
                         FeedVC.imageCache.setObject(img, forKey: profileUrl)
                     }
                 })
@@ -176,39 +188,6 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         imageSelected = false
     }
     
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
-        imagePicker.dismissViewControllerAnimated(true, completion: nil)
-        imageSelector.image = image
-        addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
-        imageSelected = true
-    }
-    
-    func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool)
-    {
-        imagePicker.navigationBar.translucent = true
-        imagePicker.navigationBar.barTintColor = .blackColor()
-        imagePicker.navigationBar.tintColor = .whiteColor()
-        imagePicker.navigationBar.titleTextAttributes = [
-            NSForegroundColorAttributeName : UIColor.whiteColor()]
-        
-    }
-    
-    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
-        imagePicker.dismissViewControllerAnimated(true, completion: nil)
-    }
-    
-    func accessCamera() {
-        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
-        imagePicker.allowsEditing = false
-        self.presentViewController(imagePicker, animated: true, completion: nil)
-    }
-    
-    func accessLibrary() {
-        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
-        imagePicker.allowsEditing = true
-        self.presentViewController(imagePicker, animated: true, completion: nil)
-    }
-    
     func dismisskeyboard() {
         view.endEditing(true)
     }
@@ -278,21 +257,39 @@ class ProfileVC: UIViewController, UIImagePickerControllerDelegate, UINavigation
         return imageSelected == true
     }
     
+    
+    func fusumaImageSelected(image: UIImage) {
+        imageSelector.image = image
+        imageSelected = true
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        print("Image selected")
+    }
+    
+    func fusumaDismissedWithImage(image: UIImage) {
+        print("Called just after FusumaViewController is dismissed.")
+    }
+    
+    func fusumaVideoCompleted(withFileURL fileURL: NSURL) {
+        print("Called just after a video has been selected.")
+    }
+    
+    func fusumaCameraRollUnauthorized() {
+        print("Camera roll unauthorized")
+    }
+    
+    func fusumaClosed() {
+        self.imageSelector.image = currentProfileImage
+        imageSelected = false
+        UIApplication.sharedApplication().statusBarHidden = false
+    }
+
+    
     @IBAction func addImgBtnTapped(sender: AnyObject) {
         dismisskeyboard()
         addImgBtn.imageView?.image = UIImage(named: "ImageSelected")
         
-        if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera) {
-            
-            let alertview = JSSAlertView().show(self, title: "Access Photo Library Or Camera?", text: "", buttonText: "Library", cancelButtonText: "Camera", color: UIColorFromHex(0x25c051, alpha: 1))
-            alertview.setTextTheme(.Light)
-            alertview.addAction(accessLibrary)
-            alertview.addCancelAction(accessCamera)
-            
-        } else {
-            imagePicker.allowsEditing = true
-            self.presentViewController(imagePicker, animated: true, completion: nil)
-        }
+        self.presentViewController(fusuma, animated: true, completion: nil)
+        UIApplication.sharedApplication().statusBarHidden = true
     }
     
     @IBAction func saveBtnTapped(sender: AnyObject) {

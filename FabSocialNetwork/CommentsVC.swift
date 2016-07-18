@@ -57,7 +57,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         commentTextView.delegate = self
         
-        NSTimer.scheduledTimerWithTimeInterval(10, target: self, selector: #selector(CommentsVC.isConnected), userInfo: nil, repeats: true)
+        NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: #selector(CommentsVC.isConnected), userInfo: nil, repeats: true)
         
         title = "COMMENTS"
         
@@ -194,9 +194,8 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         let deleteAction = UITableViewRowAction(style: .Normal, title: "Remove") { (rowAction:UITableViewRowAction, indexPath:NSIndexPath) -> Void in
             
             if !isConnectedToNetwork() {
-                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and try again.")
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Your comment will be removed when connected to a network.")
                 tableView.setEditing(false, animated: true)
-                return
             }
             
             let commentToRemove = self.comments[indexPath.row]
@@ -314,22 +313,6 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
     }
     
-    func blockUserAlert() {
-        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block this user? \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
-        alertview.setTextTheme(.Light)
-        alertview.addAction(blockUserAnswerYes)
-        alertview.addCancelAction(blockUserAnswerNo)
-    }
-    
-    func blockUserAnswerYes() {
-        print("YES!")
-    }
-    
-    func blockUserAnswerNo() {
-        print("NO!")
-    }
-    
-    
     func reportAlert() {
         let alertview = JSSAlertView().show(self, title: "Report", text: "Do you want to report this user for abusive behaviour?", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
         alertview.setTextTheme(.Light)
@@ -392,6 +375,12 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             commentTextView.textColor = UIColor.lightGrayColor()
             self.sendPushNotificationToUser()
             tableView.reloadData()
+            
+            Async.main(after: 0.5) {
+                if !isConnectedToNetwork() {
+                    JSSAlertView().danger(self, title: "No Internet Connection", text: "Your message will be sent when connected to a network.")
+                }
+            }
         }
     }
     
@@ -412,16 +401,9 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         
         if !userProfileAdded() {
             JSSAlertView().danger(self, title: "Update Your Profile", text: "Please add a profile image and username before commenting.")
-            return;
+            return
         }
         
-        DataService.ds.REF_POSTS.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            
-            if snapshot.hasChild(self.post.postKey) {
-                self.postComment()
-            } else {
-                NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
-            }
-        })
+        self.postComment()
     }
 }

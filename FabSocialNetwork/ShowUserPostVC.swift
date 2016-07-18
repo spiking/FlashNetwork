@@ -20,7 +20,7 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0);
+        tableView.contentInset = UIEdgeInsetsMake(-8, 0, 0, 0)
         
         loadiPhoneTypeRowHeight()
         tableView.rowHeight = UITableViewAutomaticDimension
@@ -45,9 +45,9 @@ class ShowUserPostVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         case "4":
             tableView.estimatedRowHeight = 400
         case "5":
-            tableView.estimatedRowHeight = 450
+            tableView.estimatedRowHeight = 425
         case "6":
-            tableView.estimatedRowHeight = 500
+            tableView.estimatedRowHeight = 450
         case "6+":
             tableView.estimatedRowHeight = 550
         default:

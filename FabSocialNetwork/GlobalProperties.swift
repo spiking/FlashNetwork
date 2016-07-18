@@ -12,6 +12,7 @@ import MBProgressHUD
 var oneSignal: OneSignal!
 var firstLogin = true
 var userBanned = false
+var firstView = true
 var iphoneType = ""
 var likeAnimation = MBProgressHUD()
 var Timestamp: String {

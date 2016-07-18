@@ -15,12 +15,12 @@ import EZLoadingActivity
 import JSSAlertView
 import BTNavigationDropdownMenu
 import Async
+import Fusuma
 
-class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
+class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextViewDelegate, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate, FusumaDelegate {
     
     static var imageCache = NSCache() // Static since single instance (global)
     private var posts = [Post]()
-    private var imagePicker: UIImagePickerController!
     private var imageSelected = false
     private var loadingData = false
     private var alert = false
@@ -34,6 +34,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     private var feedMode = FeedMode.Popular
     private var menuView: BTNavigationDropdownMenu!
     private var timer: NSTimer?
+    private var noInternetConnectionAlert = true
     private var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
     private var previousRect = CGRectZero
     private var heightConstraint: NSLayoutConstraint?
@@ -41,6 +42,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     private var profileBtn: UIButton!
     private var cancelButton: UIButton!
     private var numberOfLaunches: Int = 0
+    private var request: Request?
+    private var firstView = true
+    private var fusuma = FusumaViewController()
     
     var typeOfLogin = ""
     
@@ -81,20 +85,19 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         postTextView.delegate = self
         
-        imagePicker = UIImagePickerController()
-        imagePicker.delegate = self
-        imagePicker.navigationBar.tintColor = UIColor.blackColor()
-        imagePicker.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.blackColor()]
-        
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(FeedVC.dismisskeyboard))
         view.addGestureRecognizer(tap)
         
         numberOfLaunches = NSUserDefaults.standardUserDefaults().integerForKey("numberOfLaunches") + 1
         NSUserDefaults.standardUserDefaults().setInteger(numberOfLaunches, forKey: "numberOfLaunches")
         
+        NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: #selector(FeedVC.checkNetworkConnection), userInfo: nil, repeats: true)
+        
         setupProfileButton()
         setupCancelButton()
         setupSortMenu()
+        setupFusuma()
+        setupRateMe()
         
         navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
         
@@ -114,7 +117,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         loadBlockedUsersAndInitalDataFromFirebase()
         loadProfileData()
-        rateMe()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -123,6 +125,9 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
             UIApplication.sharedApplication().endIgnoringInteractionEvents()
         }
+        
+        UIApplication.sharedApplication().statusBarStyle = .LightContent
+        UIApplication.sharedApplication().statusBarHidden = false
         
         profileBtn.userInteractionEnabled = true
         
@@ -141,18 +146,25 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             updatePushUserIdInFirebase()
         }
         
-//        oneSignal.postNotification(["contents": ["en": "Test Message"], "include_player_ids": [getUserPushId()]], onSuccess: { (success) in
-//            print(success)
-//            }) { (error) in
-//                print(error)
-//        }
+        //        oneSignal.postNotification(["contents": ["en": "Test Message"], "include_player_ids": [getUserPushId()]], onSuccess: { (success) in
+        //            print(success)
+        //            }) { (error) in
+        //                print(error)
+        //        }
+        
+    }
     
+    func setupFusuma() {
+        fusumaCropImage = true
+        fusumaTintColor = UIColorFromHex(0x25c051, alpha: 1)
+        fusumaBackgroundColor = UIColor(red: CGFloat(18/255.0), green: CGFloat(18/255.0), blue: CGFloat(18/255.0), alpha: CGFloat(1.0))
+        fusuma.delegate = self
     }
     
     func updatePushUserIdInFirebase() {
         
         DataService.ds.REF_USER_CURRENT.child("userPushId").observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
-
+            
             if (snapshot.value as? NSNull) == nil {
                 if getUserPushId() != snapshot.value as! String {
                     DataService.ds.REF_USER_CURRENT.child("userPushId").setValue(getUserPushId())
@@ -212,13 +224,14 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func loadIphoneTypeForRowHeight() {
+        
         switch iphoneType {
         case "4":
             tableView.estimatedRowHeight = 400
         case "5":
-            tableView.estimatedRowHeight = 450
+            tableView.estimatedRowHeight = 425
         case "6":
-            tableView.estimatedRowHeight = 500
+            tableView.estimatedRowHeight = 450
         case "6+":
             tableView.estimatedRowHeight = 550
         default:
@@ -226,9 +239,24 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func loadDataFromFirebase() {
+    func checkNetworkConnection() {
         
         if !isConnectedToNetwork() {
+            if noInternetConnectionAlert {
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network.")
+                noInternetConnectionAlert = false
+            }
+            
+            loadDataFromFirebase()
+            
+        } else {
+            noInternetConnectionAlert = true
+        }
+    }
+    
+    func loadDataFromFirebase() {
+        
+        if !isConnectedToNetwork() && noInternetConnectionAlert {
             JSSAlertView().danger(self, title: "No Internet Connection", text: "Please connect to a network and the feed will load automatically.")
         }
         
@@ -243,6 +271,32 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         
         scrollToTop()
         postsShown = 20
+    }
+    
+    func saveImagesToCache() {
+        
+        var count = 0
+        
+        for post in posts {
+            let imgUrl = post.imageUrl!
+            if (FeedVC.imageCache.objectForKey(imgUrl) as? UIImage) == nil {
+                request = Alamofire.request(.GET, imgUrl).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                    if err == nil {
+                        let img = UIImage(data: data!)!
+                        FeedVC.imageCache.setObject(img, forKey: imgUrl)
+                    }
+                    
+                    count += 1
+                    
+                    if count == self.posts.count || firstLogin {
+                        self.posts = self.posts.reverse()
+                        self.tableView.reloadData()
+                        firstLogin = false
+                        EZLoadingActivity.hide()
+                    }
+                })
+            }
+        }
     }
     
     func loadBlockedUsersAndInitalDataFromFirebase() {
@@ -267,7 +321,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     
     func loadHottestFromFirebase() {
         
-        let count = posts.count
         let lastTwoDays = Double(Timestamp)! - (86000.0 * 2)
         let lastTwoDaysStr = "\(lastTwoDays)"
         
@@ -288,10 +341,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 }
             }
             
-            if count == 0 {
-                EZLoadingActivity.hide()
-            }
-            
             if firstLogin {
                 self.loginMessage()
                 firstLogin = false
@@ -305,9 +354,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func loadMostPopularFromFirebase() {
-        
-        let count = posts.count
-        
+    
         // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).queryOrderedByChild("likes").observeSingleEventOfType(.Value, withBlock: { snapshot in
             self.posts = []
@@ -325,25 +372,22 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                     }
                 }
             }
-            
-            if count == 0 {
-                EZLoadingActivity.hide()
-            }
-            
+
             if firstLogin {
                 self.loginMessage()
-                firstLogin = false
             }
             
-            self.posts = self.posts.reverse()
-            self.tableView.reloadData()
-            
+            if self.firstView {
+                self.saveImagesToCache()
+                self.firstView = false
+            } else {
+                self.posts = self.posts.reverse()
+                self.tableView.reloadData()
+            }
         })
     }
     
     func loadLatestFromFirebase() {
-        
-        let count = posts.count
         
         // Observe changes in Firebase
         DataService.ds.REF_POSTS.queryLimitedToLast(UInt(postsShown)).observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -360,10 +404,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                         }
                     }
                 }
-            }
-            
-            if count == 0 {
-                EZLoadingActivity.hide()
             }
             
             if firstLogin {
@@ -518,7 +558,23 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
             }
             
             cell.usernameTapAction = { (cell) in
-                self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: post.userKey)
+                
+                if post.userKey != currentUserKey() {
+                     self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: post.userKey)
+                } else {
+                     self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: post.userKey)
+                }
+                
+            }
+            
+            cell.profileImgTapAction = { (cell) in
+                
+                if post.userKey != currentUserKey() {
+                    self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: post.userKey)
+                } else {
+                    self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: post.userKey)
+                }
+                
             }
             
             cell.layoutIfNeeded()
@@ -613,18 +669,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
                 UIApplication.sharedApplication().endIgnoringInteractionEvents()
             }
         }
-    }
-    
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingImage image: UIImage, editingInfo: [String : AnyObject]?) {
-        imagePicker.dismissViewControllerAnimated(true, completion: nil)
-        imageSelector.image = image
-        imageSelected = true
-    }
-    
-    func imagePickerControllerDidCancel(picker: UIImagePickerController) {
-        imagePicker.dismissViewControllerAnimated(true, completion: nil)
-        imageSelector.image = UIImage(named: "Camera2")
-        imageSelected = false
     }
     
     func keyboardWillShow(sender: NSNotification) {
@@ -840,29 +884,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         // Do nothing
     }
     
-    func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool)
-    {
-        super.viewDidLoad()
-        imagePicker.navigationBar.translucent = true
-        imagePicker.navigationBar.barTintColor = .blackColor()
-        imagePicker.navigationBar.tintColor = .whiteColor()
-        imagePicker.navigationBar.titleTextAttributes = [
-            NSForegroundColorAttributeName : UIColor.whiteColor()]
-        
-    }
-    
-    func accessCamera() {
-        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera;
-        imagePicker.allowsEditing = false
-        self.presentViewController(imagePicker, animated: true, completion: nil)
-    }
-    
-    func accessLibrary() {
-        imagePicker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
-        imagePicker.allowsEditing = true
-        self.presentViewController(imagePicker, animated: true, completion: nil)
-    }
-    
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
         dismisskeyboard()
@@ -886,9 +907,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
     
-    func rateMe() {
-        let neverRate = NSUserDefaults.standardUserDefaults().boolForKey("neverRate")
-        if (!neverRate && (numberOfLaunches == 10 || numberOfLaunches == 20)) {
+    func setupRateMe() {
+        if (numberOfLaunches == 15 || numberOfLaunches == 30) {
             showRateAlert()
         }
     }
@@ -905,22 +925,39 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
     }
     
     func rateAlertAnswerNo() {
-        NSUserDefaults.standardUserDefaults().setBool(true, forKey: "neverRate")
+        // Do nothing
+    }
+    
+    // Return the image which is selected from camera roll or is taken via the camera
+    func fusumaImageSelected(image: UIImage) {
+        
+        imageSelector.image = image
+        imageSelected = true
+        
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+    }
+    
+    func fusumaDismissedWithImage(image: UIImage) {
+        print("Called just after FusumaViewController is dismissed.")
+    }
+    
+    func fusumaVideoCompleted(withFileURL fileURL: NSURL) {
+        print("Called just after a video has been selected.")
+    }
+    
+    func fusumaCameraRollUnauthorized() {
+        print("Camera roll unauthorized")
+    }
+    
+    func fusumaClosed() {
+        print("Called when the close button is pressed")
+        imageSelector.image = UIImage(named: "Camera2")
+        imageSelected = false
     }
     
     @IBAction func selectImage(sender: UITapGestureRecognizer) {
-        
-        if UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera) {
-            
-            let alertview = JSSAlertView().show(self, title: "Access Photo Library Or Camera?", text: "", buttonText: "Library", cancelButtonText: "Camera", color: UIColorFromHex(0x25c051, alpha: 1))
-            alertview.setTextTheme(.Light)
-            alertview.addAction(accessLibrary)
-            alertview.addCancelAction(accessCamera)
-            
-        } else {
-            imagePicker.allowsEditing = true
-            self.presentViewController(imagePicker, animated: true, completion: nil)
-        }
+        self.presentViewController(fusuma, animated: true, completion: nil)
+        UIApplication.sharedApplication().statusBarHidden = true
     }
     
     @IBAction func makePost(sender: AnyObject) {
@@ -995,4 +1032,3 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UIIm
         }
     }
 }
-

@@ -11,6 +11,8 @@ import UIKit
 import Firebase
 import JSQMessagesViewController
 import Alamofire
+import JSSAlertView
+import Async
 
 class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetDelegate {
     
@@ -186,6 +188,12 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         isTyping = false
         
         sendPushNotificationToUser()
+        
+        Async.main(after: 0.5) {
+            if !isConnectedToNetwork() {
+                JSSAlertView().danger(self, title: "No Internet Connection", text: "Your message will be sent when connected to a network.")
+            }
+        }
     }
     
     func sendPushNotificationToUser() {
@@ -220,9 +228,9 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
     func descriptionForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {
         var str = ""
         if isConnectedToNetwork() {
-            str = "It looks like there are no messages.\n If you like, send one below."
+            str = "It looks like there are no messages. If you like, send one below."
         } else {
-            str = "Please connect to a network.\n The messages will load automatically."
+            str = "Please connect to a network. The messages will load automatically."
         }
         let attrs = [NSFontAttributeName: UIFont.preferredFontForTextStyle(UIFontTextStyleBody)]
         return NSAttributedString(string: str, attributes: attrs)

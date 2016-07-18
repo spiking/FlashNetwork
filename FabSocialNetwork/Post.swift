@@ -11,7 +11,7 @@ import Firebase
 
 class Post {
     
-    private var _postDescription: String!
+    private var _postDescription: String?
     private var _imageUrl: String?
     private var _likes: Int!
     private var _postKey: String!
@@ -20,7 +20,10 @@ class Post {
     private var _postRef: FIRDatabaseReference!
     
     var postDescription: String {
-        return _postDescription
+        if _postDescription != nil {
+            return _postDescription!
+        }
+        return ""
     }
     
     var imageUrl: String? {
@@ -83,8 +86,12 @@ class Post {
         } else {
             _likes = _likes - 1
             _postRef.child("likes_from_users").child(currentUserKey()).removeValue()
-            
         }
-        _postRef.child("likes").setValue(_likes)
+        
+        _postRef.child("likes_from_users").observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
+            let likes = snapshot.childrenCount
+            self._postRef.child("likes").setValue(likes)
+            self._likes = Int(likes)
+        }
     }
 }

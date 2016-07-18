@@ -16,6 +16,7 @@ target 'FabSocialNetwork' do
   pod 'SlackTextViewController'
   pod 'JSQMessagesViewController'
   pod 'OneSignal'
+  pod 'Fusuma'
 end
 
 post_install do |installer|

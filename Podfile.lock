@@ -26,6 +26,7 @@ PODS:
   - FirebaseDatabase (3.0.2):
     - FirebaseAnalytics (~> 3.2)
   - FirebaseInstanceID (1.0.7)
+  - Fusuma (0.5.1)
   - GoogleInterchangeUtilities (1.2.1):
     - GoogleSymbolUtilities (~> 1.0)
   - GoogleNetworkingUtilities (1.2.1):
@@ -52,6 +53,7 @@ DEPENDENCIES:
   - Firebase/Auth
   - Firebase/Core
   - Firebase/Database
+  - Fusuma
   - JSQMessagesViewController
   - JSSAlertView
   - MBProgressHUD (~> 0.9.2)
@@ -68,6 +70,7 @@ SPEC CHECKSUMS:
   FirebaseAuth: 5efddc3fae47042b73585f083f956462be4f5b8e
   FirebaseDatabase: 59bea2e7dfd81b3b8b2f8e396caf1a52c2ced6f7
   FirebaseInstanceID: a9d923f3d0b6fbf9fac89310860357aaadc34be5
+  Fusuma: b6b727aabfbf3fd40419393aa25959910d6598d1
   GoogleInterchangeUtilities: def8415a862effc67d549d5b5b0b9c7a2f97d4de
   GoogleNetworkingUtilities: 3e83269048cfb498dc7ec83ab36813360965c74f
   GoogleParsingUtilities: 30b3896f9ee167dc78747f013d3de157ced1cadf
@@ -80,6 +83,6 @@ SPEC CHECKSUMS:
   OneSignal: 434facae3389cb0d4d3fc57b9a6cf66db685205e
   SlackTextViewController: bd2a34c188d4f7dec93cf42388f38551263fac82
 
-PODFILE CHECKSUM: f8783b6e598c84479df5519e13a788c012724ef8
+PODFILE CHECKSUM: 0b029d227aa8f8fb000d1a1df80d79cb956917f4
 
 COCOAPODS: 1.0.0

@@ -23,8 +23,7 @@ class UserPostCell: UITableViewCell {
     }
     
     @IBOutlet weak var postLabel: UILabel!
-    @IBOutlet weak var postImage:
-    UIImageView!
+    @IBOutlet weak var postImage: UIImageView!
     @IBOutlet weak var likesLabel: UILabel!
     @IBOutlet weak var timeLabel: UILabel!
     
@@ -37,7 +36,13 @@ class UserPostCell: UITableViewCell {
     
     func configureCell(post: Post, img: UIImage?) {
         self._post = post
-        self.postLabel.text = post.postDescription
+        
+        if post.postDescription != "" {
+            self.postLabel.text = post.postDescription
+        } else {
+            self.postLabel.text = "No Description"
+        }
+        
         self.likesLabel.text = String(post.likes)
         self.postImage.image = nil
         
@@ -45,17 +50,15 @@ class UserPostCell: UITableViewCell {
         let diff = NSDate().offsetFrom(date)
         self.timeLabel.text = diff
         
-        // Main post image
+        // Main post image (checks cache in controller)
         if post.imageUrl != "" {
             if img != nil {
                 self.postImage.image = img
             } else {
-                // Not in cache, download and add to cache
-                _request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
+                self._request = Alamofire.request(.GET, post.imageUrl!).validate(contentType: ["image/*"]).response(completionHandler: { (request, response, data, err) in
                     if err == nil {
                         let img = UIImage(data: data!)!
                         self.postImage.image = img
-                        print("Add to cache!")
                         FeedVC.imageCache.setObject(img, forKey: self.post!.imageUrl!)
                     }
                 })
@@ -67,8 +70,6 @@ class UserPostCell: UITableViewCell {
 
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
-        // Configure the view for the selected state
     }
 
 }
