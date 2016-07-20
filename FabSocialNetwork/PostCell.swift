@@ -225,7 +225,11 @@ class PostCell: UITableViewCell {
             if let userPushId = snapshot.childSnapshotForPath("userPushId").value as? String {
                 if self.post!.userKey != currentUserKey() {
                     let postTime = dateSincePosted(self.post!.timestamp)
-                    oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) liked your post from \(postTime) ago."], "include_player_ids": [userPushId]])
+                    if postTime != "" && postTime != " " {
+                        oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) liked the post you uploaded \(postTime) ago."], "include_player_ids": [userPushId]])
+                    } else {
+                        oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) liked the post you recently uploaded."], "include_player_ids": [userPushId]])
+                    }
                 }
             }
         }
@@ -314,7 +318,7 @@ class PostCell: UITableViewCell {
         self.reportBtn.userInteractionEnabled = false
         self.reportTapAction?(self)
         
-        Async.background(after: 0.3) {
+        Async.background(after: 0.5) {
             self.reportBtn.userInteractionEnabled = true
         }
     }

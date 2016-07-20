@@ -388,8 +388,12 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         DataService.ds.REF_USERS.child(self.post!.userKey).observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
             if let userPushId = snapshot.childSnapshotForPath("userPushId").value as? String {
                 if self.post!.userKey != currentUserKey() {
-                    let postTime = dateSincePosted(self.post.timestamp)
-                    oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) commented on your post from \(postTime) ago."], "include_player_ids": [userPushId]])
+                    let postTime = dateSincePosted(self.post!.timestamp)
+                    if postTime != "" && postTime != " " {
+                        oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) commented on the post you uploaded \(postTime) ago."], "include_player_ids": [userPushId]])
+                    } else {
+                        oneSignal.postNotification(["contents": ["en":"\(getCurrentUsername().capitalizedString) ommented on the post you recently uploaded."], "include_player_ids": [userPushId]])
+                    }
                 }
             }
         }

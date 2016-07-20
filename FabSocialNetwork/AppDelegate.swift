@@ -25,9 +25,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         FIRApp.configure()
         
-        // Possible push notifications
         oneSignal = OneSignal(launchOptions: launchOptions, appId: "2b0915b4-9320-4ba8-be22-60364aa97071", handleNotification: nil)
-        oneSignal.enableInAppAlertNotification(true)
+//        oneSignal.enableInAppAlertNotification(true)
         setUserPushId()
         
         oneSignal = OneSignal(launchOptions: launchOptions, appId: "2b0915b4-9320-4ba8-be22-60364aa97071") { (message, additionalData, isActive) in

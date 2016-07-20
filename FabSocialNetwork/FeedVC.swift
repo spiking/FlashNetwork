@@ -43,8 +43,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
     private var cancelButton: UIButton!
     private var numberOfLaunches: Int = 0
     private var request: Request?
-    private var firstView = true
     private var fusuma = FusumaViewController()
+    private var firstView = true
     
     var typeOfLogin = ""
     
@@ -273,6 +273,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         postsShown = 20
     }
     
+    // NOT IN USE
+    
     func saveImagesToCache() {
         
         var count = 0
@@ -341,6 +343,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
                 }
             }
             
+            if self.firstView {
+                EZLoadingActivity.hide()
+                self.firstView = false
+            }
+            
             if firstLogin {
                 self.loginMessage()
                 firstLogin = false
@@ -372,18 +379,19 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
                     }
                 }
             }
-
-            if firstLogin {
-                self.loginMessage()
-            }
             
             if self.firstView {
-                self.saveImagesToCache()
+                EZLoadingActivity.hide()
                 self.firstView = false
-            } else {
-                self.posts = self.posts.reverse()
-                self.tableView.reloadData()
             }
+            
+            if firstLogin {
+                self.loginMessage()
+                firstLogin = false
+            }
+            
+            self.posts = self.posts.reverse()
+            self.tableView.reloadData()
         })
     }
     
@@ -404,6 +412,11 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
                         }
                     }
                 }
+            }
+            
+            if self.firstView {
+                EZLoadingActivity.hide()
+                self.firstView = false
             }
             
             if firstLogin {

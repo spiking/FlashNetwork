@@ -27,7 +27,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         
         if userBanned {
             JSSAlertView().danger(self, title: "Banned", text: "You have violated the user license agreement. Your account has been permanetly banned from Flash Network.")
-            NSTimer.scheduledTimerWithTimeInterval(7, target: self, selector: #selector(ViewController.terminateApp), userInfo: nil, repeats: false)
         }
         
         let tap : UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.dismisskeyboard))
@@ -52,10 +51,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
             self.passwordField.becomeFirstResponder()
         }
         return true
-    }
-    
-    func terminateApp() {
-        exit(0)
     }
     
     func dismisskeyboard() {

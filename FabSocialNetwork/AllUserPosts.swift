@@ -25,6 +25,7 @@ class AllUserPosts: UIViewController, UICollectionViewDelegate, UICollectionView
     private var zoomBarButton : UIButton!
     private var reportPost: Post!
     private var request: Request?
+    private var firstView = true
     
     var userPosts = [Post]()
     var userKey = currentUserKey()
@@ -124,9 +125,9 @@ class AllUserPosts: UIViewController, UICollectionViewDelegate, UICollectionView
             }
             
             // Save to cache once
-            if firstView  {
+            if self.firstView  {
                 self.saveImagesToCache()
-                firstView = false
+                self.firstView = false
             } else {
                 EZLoadingActivity.hide()
                 self.collectionView.reloadData()

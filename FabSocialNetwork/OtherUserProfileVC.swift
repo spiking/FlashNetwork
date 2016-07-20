@@ -36,7 +36,6 @@ class OtherUserProfileVC: UIViewController {
         title = "PROFILE"
         
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title:"", style:.Plain, target:nil, action:nil)
-        
         navigationItem.leftItemsSupplementBackButton = true
         
         let blockButton = seutpBlockButton()
