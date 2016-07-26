@@ -84,11 +84,8 @@ class PostCell: UITableViewCell {
         self.mainImg.image = nil
         self.descriptionLbl.text = post.postDescription
         self.likesLbl.text = "\(post.likes)"
-        
         self.timeLbl.text = dateSincePosted(post.timestamp)
-        
         self.likesLblWidth.constant = self.likesLbl.intrinsicContentSize().width + 4
-        
         self.userRef = DataService.ds.REF_USERS.child(post.userKey)
         self.likeRef = DataService.ds.REF_USER_CURRENT.child("likes").child(post.postKey)
         self.userLikes = DataService.ds.REF_USER_CURRENT.child("likes")

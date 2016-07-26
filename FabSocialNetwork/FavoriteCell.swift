@@ -1,92 +1,49 @@
 //
-//  CommentCell.swift
+//  FavoriteCell.swift
 //  FabSocialNetwork
 //
-//  Created by Adam Thuvesen on 2016-06-09.
+//  Created by Adam Thuvesen on 2016-07-20.
 //  Copyright © 2016 Adam Thuvesen. All rights reserved.
 //
 
 import UIKit
-import Alamofire
 import Firebase
-import Async
+import Alamofire
 
-class CommentCell: UITableViewCell {
+class FavoriteCell: UITableViewCell {
     
-    var blockUserTapAction: ((UITableViewCell) -> Void)?
-    var usernameTapAction: ((UITableViewCell) -> Void)?
-    var profileImgTapAction: ((UITableViewCell) -> Void)?
-    
-    private var _comment: Comment!
-    private var _post: Post!
     private var _userRef: FIRDatabaseReference!
     private var _request: Request?
-    
-    var post: Post {
-        return _post
-    }
-    
-    var comment: Comment {
-        return _comment
-    }
+    private var _userKey: String!
     
     var request: Request? {
         return _request
     }
     
-    @IBOutlet weak var profileImg: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
-    @IBOutlet weak var textLbl: UILabel!
+    @IBOutlet weak var profileImg: UIImageView!
+    @IBOutlet weak var scoreLbl: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        
-        let usernameTapped = UITapGestureRecognizer(target: self, action: #selector(CommentCell.usernameTapped(_:)))
-        usernameTapped.numberOfTapsRequired = 1
-        usernameLbl.addGestureRecognizer(usernameTapped)
-        usernameLbl.userInteractionEnabled = true
-        
-        let profileImgTapped = UITapGestureRecognizer(target: self, action: #selector(CommentCell.profileImgTapped(_:)))
-        profileImgTapped.numberOfTapsRequired = 1
-        profileImg.addGestureRecognizer(profileImgTapped)
-        profileImg.userInteractionEnabled = true
-        
+
     }
     
     override func drawRect(rect: CGRect) {
         profileImg.layer.cornerRadius = profileImg.frame.size.width / 2
         profileImg.clipsToBounds = true
     }
-    
+
     override func setSelected(selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
+
+        // Configure the view for the selected state
     }
     
-    func usernameTapped(sender: UITapGestureRecognizer) {
+    func configureCell(userKey: String) {
         
-        self.usernameLbl.userInteractionEnabled = false
-        self.usernameTapAction?(self)
-        
-        Async.background(after: 0.3) {
-            self.usernameLbl.userInteractionEnabled = true
-        }
-    }
-    
-    func profileImgTapped(sender: UITapGestureRecognizer) {
-        
-        self.profileImg.userInteractionEnabled = false
-        self.profileImgTapAction?(self)
-        
-        Async.background(after: 0.3) {
-            self.profileImg.userInteractionEnabled = true
-        }
-    }
-    
-    func configureCell(comment: Comment) {
-        
-        self._comment = comment
-        self._userRef = DataService.ds.REF_USERS.child(comment.userKey)
-        self.textLbl.text = comment.commentText
+        self._userKey = userKey
+        self._userRef = DataService.ds.REF_USERS.child(_userKey)
         
         _userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
@@ -94,6 +51,12 @@ class CommentCell: UITableViewCell {
                 self.usernameLbl.text = username.capitalizedString
             } else {
                 self.usernameLbl.text = "Default Username"
+            }
+            
+            if let score = snapshot.value!["score"] as? Int {
+                self.scoreLbl.text = "\(score)"
+            } else {
+                self.scoreLbl.text = "0"
             }
             
             if let profileUrl = snapshot.value!["imgUrl"] as? String {
@@ -116,6 +79,7 @@ class CommentCell: UITableViewCell {
             }, withCancelBlock: { error in
                 print(error.description)
         })
-
+        
     }
+
 }

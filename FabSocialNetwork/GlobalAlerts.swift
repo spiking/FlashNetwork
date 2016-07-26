@@ -9,6 +9,7 @@
 import Foundation
 import EZLoadingActivity
 import JSSAlertView
+import MBProgressHUD
 
 func alertViewSetup() {
     EZLoadingActivity.Settings.BackgroundColor = UIColor.blackColor()

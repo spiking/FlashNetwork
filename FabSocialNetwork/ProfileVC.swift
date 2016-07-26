@@ -22,6 +22,7 @@ class ProfileVC: UIViewController, FusumaDelegate {
     private var keyboardVisible = false
     private var standardKeyboardHeight: CGFloat = 216
     private var settingsButton: UIButton!
+    private var favoritesButton: UIButton!
     private var currentProfileImage: UIImage?
     private var fusuma = FusumaViewController()
     
@@ -54,7 +55,13 @@ class ProfileVC: UIViewController, FusumaDelegate {
             NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(CommentsVC.keyboardWillHide(_:)), name:UIKeyboardWillHideNotification, object: nil)
         }
         
-        setupSettingsButton()
+        let settingsButton = setupSettingsButton()
+        let favoritesButton = setupFavoritesButton()
+        
+        let fixed: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FixedSpace, target: nil, action: nil)
+        fixed.width = 12
+        navigationItem.setRightBarButtonItems([settingsButton, fixed, favoritesButton], animated: true)
+        
         setupFusuma()
         
         loadProfileData()
@@ -117,18 +124,38 @@ class ProfileVC: UIViewController, FusumaDelegate {
         })
     }
     
-    func setupSettingsButton() {
+    func setupSettingsButton() -> UIBarButtonItem {
         settingsButton = UIButton(type: UIButtonType.Custom)
         settingsButton.setImage(UIImage(named: "Settings"), forState: UIControlState.Normal)
         settingsButton.addTarget(self, action: #selector(ProfileVC.settingsBtnTapped), forControlEvents: UIControlEvents.TouchUpInside)
         settingsButton.frame = CGRectMake(0, 0, 22, 22)
         let barButton = UIBarButtonItem(customView: settingsButton)
-        self.navigationItem.rightBarButtonItem = barButton
+        return barButton
+    }
+    
+    
+    func setupFavoritesButton() -> UIBarButtonItem {
+        favoritesButton = UIButton(type: UIButtonType.Custom)
+        favoritesButton.setImage(UIImage(named: "StarEmpty"), forState: UIControlState.Normal)
+        favoritesButton.addTarget(self, action: #selector(ProfileVC.favoritesBtnTapped), forControlEvents: UIControlEvents.TouchUpInside)
+        favoritesButton.frame = CGRectMake(0, 0, 25, 25)
+        let barButton = UIBarButtonItem(customView: favoritesButton)
+        return barButton
     }
     
     func settingsBtnTapped() {
         UIApplication.sharedApplication().beginIgnoringInteractionEvents()
         self.performSegueWithIdentifier(SEGUE_SETTINGSVC, sender: nil)
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
+    }
+    
+    func favoritesBtnTapped() {
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        self.performSegueWithIdentifier(SEGUE_FAVORITESVC, sender: nil)
         Async.background(after: 0.5) {
             if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
                 UIApplication.sharedApplication().endIgnoringInteractionEvents()
@@ -182,6 +209,7 @@ class ProfileVC: UIViewController, FusumaDelegate {
         if imgUrl != nil {
             DataService.ds.REF_USER_CURRENT.child("imgUrl").setValue(imgUrl)
             NSUserDefaults.standardUserDefaults().setValue(imgUrl, forKey: "profileUrl")
+
             EZLoadingActivity.Settings.SuccessText = "Updated"
             EZLoadingActivity.hide(success: true, animated: true)
         }
@@ -236,6 +264,7 @@ class ProfileVC: UIViewController, FusumaDelegate {
         DataService.ds.REF_USER_CURRENT.child("username").setValue(newUsername)
         NSUserDefaults.standardUserDefaults().setValue(newUsername.lowercaseString, forKey: "username")
         self.usernameTaken = false
+        
         EZLoadingActivity.Settings.SuccessText = "Updated"
         EZLoadingActivity.hide(success: true, animated: true)
     }

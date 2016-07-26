@@ -36,6 +36,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
         
         setupPlaceholders()
         emailField.delegate = self
+        
+        firstLogin = true
     }
     
     func setupPlaceholders() {
@@ -117,16 +119,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
                     } else {
                         print("Logged In! \(user)")
                         
-                        setUserPushId()
-                        
-                        
                         DataService.ds.REF_USERS.observeSingleEventOfType(.Value, withBlock: { snapshot in
                             
-                            if snapshot.hasChild(user!.uid) {
+                            if !snapshot.hasChild(user!.uid) {
                                 
                                 EZLoadingActivity.show("Creating account...", disableUI: false)
-                                
-                                setUserPushId()
                                 
                                 let userPushId = getUserPushId()
                                 let userData = ["provider": credential.provider, "timestamp": Timestamp, "score" : 0, "userPushId" : userPushId]
@@ -137,8 +134,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
                             } else {
                                 
                                 EZLoadingActivity.show("Logging in...", disableUI: false)
-                                
-                                firstLogin = true
                                 
                                 setUserPushId()
                                 
@@ -213,8 +208,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         
                         EZLoadingActivity.show("Creating account...", disableUI: false)
                         
-                        setUserPushId()
-                        
                         FIRAuth.auth()?.createUserWithEmail(email, password: pwd, completion: { (user, error) in
                             
                             // Try to creat account
@@ -237,8 +230,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
                 } else {
                     
                     EZLoadingActivity.show("Logging in...", disableUI: false)
-                    
-                    firstLogin = true
                     
                     setUserPushId()
                     
@@ -275,7 +266,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 
                             } else {
                                 self.performSegueWithIdentifier(SEGUE_LOGGED_IN, sender: self.OLD_ACCOUNT)
-                            }
+                            }       
                     }
                     
                 }

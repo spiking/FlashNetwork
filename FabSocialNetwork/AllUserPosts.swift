@@ -98,6 +98,7 @@ class AllUserPosts: UIViewController, UICollectionViewDelegate, UICollectionView
                 
                 if count == self.userPosts.count {
                     EZLoadingActivity.hide()
+                    self.userPosts = self.userPosts.reverse()
                     self.collectionView.reloadData()
                 }
             })
@@ -130,6 +131,7 @@ class AllUserPosts: UIViewController, UICollectionViewDelegate, UICollectionView
                 self.firstView = false
             } else {
                 EZLoadingActivity.hide()
+                self.userPosts = self.userPosts.reverse()
                 self.collectionView.reloadData()
             }
             
@@ -377,8 +379,8 @@ class AllUserPosts: UIViewController, UICollectionViewDelegate, UICollectionView
                 EZLoadingActivity.hide(success: false, animated: true)
             } else {
                 EZLoadingActivity.showWithDelay("Removed", disableUI: true, seconds: 1.0)
-                EZLoadingActivity.Settings.SuccessText = "Removed"
-                EZLoadingActivity.hide(success: true, animated: true)
+                EZLoadingActivity.Settings.FailText = "Removed"
+                EZLoadingActivity.hide(success: false, animated: true)
                 self.updateScores()
             }
         }

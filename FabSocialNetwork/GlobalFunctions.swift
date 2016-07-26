@@ -10,6 +10,7 @@ import Foundation
 import MBProgressHUD
 import Firebase
 
+
 func dateSincePosted(timestamp: String) -> String {
     let dateCreated = NSDate(timeIntervalSince1970: Double(timestamp)!)
     let dateDiff = NSDate().offsetFrom(dateCreated)
@@ -177,7 +178,7 @@ func userAcceptedTerms() -> Bool {
 
 func startLikeAnimation(view: UIView) {
     likeAnimation = MBProgressHUD.showHUDAddedTo(view, animated: true)
-    likeAnimation.frame = CGRectMake(0, 0, 50, 50)
+    likeAnimation.frame = CGRectMake(0, 0, 100, 100)
     likeAnimation.mode = MBProgressHUDMode.CustomView
     let image = UIImage(named: "Heart")
     likeAnimation.customView = UIImageView(image: image)

@@ -8,7 +8,6 @@
 
 import UIKit
 import Firebase
-
 import JSSAlertView
 import EZLoadingActivity
 import Async
@@ -41,7 +40,7 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
         refreshControl.addTarget(self, action: #selector(FeedVC.refresh(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.addSubview(refreshControl) // not required when using UITableViewController
         
-        tableView.estimatedRowHeight = 75
+        tableView.estimatedRowHeight = 80
         tableView.rowHeight = UITableViewAutomaticDimension
         
         edgesForExtendedLayout = UIRectEdge.None
@@ -81,12 +80,17 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
-        if segue.identifier == SEGUE_OTHERUSERPROFILEVC {
-            if let commentsVC = segue.destinationViewController as? OtherUserProfileVC {
+        switch segue.identifier {
+        case SEGUE_OTHERUSERPROFILEVC?:
+            if let otherUserProfileVC = segue.destinationViewController as? OtherUserProfileVC {
                 if let userKey = sender as? String {
-                    commentsVC.otherUserKey = userKey
+                    otherUserProfileVC.otherUserKey = userKey
                 }
             }
+        case SEGUE_PROFILEVC?:
+            print("Profile")
+        default:
+            break
         }
     }
     
@@ -174,6 +178,26 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
             
             cell.blockUserTapAction = { (cell) in
                 self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: comment.userKey)
+            }
+            
+            cell.usernameTapAction = { (cell) in
+                
+                if comment.userKey != currentUserKey() {
+                    self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: comment.userKey)
+                } else {
+                    self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: comment.userKey)
+                }
+                
+            }
+            
+            cell.profileImgTapAction = { (cell) in
+                
+                if comment.userKey != currentUserKey() {
+                    self.performSegueWithIdentifier(SEGUE_OTHERUSERPROFILEVC, sender: comment.userKey)
+                } else {
+                    self.performSegueWithIdentifier(SEGUE_PROFILEVC, sender: comment.userKey)
+                }
+                
             }
             
             return cell
@@ -306,11 +330,10 @@ class CommentsVC: UIViewController, UITableViewDelegate, UITableViewDataSource, 
                 EZLoadingActivity.hide(success: false, animated: true)
             } else {
                 EZLoadingActivity.showWithDelay("Removed", disableUI: true, seconds: 1.0)
-                EZLoadingActivity.Settings.SuccessText = "Removed"
-                EZLoadingActivity.hide(success: true, animated: true)
+                EZLoadingActivity.Settings.FailText = "Removed"
+                EZLoadingActivity.hide(success: false, animated: true)
             }
         }
-        
     }
     
     func reportAlert() {

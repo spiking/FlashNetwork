@@ -38,8 +38,8 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
     private var spinner = UIActivityIndicatorView(activityIndicatorStyle: .Gray)
     private var previousRect = CGRectZero
     private var heightConstraint: NSLayoutConstraint?
-    private var blockedUsers = [String]()
     private var profileBtn: UIButton!
+    private var msgButton: UIButton!
     private var cancelButton: UIButton!
     private var numberOfLaunches: Int = 0
     private var request: Request?
@@ -95,6 +95,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         
         setupProfileButton()
         setupCancelButton()
+        setupMessageButton()
         setupSortMenu()
         setupFusuma()
         setupRateMe()
@@ -117,6 +118,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         
         loadBlockedUsersAndInitalDataFromFirebase()
         loadProfileData()
+        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -145,13 +147,6 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         if (NSUserDefaults.standardUserDefaults().valueForKey(KEY_UID) as? String) != nil {
             updatePushUserIdInFirebase()
         }
-        
-        //        oneSignal.postNotification(["contents": ["en": "Test Message"], "include_player_ids": [getUserPushId()]], onSuccess: { (success) in
-        //            print(success)
-        //            }) { (error) in
-        //                print(error)
-        //        }
-        
     }
     
     func setupFusuma() {
@@ -192,6 +187,27 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         profileBtn.frame = CGRectMake(0, 0, 30, 30)
         let barButton = UIBarButtonItem(customView: profileBtn)
         self.navigationItem.rightBarButtonItem = barButton
+    }
+    
+    func setupMessageButton() {
+        msgButton = UIButton(type: UIButtonType.Custom)
+        msgButton.setImage(UIImage(named: "Message.png"), forState: UIControlState.Normal)
+        msgButton.addTarget(self, action: #selector(FeedVC.messageButtonPressed), forControlEvents: UIControlEvents.TouchUpInside)
+        msgButton.frame = CGRectMake(0, 0, 23, 23)
+        let barButton = UIBarButtonItem(customView: msgButton)
+        self.navigationItem.leftBarButtonItem = barButton
+    }
+    
+    func hideMessageButton() {
+        msgButton.hidden = true
+    }
+    
+    func showMessageButton() {
+        msgButton.hidden = false
+    }
+    
+    func messageButtonPressed() {
+        self.performSegueWithIdentifier(SEGUE_MESSAGEVC, sender: nil)
     }
     
     func setupSortMenu() {
@@ -306,7 +322,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
             
             if let snapshot = snapshot.children.allObjects as? [FIRDataSnapshot] {
                 for snap in snapshot {
-                    self.blockedUsers.append(snap.key)
+                    blockedUsers.append(snap.key)
                 }
             }
             
@@ -336,7 +352,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         
-                        if !self.blockedUsers.contains(post.userKey) {
+                        if !blockedUsers.contains(post.userKey) {
                             self.posts.append(post)
                         }
                     }
@@ -373,7 +389,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         
-                        if !self.blockedUsers.contains(post.userKey) {
+                        if !blockedUsers.contains(post.userKey) {
                             self.posts.append(post)
                         }
                     }
@@ -407,7 +423,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
                         let key = snap.key
                         let post = Post(postKey: key, dictionary: postDict)
                         
-                        if !self.blockedUsers.contains(post.userKey) {
+                        if !blockedUsers.contains(post.userKey) {
                             self.posts.append(post)
                         }
                     }
@@ -421,7 +437,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
             
             if firstLogin {
                 self.loginMessage()
-                firstLogin = false
+                firstLogin = false  
             }
             
             self.posts = self.posts.reverse()
@@ -685,7 +701,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
     }
     
     func keyboardWillShow(sender: NSNotification) {
-        
+        hideMessageButton()
         showCancelButton()
         
         if let constraint = heightConstraint {
@@ -703,6 +719,7 @@ class FeedVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
     
     func keyboardWillHide(sender: NSNotification) {
         hideCancelButton()
+        showMessageButton()
         
         self.postTextView.scrollEnabled = false
         self.postBottomConstraint.constant =  0

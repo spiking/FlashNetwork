@@ -42,27 +42,30 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         super.viewDidLoad()
         
         setupBubbles()
+        loadOtherUsername()
         
-        title = otherUsername.uppercaseString
+        collectionView.emptyDataSetSource = self
+        collectionView.emptyDataSetDelegate = self
         
-        self.collectionView.emptyDataSetSource = self
-        self.collectionView.emptyDataSetDelegate = self
+        collectionView.backgroundColor = UIColor(red: CGFloat(18/255.0), green: CGFloat(18/255.0), blue: CGFloat(18/255.0), alpha: CGFloat(1.0))
+        inputToolbar.contentView.backgroundColor = UIColor(red: CGFloat(30/255.0), green: CGFloat(30/255.0), blue: CGFloat(30/255.0), alpha: CGFloat(1.0))
         
-        self.collectionView.backgroundColor = UIColor(red: CGFloat(18/255.0), green: CGFloat(18/255.0), blue: CGFloat(18/255.0), alpha: CGFloat(1.0))
-        self.inputToolbar.contentView.backgroundColor = UIColor(red: CGFloat(30/255.0), green: CGFloat(30/255.0), blue: CGFloat(30/255.0), alpha: CGFloat(1.0))
-        
-        self.inputToolbar.contentView.textView.keyboardAppearance = .Dark
-        self.inputToolbar.contentView.rightBarButtonItem.setTitleColor(UIColor.whiteColor(), forState: .Normal)
+        inputToolbar.contentView.textView.keyboardAppearance = .Dark
+        inputToolbar.contentView.rightBarButtonItem.setTitleColor(UIColor.whiteColor(), forState: .Normal)
         let rightBarbuttonHighlightedColor = UIColor(red: CGFloat(37/255.0), green: CGFloat(193/255.0), blue: CGFloat(81/255.0), alpha: CGFloat(0.88))
-        self.inputToolbar.contentView.rightBarButtonItem.setTitleColor(rightBarbuttonHighlightedColor, forState: .Highlighted)
-        self.inputToolbar.contentView.leftBarButtonItem = nil
-        self.inputToolbar.contentView.textView.font = UIFont(name: "Avenir-Medium", size: 16)!
+        inputToolbar.contentView.rightBarButtonItem.setTitleColor(rightBarbuttonHighlightedColor, forState: .Highlighted)
+        inputToolbar.contentView.leftBarButtonItem = nil
+        inputToolbar.contentView.textView.font = UIFont(name: "Avenir-Medium", size: 16)!
         
-        self.collectionView.loadEarlierMessagesHeaderTextColor = UIColor.lightTextColor()
+        collectionView.loadEarlierMessagesHeaderTextColor = UIColor.lightTextColor()
+        
+        seutpBlockButton()
         
         // No avatars
         collectionView!.collectionViewLayout.incomingAvatarViewSize = CGSizeZero
         collectionView!.collectionViewLayout.outgoingAvatarViewSize = CGSizeZero
+        
+        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -84,6 +87,16 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         removeTyping()
+    }
+    
+    func seutpBlockButton() {
+        let button: UIButton = UIButton(type: UIButtonType.Custom)
+        button.setImage(UIImage(named: "Report.png"), forState: UIControlState.Normal)
+        button.addTarget(self, action: #selector(OtherUserProfileVC.blockUserAlert), forControlEvents: UIControlEvents.TouchUpInside)
+        button.frame = CGRectMake(0, 0, 25, 25)
+        let barButton = UIBarButtonItem(customView: button)
+        self.navigationItem.rightBarButtonItem = barButton
+
     }
     
     override func collectionView(collectionView: JSQMessagesCollectionView!, messageDataForItemAtIndexPath indexPath: NSIndexPath!) -> JSQMessageData! {
@@ -164,6 +177,16 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         messages.append(message)
     }
     
+    func loadOtherUsername() {
+        DataService.ds.REF_USERS.child(otherUserKey).observeSingleEventOfType(.Value) { (snapshot: FIRDataSnapshot!) in
+        
+            if let username = snapshot.childSnapshotForPath("username").value as? String {
+                self.otherUsername = username.uppercaseString
+                self.title = self.otherUsername
+            }
+        }
+    }
+    
     override func textViewDidChange(textView: UITextView) {
         super.textViewDidChange(textView)
         // If the text is not empty, the user is typing
@@ -211,6 +234,37 @@ class ChatVC: JSQMessagesViewController, DZNEmptyDataSetSource, DZNEmptyDataSetD
         let bubbleImageFactory = JSQMessagesBubbleImageFactory()
         outgoingBubbleImageView = bubbleImageFactory.outgoingMessagesBubbleImageWithColor(UIColor.jsq_messageBubbleGreenColor())
         incomingBubbleImageView = bubbleImageFactory.incomingMessagesBubbleImageWithColor(UIColor.jsq_messageBubbleLightGrayColor())
+    }
+    
+    func blockUserAlert() {
+        UIApplication.sharedApplication().beginIgnoringInteractionEvents()
+        let alertview = JSSAlertView().show(self, title: "Block User", text: "Do you want to block \(otherUsername)? You will not be able to see any acitivty from this user, and vice versa. This cannot be undone. \n", buttonText: "Yes", cancelButtonText: "No", color: UIColorFromHex(0xe64c3c, alpha: 1))
+        alertview.setTextTheme(.Light)
+        alertview.addAction(blockUserAnswerYes)
+        alertview.addCancelAction(blockUserAnswerNo)
+        
+        Async.background(after: 0.5) {
+            if UIApplication.sharedApplication().isIgnoringInteractionEvents() {
+                UIApplication.sharedApplication().endIgnoringInteractionEvents()
+            }
+        }
+    }
+    
+    func blockUserAnswerYes() {
+        blockUser()
+    }
+    
+    func blockUserAnswerNo() {
+        // Do nothing
+    }
+    
+    func blockUser() {
+        DataService.ds.REF_USER_CURRENT.child("blocked_users").child(otherUserKey).setValue("TRUE")
+        DataService.ds.REF_USERS.child(otherUserKey).child("blocked_users").child(currentUserKey()).setValue("TRUE")
+        DataService.ds.REF_USER_CURRENT.child("favorites").child(otherUserKey).removeValue()
+        DataService.ds.REF_USERS.child(otherUserKey).child("favorites").child(currentUserKey()).removeValue()
+        
+        NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
     }
     
     func titleForEmptyDataSet(scrollView: UIScrollView!) -> NSAttributedString! {

@@ -1,33 +1,25 @@
 //
-//  CommentCell.swift
+//  MessageCell.swift
 //  FabSocialNetwork
 //
-//  Created by Adam Thuvesen on 2016-06-09.
+//  Created by Adam Thuvesen on 2016-07-26.
 //  Copyright © 2016 Adam Thuvesen. All rights reserved.
 //
 
 import UIKit
+import Async
 import Alamofire
 import Firebase
-import Async
 
-class CommentCell: UITableViewCell {
+class MessageCell: UITableViewCell {
     
-    var blockUserTapAction: ((UITableViewCell) -> Void)?
-    var usernameTapAction: ((UITableViewCell) -> Void)?
-    var profileImgTapAction: ((UITableViewCell) -> Void)?
-    
-    private var _comment: Comment!
-    private var _post: Post!
     private var _userRef: FIRDatabaseReference!
     private var _request: Request?
+    private var _userKey: String!
+    private var _message: Message!
     
-    var post: Post {
-        return _post
-    }
-    
-    var comment: Comment {
-        return _comment
+    var userRef: FIRDatabaseReference? {
+        return _userRef
     }
     
     var request: Request? {
@@ -36,21 +28,10 @@ class CommentCell: UITableViewCell {
     
     @IBOutlet weak var profileImg: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
-    @IBOutlet weak var textLbl: UILabel!
+    @IBOutlet weak var messageLbl: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        
-        let usernameTapped = UITapGestureRecognizer(target: self, action: #selector(CommentCell.usernameTapped(_:)))
-        usernameTapped.numberOfTapsRequired = 1
-        usernameLbl.addGestureRecognizer(usernameTapped)
-        usernameLbl.userInteractionEnabled = true
-        
-        let profileImgTapped = UITapGestureRecognizer(target: self, action: #selector(CommentCell.profileImgTapped(_:)))
-        profileImgTapped.numberOfTapsRequired = 1
-        profileImg.addGestureRecognizer(profileImgTapped)
-        profileImg.userInteractionEnabled = true
-        
     }
     
     override func drawRect(rect: CGRect) {
@@ -62,31 +43,16 @@ class CommentCell: UITableViewCell {
         super.setSelected(selected, animated: animated)
     }
     
-    func usernameTapped(sender: UITapGestureRecognizer) {
+    func configureCell(message: Message) {
         
-        self.usernameLbl.userInteractionEnabled = false
-        self.usernameTapAction?(self)
+        self._userKey = message.getOtherUserId
+        self._userRef = DataService.ds.REF_USERS.child(_userKey)
         
-        Async.background(after: 0.3) {
-            self.usernameLbl.userInteractionEnabled = true
+        if message.lastMessageFromCurrentUser {
+            self.messageLbl.text = "You: \(message.lastMessage)"
+        } else {
+            self.messageLbl.text = message.lastMessage
         }
-    }
-    
-    func profileImgTapped(sender: UITapGestureRecognizer) {
-        
-        self.profileImg.userInteractionEnabled = false
-        self.profileImgTapAction?(self)
-        
-        Async.background(after: 0.3) {
-            self.profileImg.userInteractionEnabled = true
-        }
-    }
-    
-    func configureCell(comment: Comment) {
-        
-        self._comment = comment
-        self._userRef = DataService.ds.REF_USERS.child(comment.userKey)
-        self.textLbl.text = comment.commentText
         
         _userRef.observeSingleEventOfType(.Value, withBlock: { snapshot in
             
@@ -116,6 +82,7 @@ class CommentCell: UITableViewCell {
             }, withCancelBlock: { error in
                 print(error.description)
         })
-
+        
     }
+
 }

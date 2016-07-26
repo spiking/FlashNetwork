@@ -11,6 +11,7 @@ import Firebase
 import Alamofire
 import JSSAlertView
 import Async
+import EZLoadingActivity
 
 class OtherUserProfileVC: UIViewController {
     
@@ -22,6 +23,7 @@ class OtherUserProfileVC: UIViewController {
         return _request
     }
     
+    @IBOutlet weak var favoritesButton: UIButton!
     @IBOutlet weak var usernameLbl: UILabel!
     @IBOutlet weak var scoreLbl: UILabel!
     @IBOutlet weak var profileImg: UIImageView!
@@ -43,10 +45,15 @@ class OtherUserProfileVC: UIViewController {
         let fixed: UIBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FixedSpace, target: nil, action: nil)
         fixed.width = 12
         navigationItem.setRightBarButtonItems([blockButton, fixed, chatButton], animated: true)
-      
+         setupFavoriteButton()
         NSNotificationCenter.defaultCenter().postNotificationName("load", object: nil)
         
         loadUserFromFirebase()
+    }
+
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        setupFavoriteButton()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -67,11 +74,27 @@ class OtherUserProfileVC: UIViewController {
     
     func setupChatButton() -> UIBarButtonItem {
         let button: UIButton = UIButton(type: UIButtonType.Custom)
-        button.setImage(UIImage(named: "Chat.png"), forState: UIControlState.Normal)
+        button.setImage(UIImage(named: "Message.png"), forState: UIControlState.Normal)
         button.addTarget(self, action: #selector(OtherUserProfileVC.startChat), forControlEvents: UIControlEvents.TouchUpInside)
-        button.frame = CGRectMake(0, 0, 25, 25)
+        button.frame = CGRectMake(0, 0, 23, 23)
         let barButton = UIBarButtonItem(customView: button)
         return barButton
+    }
+    
+    func setupFavoriteButton() {
+        let userFavoriteRef = DataService.ds.REF_USER_CURRENT.child("favorites")
+        
+        userFavoriteRef.observeSingleEventOfType(.Value) {(snapshot: FIRDataSnapshot!) in
+            
+            if snapshot.hasChild(self.otherUserKey) {
+                self.favoritesButton.backgroundColor = UIColorFromHex(0xe64c3c, alpha: 1)
+                self.favoritesButton.setTitle("Remove From Favorite", forState: UIControlState.Normal)
+            } else {
+                self.favoritesButton.backgroundColor = UIColor(red: 37/255, green: 193/255, blue: 81/255, alpha: 0.88)
+                self.favoritesButton.setTitle("Add To Favorite", forState: UIControlState.Normal)
+            }
+            
+        }
     }
     
     func blockUserAlert() {
@@ -99,6 +122,9 @@ class OtherUserProfileVC: UIViewController {
     func blockUser() {
         DataService.ds.REF_USER_CURRENT.child("blocked_users").child(otherUserKey).setValue("TRUE")
         DataService.ds.REF_USERS.child(otherUserKey).child("blocked_users").child(currentUserKey()).setValue("TRUE")
+        DataService.ds.REF_USER_CURRENT.child("favorites").child(otherUserKey).removeValue()
+        DataService.ds.REF_USERS.child(otherUserKey).child("favorites").child(currentUserKey()).removeValue()
+        
         NSNotificationCenter.defaultCenter().postNotificationName("update", object: nil)
     }
     
@@ -181,6 +207,36 @@ class OtherUserProfileVC: UIViewController {
             }
         default:
             break
+        }
+    }
+    
+    @IBAction func favoritesBtnTapped(sender: AnyObject) {
+        
+        let userFavoriteRef = DataService.ds.REF_USER_CURRENT.child("favorites")
+        
+        userFavoriteRef.observeSingleEventOfType(.Value) {(snapshot: FIRDataSnapshot!) in
+         
+            if snapshot.hasChild(self.otherUserKey) {
+                
+                self.favoritesButton.backgroundColor = UIColor(red: 37/255, green: 193/255, blue: 81/255, alpha: 0.88)
+                self.favoritesButton.setTitle("Add To Favorite", forState: UIControlState.Normal)
+                
+                userFavoriteRef.child(self.otherUserKey).removeValue()
+                EZLoadingActivity.showWithDelay("Removed", disableUI: true, seconds: 1.0)
+                EZLoadingActivity.Settings.FailText = "Removed"
+                EZLoadingActivity.hide(success: false, animated: true)
+
+            } else {
+                
+                self.favoritesButton.backgroundColor = UIColorFromHex(0xe64c3c, alpha: 1)
+                self.favoritesButton.setTitle("Remove From Favorite", forState: UIControlState.Normal)
+                
+                userFavoriteRef.child(self.otherUserKey).setValue(true)
+                EZLoadingActivity.showWithDelay("Added", disableUI: true, seconds: 1.0)
+                EZLoadingActivity.Settings.SuccessText = "Added"
+                EZLoadingActivity.hide(success: true, animated: true)
+       
+            }
         }
     }
     

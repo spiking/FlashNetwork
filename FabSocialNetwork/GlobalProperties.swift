@@ -10,6 +10,7 @@ import Foundation
 import MBProgressHUD
 
 var oneSignal: OneSignal!
+var blockedUsers = [String]()
 var firstLogin = true
 var userBanned = false
 var iphoneType = ""
